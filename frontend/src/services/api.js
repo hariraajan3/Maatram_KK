@@ -58,6 +58,44 @@ export const login = async (credentials) => {
   }
 };
 
+export const signup = async (userData) => {
+  try {
+    const { data } = await client.post('/auth/signup', userData);
+    setAuthToken(data.token);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const forgotPassword = async (emailData) => {
+  try {
+    const { data } = await client.post('/auth/forgot-password', emailData);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const resetPassword = async (resetData) => {
+  try {
+    const { data } = await client.post('/auth/reset-password', resetData);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const socialLogin = async (provider, token) => {
+  try {
+    const { data } = await client.post(`/auth/social/${provider}`, { token });
+    setAuthToken(data.token);
+    return data;
+  } catch (error) {
+    throw error;
+  }
+};
+
 const safeGet = async (path, fallback) => {
   try {
     const { data } = await client.get(path);
