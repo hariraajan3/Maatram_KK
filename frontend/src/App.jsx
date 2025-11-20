@@ -9,6 +9,7 @@ import Analytics from './pages/Analytics';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
+import Profile from './pages/Profile';
 import { login as loginApi, signup as signupApi, setAuthToken } from './services/api';
 import './App.css';
 
@@ -79,6 +80,7 @@ const App = () => {
           <Route path="attendance" element={<Attendance />} />
           <Route path="onboarding" element={<Onboarding />} />
           <Route path="analytics" element={<Analytics />} />
+          <Route path="profile" element={<Profile />} />
         </Route>
         <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />
       </Routes>

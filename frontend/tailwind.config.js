@@ -4,12 +4,23 @@ export default {
   theme: {
     extend: {
       colors: {
+        maatram: {
+          yellow: '#FFD700',
+          'yellow-light': '#FFE44D',
+          'yellow-dark': '#FFC107',
+          'yellow-hover': '#FFEB3B',
+          black: '#000000',
+          'black-light': '#1a1a1a',
+          'black-dark': '#000000',
+          white: '#FFFFFF',
+          'white-off': '#FAFAFA',
+        },
         brand: {
-          50: '#f2f8f4',
-          100: '#d4ecde',
-          300: '#74c69d',
-          500: '#2f9e44',
-          700: '#1c7c32',
+          50: '#fffef0',
+          100: '#fffde0',
+          300: '#FFD700',
+          500: '#FFC107',
+          700: '#FFA000',
         },
       },
     },

@@ -127,6 +127,9 @@ export const fetchAttendance = () =>
 export const recordAttendance = (payload) =>
   safePost('/attendance', payload, { record: payload });
 
+export const recordBulkAttendance = (attendanceList) =>
+  safePost('/attendance/bulk', { attendance: attendanceList }, { success: true });
+
 export const requestSwap = (payload) =>
   safePost('/schedule/swap', payload, { request: { ...payload, status: 'pending' } });
 

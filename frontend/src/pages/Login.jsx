@@ -36,40 +36,40 @@ const Login = ({ onSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+        <div className="bg-white rounded-2xl shadow-2xl border-2 border-maatram-yellow p-8 space-y-6">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Maatram KK</h1>
-            <p className="text-sm text-slate-500">Unified operations console</p>
+            <h1 className="text-4xl font-bold text-black mb-2">Maatram KK</h1>
+            <p className="text-sm text-black/70 font-medium">Unified operations console</p>
           </div>
 
           {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-bold text-black mb-1">
                 Email
               </label>
               <input
                 id="email"
                 type="email"
                 required
-                className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                className="w-full border-2 border-black rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-maatram-yellow focus:border-maatram-yellow outline-none transition font-medium"
                 placeholder="Enter your email"
                 value={form.email}
                 onChange={(event) => setForm({ ...form, email: event.target.value })}
               />
             </div>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-bold text-black mb-1">
                 Password
               </label>
               <input
                 id="password"
                 type="password"
                 required
-                className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                className="w-full border-2 border-black rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-maatram-yellow focus:border-maatram-yellow outline-none transition font-medium"
                 placeholder="Enter your password"
                 value={form.password}
                 onChange={(event) => setForm({ ...form, password: event.target.value })}
@@ -77,21 +77,21 @@ const Login = ({ onSuccess }) => {
               <div className="mt-2 text-right">
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+                  className="text-sm text-black hover:text-black/70 font-bold underline"
                 >
                   Forgot password?
                 </Link>
               </div>
             </div>
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-100 border-2 border-red-500 text-red-900 px-4 py-3 rounded-lg text-sm font-bold">
                 {error}
               </div>
             )}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-maatram-yellow hover:bg-maatram-yellow-dark text-black py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center border-2 border-black"
             >
               {loading ? (
                 <>
@@ -137,7 +137,7 @@ const Login = ({ onSuccess }) => {
               <div className="w-full border-t border-slate-200"></div>
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-white px-2 text-slate-500">Or continue with</span>
+              <span className="bg-white px-2 text-black font-bold">Or continue with</span>
             </div>
           </div>
 
@@ -147,7 +147,7 @@ const Login = ({ onSuccess }) => {
               type="button"
               onClick={() => handleSocialLogin('Google')}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-black rounded-lg hover:bg-maatram-yellow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path
@@ -167,36 +167,36 @@ const Login = ({ onSuccess }) => {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              <span className="text-slate-700 font-medium">Continue with Google</span>
+              <span className="text-black font-bold">Continue with Google</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleSocialLogin('Facebook')}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-black rounded-lg hover:bg-maatram-yellow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#1877F2">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
               </svg>
-              <span className="text-slate-700 font-medium">Continue with Facebook</span>
+              <span className="text-black font-bold">Continue with Facebook</span>
             </button>
 
             <button
               type="button"
               onClick={() => handleSocialLogin('Apple')}
               disabled={loading}
-              className="w-full flex items-center justify-center gap-3 px-4 py-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-3 px-4 py-3 border-2 border-black rounded-lg hover:bg-maatram-yellow transition-all disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24" fill="#000000">
                 <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z" />
               </svg>
-              <span className="text-slate-700 font-medium">Continue with Apple</span>
+              <span className="text-black font-bold">Continue with Apple</span>
             </button>
           </div>
 
           {/* Demo credentials hint */}
-          <p className="text-xs text-center text-slate-400 pt-2 border-t border-slate-100">
+          <p className="text-xs text-center text-black/60 pt-2 border-t-2 border-maatram-yellow font-medium">
             Demo: admin@maatram.org / admin@123
           </p>
         </div>

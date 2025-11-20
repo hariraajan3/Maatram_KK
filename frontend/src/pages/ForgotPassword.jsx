@@ -36,54 +36,54 @@ const ForgotPassword = () => {
 
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4 py-12">
-        <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6 text-center">
-            <div className="mx-auto w-16 h-16 bg-green-100 rounded-full flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900 mb-2">Check your email</h1>
-              <p className="text-slate-600">
-                We've sent a password reset link to <strong>{email}</strong>
-              </p>
-            </div>
-            <p className="text-sm text-slate-500">
-              Click the link in the email to reset your password. If you don't see it, check your
-              spam folder.
-            </p>
-            <Link
-              to="/login"
-              className="block w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl"
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-2xl shadow-2xl border-2 border-maatram-yellow p-8 space-y-6 text-center">
+          <div className="mx-auto w-16 h-16 bg-maatram-yellow rounded-full flex items-center justify-center border-2 border-black">
+            <svg
+              className="w-8 h-8 text-black"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              Back to Sign in
-            </Link>
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
           </div>
+          <div>
+            <h1 className="text-2xl font-bold text-black mb-2">Check your email</h1>
+            <p className="text-black/70 font-medium">
+              We've sent a password reset link to <strong className="text-black">{email}</strong>
+            </p>
+          </div>
+          <p className="text-sm text-black/60 font-medium">
+            Click the link in the email to reset your password. If you don't see it, check your
+            spam folder.
+          </p>
+          <Link
+            to="/login"
+            className="block w-full bg-maatram-yellow hover:bg-maatram-yellow-dark text-black py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl border-2 border-black"
+          >
+            Back to Sign in
+          </Link>
         </div>
       </div>
+    </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 px-4 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
+        <div className="bg-white rounded-2xl shadow-2xl border-2 border-maatram-yellow p-8 space-y-6">
           {/* Header */}
           <div className="text-center">
-            <h1 className="text-3xl font-bold text-slate-900 mb-2">Forgot Password?</h1>
-            <p className="text-sm text-slate-500">
+            <h1 className="text-4xl font-bold text-black mb-2">Forgot Password?</h1>
+            <p className="text-sm text-black/70 font-medium">
               No worries, we'll send you reset instructions.
             </p>
           </div>
@@ -91,14 +91,14 @@ const ForgotPassword = () => {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-bold text-black mb-1">
                 Email
               </label>
               <input
                 id="email"
                 type="email"
                 required
-                className="w-full border border-slate-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+                className="w-full border-2 border-black rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-maatram-yellow focus:border-maatram-yellow outline-none transition font-medium"
                 placeholder="Enter your email"
                 value={email}
                 onChange={(event) => setEmail(event.target.value)}
@@ -106,7 +106,7 @@ const ForgotPassword = () => {
             </div>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+              <div className="bg-red-100 border-2 border-red-500 text-red-900 px-4 py-3 rounded-lg text-sm font-bold">
                 {error}
               </div>
             )}
@@ -114,7 +114,7 @@ const ForgotPassword = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-3 rounded-lg font-semibold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              className="w-full bg-maatram-yellow hover:bg-maatram-yellow-dark text-black py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center border-2 border-black"
             >
               {loading ? (
                 <>
@@ -150,7 +150,7 @@ const ForgotPassword = () => {
           <div className="text-center">
             <Link
               to="/login"
-              className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
+              className="text-sm text-black hover:text-black/70 font-bold underline"
             >
               ← Back to Sign in
             </Link>
