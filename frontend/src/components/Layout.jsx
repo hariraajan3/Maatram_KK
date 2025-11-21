@@ -1,12 +1,13 @@
 import { Link, NavLink, Outlet } from 'react-router-dom';
 import PropTypes from 'prop-types';
 
+// navItems can include an optional `roles` array to restrict visibility
 const navItems = [
   { to: '/', label: 'Dashboard' },
-  { to: '/scheduling', label: 'Scheduling' },
-  { to: '/attendance', label: 'Attendance' },
-  { to: '/onboarding', label: 'Onboarding' },
-  { to: '/analytics', label: 'Analytics' },
+  { to: '/scheduling', label: 'Scheduling', roles: ['admin', 'lead'] },
+  { to: '/attendance', label: 'Attendance', roles: ['admin', 'lead', 'tutor'] },
+  { to: '/onboarding', label: 'Onboarding', roles: ['admin'] },
+  { to: '/admin-logs', label: 'Admin Logs', roles: ['admin'] },
 ];
 
 const Layout = ({ user, onLogout }) => (
@@ -19,21 +20,25 @@ const Layout = ({ user, onLogout }) => (
         <p className="text-xs text-black/70 mt-1 font-medium">Unified tutor platform</p>
       </div>
       <nav className="flex-1 px-4 py-4 space-y-2 bg-white">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            className={({ isActive }) =>
-              `block rounded-lg px-3 py-2.5 text-sm font-semibold transition-all ${
-                isActive
-                  ? 'bg-maatram-yellow text-black shadow-md'
-                  : 'text-black hover:bg-maatram-yellow/20 hover:text-black'
-              }`
-            }
-          >
-            {item.label}
-          </NavLink>
-        ))}
+        {navItems.map((item) =>
+          // render the nav item only if there is no roles restriction
+          // or the current user's role is included in the allowed roles
+          ((!item.roles || item.roles.includes(user.role)) && (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `block rounded-lg px-3 py-2.5 text-sm font-semibold transition-all ${
+                  isActive
+                    ? 'bg-maatram-yellow text-black shadow-md'
+                    : 'text-black hover:bg-maatram-yellow/20 hover:text-black'
+                }`
+              }
+            >
+              {item.label}
+            </NavLink>
+          ))
+        )}
       </nav>
       <div className="p-4 border-t-2 border-maatram-yellow bg-maatram-yellow text-xs text-black font-medium">
         © {new Date().getFullYear()} Maatram Foundation

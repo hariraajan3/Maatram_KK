@@ -5,7 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Scheduling from './pages/Scheduling';
 import Attendance from './pages/Attendance';
 import Onboarding from './pages/Onboarding';
-import Analytics from './pages/Analytics';
+import AdminLogs from './pages/AdminLogs';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
@@ -79,7 +79,7 @@ const App = () => {
           <Route path="scheduling" element={<Scheduling />} />
           <Route path="attendance" element={<Attendance />} />
           <Route path="onboarding" element={<Onboarding />} />
-          <Route path="analytics" element={<Analytics />} />
+          <Route path="admin-logs" element={<AdminLogs />} />
           <Route path="profile" element={<Profile />} />
         </Route>
         <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />

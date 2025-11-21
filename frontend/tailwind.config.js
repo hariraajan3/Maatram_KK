@@ -5,7 +5,8 @@ export default {
     extend: {
       colors: {
         maatram: {
-          yellow: '#FFD700',
+          // softened main yellow to reduce brightness
+          yellow: '#FFEB99',
           'yellow-light': '#FFE44D',
           'yellow-dark': '#FFC107',
           'yellow-hover': '#FFEB3B',

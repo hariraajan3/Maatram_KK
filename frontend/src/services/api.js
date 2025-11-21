@@ -1,10 +1,16 @@
 import axios from 'axios';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+// If VITE_API_URL is not set, the app will run in mock mode and avoid
+// making real network requests (this prevents ERR_CONNECTION_REFUSED logs
+// when the backend is not running during development).
+const API_BASE = import.meta.env.VITE_API_URL || null;
+const USE_MOCK = !API_BASE;
 
-const client = axios.create({
-  baseURL: API_BASE,
-});
+const client = USE_MOCK
+  ? null
+  : axios.create({
+      baseURL: API_BASE,
+    });
 
 const mockUser = {
   id: 'mock-admin',
@@ -36,6 +42,7 @@ const mockDashboard = {
 };
 
 export const setAuthToken = (token) => {
+  if (!client) return;
   if (token) {
     client.defaults.headers.common.Authorization = `Bearer ${token}`;
   } else {
@@ -44,21 +51,34 @@ export const setAuthToken = (token) => {
 };
 
 export const login = async (credentials) => {
+  if (USE_MOCK) {
+    // simple mock login for local development
+    if (credentials.password === 'admin@123' || credentials.email === 'admin@maatram.org') {
+      const session = { token: 'mock-token', user: mockUser };
+      setAuthToken(session.token);
+      return session;
+    }
+    // mimic API failure
+    const err = new Error('Invalid credentials (mock)');
+    err.response = { status: 401 };
+    throw err;
+  }
+
   try {
     const { data } = await client.post('/auth/login', credentials);
     setAuthToken(data.token);
     return data;
   } catch (error) {
-    if (credentials.password === 'admin@123') {
-      const session = { token: 'mock-token', user: mockUser };
-      setAuthToken(session.token);
-      return session;
-    }
     throw error;
   }
 };
 
 export const signup = async (userData) => {
+  if (USE_MOCK) {
+    const session = { token: 'mock-token', user: mockUser };
+    setAuthToken(session.token);
+    return session;
+  }
   try {
     const { data } = await client.post('/auth/signup', userData);
     setAuthToken(data.token);
@@ -69,6 +89,7 @@ export const signup = async (userData) => {
 };
 
 export const forgotPassword = async (emailData) => {
+  if (USE_MOCK) return { ok: true };
   try {
     const { data } = await client.post('/auth/forgot-password', emailData);
     return data;
@@ -87,6 +108,11 @@ export const resetPassword = async (resetData) => {
 };
 
 export const socialLogin = async (provider, token) => {
+  if (USE_MOCK) {
+    const session = { token: 'mock-token', user: mockUser };
+    setAuthToken(session.token);
+    return session;
+  }
   try {
     const { data } = await client.post(`/auth/social/${provider}`, { token });
     setAuthToken(data.token);
@@ -97,20 +123,62 @@ export const socialLogin = async (provider, token) => {
 };
 
 const safeGet = async (path, fallback) => {
+  if (USE_MOCK) {
+    console.warn(`API not configured, returning mock fallback for ${path}`);
+    return fallback;
+  }
   try {
     const { data } = await client.get(path);
     return data;
   } catch (error) {
+    // If the request is unauthorized, clear session and redirect to login
+    if (error.response && error.response.status === 401) {
+      console.warn(`Unauthorized request for ${path} - clearing session and redirecting to /login`);
+      try {
+        localStorage.removeItem('kk_session');
+      } catch (e) {
+        // ignore
+      }
+      try {
+        setAuthToken(null);
+      } catch (e) {
+        // ignore
+      }
+      // Redirect to login page
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      return fallback;
+    }
+
     console.warn(`Falling back for ${path}`, error.message);
     return fallback;
   }
 };
 
 const safePost = async (path, payload, fallback) => {
+  if (USE_MOCK) {
+    console.warn(`API not configured, returning mock fallback for POST ${path}`);
+    return fallback || { ok: true };
+  }
   try {
     const { data } = await client.post(path, payload);
     return data;
   } catch (error) {
+    if (error.response && error.response.status === 401) {
+      console.warn(`Unauthorized POST to ${path} - clearing session and redirecting to /login`);
+      try {
+        localStorage.removeItem('kk_session');
+      } catch (e) {}
+      try {
+        setAuthToken(null);
+      } catch (e) {}
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      return fallback || { ok: true };
+    }
+
     console.warn(`Falling back for ${path}`, error.message);
     return fallback || { ok: true };
   }
