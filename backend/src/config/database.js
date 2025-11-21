@@ -5,12 +5,14 @@ let connectionTested = false;
 
 const getPool = () => {
   if (pool) return pool;
-  if (!process.env.DATABASE_URL) {
-    console.warn('⚠️  DATABASE_URL not set. Using mock DB; persistence disabled.');
+  // Accept DATABASE_URL or DB_URL for flexibility
+  const dbUrl = process.env.DATABASE_URL || process.env.DB_URL;
+  if (!dbUrl) {
+    console.warn('⚠️  DATABASE_URL or DB_URL not set. Using mock DB; persistence disabled.');
     return null;
   }
   pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: dbUrl,
     ssl: process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : undefined,
   });
 
