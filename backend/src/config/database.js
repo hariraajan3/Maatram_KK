@@ -43,12 +43,17 @@ const runQuery = async (query, params = []) => {
   if (!activePool) {
     return { rows: [], rowCount: 0 };
   }
-  const client = await activePool.connect();
   try {
-    const result = await client.query(query, params);
-    return result;
-  } finally {
-    client.release();
+    const client = await activePool.connect();
+    try {
+      const result = await client.query(query, params);
+      return result;
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Database query failed:', error.message);
+    throw error;
   }
 };
 
