@@ -3,6 +3,8 @@ const { validationResult } = require('express-validator');
 const dataStore = require('../models/dataStore');
 const { encrypt, decrypt } = require('../utils/security');
 const { sendNotificationBundle } = require('../utils/notifications');
+const { logAction } = require('../utils/auditLogger');
+const bcrypt = require('bcryptjs');
 
 const respondValidation = (req) => {
   const errors = validationResult(req);
@@ -38,6 +40,8 @@ const createOnboarding = async (req, res, next) => {
       whatsappMessage: `Hi ${name}, your KK onboarding request is pending verification.`,
     });
 
+    logAction(req.user, 'CREATE_ONBOARDING', `Created onboarding request for ${name}`);
+
     res.status(201).json({ request });
   } catch (error) {
     next(error);
@@ -62,6 +66,35 @@ const updateOnboardingStatus = async (req, res, next) => {
       html: `<p>Your onboarding status is now <strong>${status}</strong>.</p>`,
       whatsappMessage: `Your KK onboarding status is now ${status}.`,
     });
+
+    if (status === 'approved') {
+      // Create User
+      const newUser = {
+        id: uuid(),
+        name: request.name,
+        email: request.email,
+        passwordHash: bcrypt.hashSync('tutor@123', 10), // Default password
+        role: 'tutor',
+        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(request.name)}`,
+      };
+      dataStore.users.push(newUser);
+
+      // Create Tutor Profile
+      const newTutor = {
+        id: newUser.id,
+        name: request.name,
+        email: request.email,
+        phone: request.phoneEncrypted,
+        status: 'active',
+        subjects: [], // To be filled later
+        avgAttendance: 0,
+      };
+      dataStore.tutors.push(newTutor);
+
+      logAction(req.user, 'APPROVE_ONBOARDING', `Approved onboarding for ${request.name}. User and Tutor profiles created.`);
+    } else {
+      logAction(req.user, 'UPDATE_ONBOARDING_STATUS', `Updated onboarding status for ${request.name} to ${status}`);
+    }
 
     res.json({ request });
   } catch (error) {

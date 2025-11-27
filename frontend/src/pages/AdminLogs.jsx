@@ -1,146 +1,130 @@
-import { useState } from 'react';
-
-const initialUsers = [
-  { id: 'U1', name: 'Akila Admin', email: 'admin@maatram.org', role: 'admin' },
-  { id: 'U2', name: 'Sanjay Lead', email: 'sanjay@maatram.org', role: 'lead' },
-  { id: 'U3', name: 'Priya Tutor', email: 'priya@maatram.org', role: 'tutor' },
-  { id: 'U4', name: 'Kumar Tutor', email: 'kumar@maatram.org', role: 'tutor' },
-];
-
-const roles = ['admin', 'lead', 'tutor'];
+import { useState, useEffect } from 'react';
+import { fetchAuditLogs, fetchRoles, updateRolePermissions } from '../services/api';
 
 const AdminLogs = () => {
-  const [users, setUsers] = useState(initialUsers);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [role, setRole] = useState('tutor');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [logs, setLogs] = useState([]);
+  const [roles, setRoles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
 
-  const changeRole = (id, newRole) => {
-    setUsers((prev) => prev.map((u) => (u.id === id ? { ...u, role: newRole } : u)));
-    setSuccess('Role updated');
-    setTimeout(() => setSuccess(''), 2000);
+  useEffect(() => {
+    Promise.all([fetchAuditLogs(), fetchRoles()])
+      .then(([logsData, rolesData]) => {
+        setLogs(logsData);
+        setRoles(rolesData);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  const handlePermissionChange = async (roleName, permission) => {
+    const role = roles.find(r => r.name === roleName);
+    if (!role) return;
+
+    const newPermissions = role.permissions.includes(permission)
+      ? role.permissions.filter(p => p !== permission)
+      : [...role.permissions, permission];
+
+    try {
+      await updateRolePermissions(roleName, newPermissions);
+      setRoles(roles.map(r => r.name === roleName ? { ...r, permissions: newPermissions } : r));
+      setMessage(`Updated permissions for ${roleName}`);
+      setTimeout(() => setMessage(''), 3000);
+    } catch (error) {
+      setMessage('Failed to update permissions');
+    }
   };
 
-  const handleAdd = (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    if (!name.trim() || !email.trim()) {
-      setError('Name and email are required');
-      return;
-    }
-    // simple email validation
-    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-      setError('Please enter a valid email');
-      return;
-    }
-
-    const newUser = {
-      id: `U${Date.now()}`,
-      name: name.trim(),
-      email: email.trim(),
-      role,
-    };
-    setUsers((prev) => [newUser, ...prev]);
-    setName('');
-    setEmail('');
-    setRole('tutor');
-    setSuccess('User added');
-    setTimeout(() => setSuccess(''), 2000);
-  };
+  const availablePermissions = ['view_tutors', 'manage_onboarding', 'view_classes', 'view_own_classes', 'mark_attendance', 'manage_schedule', 'view_attendance', 'all'];
 
   return (
-    <div className="space-y-6">
-      <section>
-        <h2 className="text-2xl font-bold text-black">Admin Logs & Role Management</h2>
-        <p className="text-sm text-black/70 mt-1">View permissions and update user roles (local demo).</p>
-      </section>
+    <div className="space-y-8">
+      <header>
+        <h2 className="text-3xl font-display font-bold text-black">Admin & Audit Logs</h2>
+        <p className="text-gray-500 mt-1">Monitor system activity and manage role permissions.</p>
+      </header>
 
-      <section className="bg-white rounded-2xl p-6 shadow-lg border-2 border-maatram-yellow">
-        <h3 className="text-lg font-bold text-black mb-4">Add User</h3>
-        <form onSubmit={handleAdd} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end mb-6">
-          <div>
-            <label className="text-xs font-bold text-black/70">Name</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="mt-1 block w-full border-2 border-black rounded-md px-3 py-2 outline-none"
-              placeholder="Full name"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-bold text-black/70">Email</label>
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-1 block w-full border-2 border-black rounded-md px-3 py-2 outline-none"
-              placeholder="email@example.org"
-            />
-          </div>
-          <div>
-            <label className="text-xs font-bold text-black/70">Role</label>
-            <select
-              value={role}
-              onChange={(e) => setRole(e.target.value)}
-              className="mt-1 block w-full border-2 border-black rounded-md px-3 py-2 outline-none"
-            >
-              {roles.map((r) => (
-                <option value={r} key={r}>
-                  {r}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <button
-              type="submit"
-              className="px-4 py-2 bg-maatram-yellow text-black font-bold rounded-md border-2 border-black hover:bg-maatram-yellow-dark transition"
-            >
-              Add
-            </button>
-          </div>
-        </form>
-        {error && <p className="text-sm text-red-700 font-bold mb-2">{error}</p>}
-        {success && <p className="text-sm text-green-700 font-bold mb-2">{success}</p>}
+      {message && (
+        <div className="p-4 bg-blue-50 text-blue-700 rounded-xl font-bold border border-blue-100 animate-fade-in">
+          {message}
+        </div>
+      )}
 
-        <h3 className="text-lg font-bold text-black mb-4">User Roles</h3>
-        <table className="w-full text-left">
-          <thead className="bg-maatram-yellow/30">
-            <tr>
-              <th className="px-4 py-2 text-xs font-bold">Name</th>
-              <th className="px-4 py-2 text-xs font-bold">Email</th>
-              <th className="px-4 py-2 text-xs font-bold">Role</th>
-              <th className="px-4 py-2 text-xs font-bold">Action</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y-2 divide-maatram-yellow">
-            {users.map((u) => (
-              <tr key={u.id} className="hover:bg-maatram-yellow/10">
-                <td className="px-4 py-3 font-bold text-black">{u.name}</td>
-                <td className="px-4 py-3 text-sm text-black/70">{u.email}</td>
-                <td className="px-4 py-3 text-sm font-bold text-black">{u.role}</td>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    {roles.map((r) => (
-                      <button
-                        key={r}
-                        onClick={() => changeRole(u.id, r)}
-                        className={`px-3 py-1 rounded-md text-xs font-bold transition-colors border-2 border-black ${
-                          u.role === r ? 'bg-maatram-yellow text-black' : 'bg-white text-black/80 hover:bg-maatram-yellow/20'
-                        }`}
-                      >
-                        {r}
-                      </button>
-                    ))}
+      <div className="grid lg:grid-cols-2 gap-8">
+        {/* Role Permissions */}
+        <section className="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+          <h3 className="text-lg font-bold text-black mb-4">Role Permissions</h3>
+          <div className="overflow-hidden rounded-xl border border-gray-100">
+            <table className="w-full text-left">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Role</th>
+                  <th className="px-6 py-4 text-xs font-bold text-gray-500 uppercase tracking-wider">Permissions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 bg-white">
+                {roles.map((role) => (
+                  <tr key={role.name} className="hover:bg-gray-50/50 transition-colors">
+                    <td className="px-6 py-4 align-top">
+                      <div className="font-bold text-black capitalize mb-1">{role.name}</div>
+                      <span className="text-xs text-gray-400 font-mono bg-gray-100 px-2 py-0.5 rounded">
+                        {role.permissions.length} active
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex flex-wrap gap-2">
+                        {availablePermissions.map((perm) => (
+                          <button
+                            key={perm}
+                            onClick={() => handlePermissionChange(role.name, perm)}
+                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all duration-200 ${role.permissions.includes(perm)
+                                ? 'bg-maatram-yellow text-black border-maatram-yellow shadow-sm hover:shadow-md'
+                                : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300 hover:text-gray-600'
+                              }`}
+                          >
+                            {perm.replace(/_/g, ' ')}
+                          </button>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        {/* Audit Logs */}
+        <section className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 h-[600px] overflow-y-auto">
+          <h3 className="text-lg font-bold text-black mb-4">Audit Logs</h3>
+          <div className="space-y-4">
+            {loading ? (
+              <p className="text-gray-500 text-center py-8">Loading logs...</p>
+            ) : logs.length === 0 ? (
+              <p className="text-gray-500 text-center py-8">No logs found.</p>
+            ) : (
+              logs.map((log) => (
+                <div key={log.id} className="flex gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors border border-transparent hover:border-gray-100 group">
+                  <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-white group-hover:shadow-sm transition-all">
+                    <span className="material-icons-outlined text-gray-500 text-sm">history</span>
                   </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+                  <div>
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="font-bold text-black text-sm">{log.userName}</span>
+                      <span className="text-xs text-gray-400 px-2 py-0.5 bg-gray-100 rounded-full capitalize">{log.userRole}</span>
+                    </div>
+                    <p className="text-sm text-gray-700 font-medium">{log.action}</p>
+                    <p className="text-xs text-gray-500 mt-1">{log.details}</p>
+                    <p className="text-[10px] text-gray-400 mt-2 font-mono">
+                      {new Date(log.timestamp).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

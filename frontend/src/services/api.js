@@ -9,8 +9,8 @@ const USE_MOCK = !API_BASE;
 const client = USE_MOCK
   ? null
   : axios.create({
-      baseURL: API_BASE,
-    });
+    baseURL: API_BASE,
+  });
 
 const mockUser = {
   id: 'mock-admin',
@@ -169,10 +169,10 @@ const safePost = async (path, payload, fallback) => {
       console.warn(`Unauthorized POST to ${path} - clearing session and redirecting to /login`);
       try {
         localStorage.removeItem('kk_session');
-      } catch (e) {}
+      } catch (e) { }
       try {
         setAuthToken(null);
-      } catch (e) {}
+      } catch (e) { }
       if (typeof window !== 'undefined') {
         window.location.href = '/login';
       }
@@ -206,6 +206,21 @@ export const createOnboarding = (payload) =>
 
 export const fetchOnboarding = () =>
   safeGet('/onboarding', { requests: [] }).then((res) => res.requests || []);
+
+export const updateOnboardingStatus = (id, status) =>
+  safePost(`/onboarding/${id}/status`, { status }, { request: { id, status } });
+
+export const fetchAuditLogs = () =>
+  safeGet('/admin/logs', { logs: [] }).then((res) => res.logs || []);
+
+export const fetchRoles = () =>
+  safeGet('/admin/roles', { roles: [] }).then((res) => res.roles || []);
+
+export const updateRolePermissions = (roleName, permissions) =>
+  safePost('/admin/roles/permissions', { roleName, permissions }, { role: { name: roleName, permissions } });
+
+export const assignRole = (userId, newRole) =>
+  safePost('/admin/users/role', { userId, newRole }, { user: { id: userId, role: newRole } });
 
 export const importStudents = (students) =>
   safePost('/data/students/import', { students }, { count: students.length });

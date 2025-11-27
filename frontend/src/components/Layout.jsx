@@ -28,8 +28,8 @@ const Layout = ({ user, onLogout }) => {
           </Link>
         </div>
 
-        <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
-          <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Menu</p>
+        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+          <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Menu</p>
           {navItems.map((item) => {
             if (item.roles && !item.roles.includes(user.role)) return null;
 
@@ -38,14 +38,14 @@ const Layout = ({ user, onLogout }) => {
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200 ${isActive
-                    ? 'bg-maatram-yellow text-black shadow-sm'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-black'
+                  `flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ${isActive
+                    ? 'bg-maatram-yellow text-black shadow-md translate-x-1'
+                    : 'text-gray-500 hover:bg-gray-50 hover:text-black hover:translate-x-1'
                   }`
                 }
               >
-                <span className="material-icons-outlined text-lg">{/* Icon placeholder if needed */}</span>
-                {item.label}
+                <span className="material-icons-outlined text-xl">{item.icon}</span>
+                <span className="font-display tracking-wide">{item.label}</span>
               </NavLink>
             );
           })}

@@ -115,6 +115,25 @@ const dataStore = {
   swapRequests: [],
   attendance: [],
   archivedRecords: [],
+  auditLogs: [],
+  roles: [
+    {
+      name: 'admin',
+      permissions: ['all'],
+    },
+    {
+      name: 'tutorLead',
+      permissions: ['view_tutors', 'manage_onboarding', 'view_classes'],
+    },
+    {
+      name: 'tutor',
+      permissions: ['view_own_classes', 'mark_attendance'],
+    },
+    {
+      name: 'coordinator', // Class tracking team
+      permissions: ['view_classes', 'manage_schedule', 'view_attendance'],
+    },
+  ],
 };
 
 module.exports = dataStore;

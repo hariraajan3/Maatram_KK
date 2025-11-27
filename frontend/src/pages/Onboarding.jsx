@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createOnboarding, fetchOnboarding } from '../services/api';
+import { createOnboarding, fetchOnboarding, updateOnboardingStatus } from '../services/api';
 
 const Onboarding = () => {
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
@@ -27,6 +27,15 @@ const Onboarding = () => {
       setTimeout(() => setMessage(''), 5000);
     } catch (error) {
       setMessage('Failed to send invitation. Please try again.');
+    }
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      await updateOnboardingStatus(id, 'approved');
+      load();
+    } catch (error) {
+      console.error('Failed to approve', error);
     }
   };
 
@@ -152,12 +161,22 @@ const Onboarding = () => {
                         </div>
                       </div>
 
-                      <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${request.status === 'completed'
+                      <div className="flex flex-col items-end gap-2">
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold capitalize ${request.status === 'approved'
                           ? 'bg-green-100 text-green-700 border border-green-200'
                           : 'bg-yellow-100 text-yellow-700 border border-yellow-200'
-                        }`}>
-                        {request.status}
-                      </span>
+                          }`}>
+                          {request.status}
+                        </span>
+                        {request.status === 'pending' && (
+                          <button
+                            onClick={() => handleApprove(request.id)}
+                            className="px-3 py-1 bg-black text-white text-xs font-bold rounded hover:bg-gray-800 transition-colors"
+                          >
+                            Approve
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
