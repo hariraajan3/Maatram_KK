@@ -1,10 +1,7 @@
 import axios from 'axios';
 
-// If VITE_API_URL is not set, the app will run in mock mode and avoid
-// making real network requests (this prevents ERR_CONNECTION_REFUSED logs
-// when the backend is not running during development).
 const API_BASE = import.meta.env.VITE_API_URL || null;
-const USE_MOCK = !API_BASE;
+const USE_MOCK = API_BASE;
 
 const client = USE_MOCK
   ? null
