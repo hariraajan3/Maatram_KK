@@ -8,8 +8,7 @@ const Signup = () => {
     name: '',
     email: '',
     password: '',
-    confirmPassword: '',
-    role: '',
+    role: ''
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
