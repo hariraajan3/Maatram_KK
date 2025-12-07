@@ -1,8 +1,7 @@
 import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_URL || null;
-const USE_MOCK = !API_BASE;
-
+const USE_MOCK = API_BASE;
 // Normalize API_BASE to avoid double /api
 const normalizeBaseURL = (url) => {
   if (!url) return '/api';
