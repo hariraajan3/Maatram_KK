@@ -1,12 +1,23 @@
 import axios from 'axios';
 
 const API_BASE = import.meta.env.VITE_API_URL || null;
-const USE_MOCK = API_BASE;
+const USE_MOCK = !API_BASE;
+
+// Normalize API_BASE to avoid double /api
+const normalizeBaseURL = (url) => {
+  if (!url) return '/api';
+  
+  // Remove trailing slash and /api if present
+  let normalized = url.replace(/\/+$/, '').replace(/\/api$/, '');
+  
+  // Add /api prefix
+  return `${normalized}/api`;
+};
 
 const client = USE_MOCK
   ? null
   : axios.create({
-    baseURL: API_BASE,
+    baseURL: normalizeBaseURL(API_BASE),
   });
 
 const mockUser = {
@@ -96,6 +107,7 @@ export const forgotPassword = async (emailData) => {
 };
 
 export const resetPassword = async (resetData) => {
+  if (USE_MOCK) return { ok: true };
   try {
     const { data } = await client.post('/auth/reset-password', resetData);
     return data;
@@ -181,6 +193,90 @@ const safePost = async (path, payload, fallback) => {
   }
 };
 
+const safePatch = async (path, payload, fallback) => {
+  if (USE_MOCK) {
+    console.warn(`API not configured, returning mock fallback for PATCH ${path}`);
+    return fallback || { ok: true };
+  }
+  try {
+    const { data } = await client.patch(path, payload);
+    return data;
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      console.warn(`Unauthorized PATCH to ${path} - clearing session and redirecting to /login`);
+      try {
+        localStorage.removeItem('kk_session');
+      } catch (e) { }
+      try {
+        setAuthToken(null);
+      } catch (e) { }
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      return fallback || { ok: true };
+    }
+
+    console.warn(`Falling back for ${path}`, error.message);
+    return fallback || { ok: true };
+  }
+};
+
+const safePut = async (path, payload, fallback) => {
+  if (USE_MOCK) {
+    console.warn(`API not configured, returning mock fallback for PUT ${path}`);
+    return fallback || { ok: true };
+  }
+  try {
+    const { data } = await client.put(path, payload);
+    return data;
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      console.warn(`Unauthorized PUT to ${path} - clearing session and redirecting to /login`);
+      try {
+        localStorage.removeItem('kk_session');
+      } catch (e) { }
+      try {
+        setAuthToken(null);
+      } catch (e) { }
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      return fallback || { ok: true };
+    }
+
+    console.warn(`Falling back for ${path}`, error.message);
+    return fallback || { ok: true };
+  }
+};
+
+const safeDelete = async (path, fallback) => {
+  if (USE_MOCK) {
+    console.warn(`API not configured, returning mock fallback for DELETE ${path}`);
+    return fallback || { ok: true };
+  }
+  try {
+    const { data } = await client.delete(path);
+    return data;
+  } catch (error) {
+    if (error.response && error.response.status === 401) {
+      console.warn(`Unauthorized DELETE to ${path} - clearing session and redirecting to /login`);
+      try {
+        localStorage.removeItem('kk_session');
+      } catch (e) { }
+      try {
+        setAuthToken(null);
+      } catch (e) { }
+      if (typeof window !== 'undefined') {
+        window.location.href = '/login';
+      }
+      return fallback || { ok: true };
+    }
+
+    console.warn(`Falling back for ${path}`, error.message);
+    return fallback || { ok: true };
+  }
+};
+
 export const fetchDashboard = () => safeGet('/dashboard', mockDashboard);
 
 export const fetchClasses = () =>
@@ -205,7 +301,7 @@ export const fetchOnboarding = () =>
   safeGet('/onboarding', { requests: [] }).then((res) => res.requests || []);
 
 export const updateOnboardingStatus = (id, status) =>
-  safePost(`/onboarding/${id}/status`, { status }, { request: { id, status } });
+  safePatch(`/onboarding/${id}`, { status }, { request: { id, status } });
 
 export const fetchAuditLogs = () =>
   safeGet('/admin/logs', { logs: [] }).then((res) => res.logs || []);
@@ -214,10 +310,16 @@ export const fetchRoles = () =>
   safeGet('/admin/roles', { roles: [] }).then((res) => res.roles || []);
 
 export const updateRolePermissions = (roleName, permissions) =>
-  safePost('/admin/roles/permissions', { roleName, permissions }, { role: { name: roleName, permissions } });
+  safePut('/admin/roles/permissions', { roleName, permissions }, { role: { name: roleName, permissions } });
+
+export const fetchUsers = () =>
+  safeGet('/admin/users', { users: [] }).then((res) => res.users || []);
 
 export const assignRole = (userId, newRole) =>
   safePost('/admin/users/role', { userId, newRole }, { user: { id: userId, role: newRole } });
+
+export const deleteUser = (userId) =>
+  safeDelete(`/admin/users/${userId}`, { message: 'User deleted successfully' });
 
 export const importStudents = (students) =>
   safePost('/data/students/import', { students }, { count: students.length });

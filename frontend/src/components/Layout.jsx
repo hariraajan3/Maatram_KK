@@ -1,5 +1,7 @@
+import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import maatramLogo from '../Maatram logo.jpg';
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: 'dashboard' },
@@ -11,25 +13,48 @@ const navItems = [
 
 const Layout = ({ user, onLogout }) => {
   const location = useLocation();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const profileRef = useRef(null);
+  const notificationsRef = useRef(null);
+
+  // Close dropdowns when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (profileRef.current && !profileRef.current.contains(event.target)) {
+        setProfileOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target)) {
+        setNotificationsOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   return (
     <div className="min-h-screen bg-white-off flex font-sans text-black">
       {/* Sidebar */}
       <aside className="w-64 bg-white border-r border-gray-200 hidden md:flex flex-col shadow-sm z-10">
-        <div className="px-6 py-8 border-b border-gray-100">
+        <div className="px-6 py-5 border-b border-gray-100">
           <Link to="/" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-xl bg-maatram-yellow flex items-center justify-center text-black font-bold text-xl shadow-sm group-hover:scale-105 transition-transform">
-              M
+            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+              <img 
+                src={maatramLogo} 
+                alt="Maatram Logo" 
+                className="w-full h-full object-contain p-1"
+              />
             </div>
             <div>
               <h1 className="text-xl font-display font-bold text-black tracking-tight">Maatram KK</h1>
-              <p className="text-xs text-gray-500 font-medium">Unified Platform</p>
             </div>
           </Link>
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          <p className="px-4 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Menu</p>
           {navItems.map((item) => {
             if (item.roles && !item.roles.includes(user.role)) return null;
 
@@ -52,23 +77,6 @@ const Layout = ({ user, onLogout }) => {
         </nav>
 
         <div className="p-4 border-t border-gray-100">
-          <div className="bg-gray-50 rounded-xl p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-8 h-8 rounded-full bg-maatram-black text-white flex items-center justify-center text-xs font-bold">
-                {user.name.charAt(0)}
-              </div>
-              <div className="overflow-hidden">
-                <p className="text-sm font-bold text-black truncate">{user.name}</p>
-                <p className="text-xs text-gray-500 capitalize">{user.role}</p>
-              </div>
-            </div>
-            <button
-              onClick={onLogout}
-              className="w-full py-2 rounded-lg bg-white border border-gray-200 text-xs font-bold text-gray-700 hover:bg-gray-50 hover:text-red-600 transition-colors shadow-sm"
-            >
-              Sign Out
-            </button>
-          </div>
           <p className="text-[10px] text-center text-gray-400 mt-4">
             © {new Date().getFullYear()} Maatram Foundation
           </p>
@@ -84,12 +92,83 @@ const Layout = ({ user, onLogout }) => {
               {navItems.find(item => item.to === location.pathname)?.label || 'Dashboard'}
             </h2>
           </div>
-          <div className="flex items-center gap-4">
-            <Link to="/profile" className="p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors">
-              <span className="sr-only">Profile</span>
-              {/* Profile Icon Placeholder */}
-              <div className="w-6 h-6 bg-gray-200 rounded-full"></div>
-            </Link>
+          <div className="flex items-center gap-3">
+            {/* Notifications */}
+            <div className="relative" ref={notificationsRef}>
+              <button
+                onClick={() => {
+                  setNotificationsOpen(!notificationsOpen);
+                  setProfileOpen(false);
+                }}
+                className="relative p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+              >
+                <span className="material-icons-outlined text-xl">notifications</span>
+                {/* Notification badge - you can add conditional rendering based on notification count */}
+                <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+              </button>
+              {notificationsOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-30">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <h3 className="text-sm font-bold text-black">Notifications</h3>
+                  </div>
+                  <div className="max-h-96 overflow-y-auto">
+                    <div className="px-4 py-8 text-center text-gray-500 text-sm">
+                      No new notifications
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={profileRef}>
+              <button
+                onClick={() => {
+                  setProfileOpen(!profileOpen);
+                  setNotificationsOpen(false);
+                }}
+                className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 transition-colors"
+              >
+                {user.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-maatram-yellow text-black flex items-center justify-center text-xs font-bold">
+                    {user.name.charAt(0)}
+                  </div>
+                )}
+                <span className="text-sm font-bold text-black hidden sm:block">{user.name}</span>
+                <span className="material-icons-outlined text-gray-500 text-sm">arrow_drop_down</span>
+              </button>
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-30">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <p className="text-sm font-bold text-black">{user.name}</p>
+                    <p className="text-xs text-gray-500">{user.email}</p>
+                    <p className="text-xs text-gray-400 capitalize mt-1">{user.role}</p>
+                  </div>
+                  <div className="py-1">
+                    <Link
+                      to="/profile"
+                      onClick={() => setProfileOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <span className="material-icons-outlined text-lg">person</span>
+                      <span>Profile</span>
+                    </Link>
+                    <button
+                      onClick={() => {
+                        setProfileOpen(false);
+                        onLogout();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <span className="material-icons-outlined text-lg">logout</span>
+                      <span>Sign Out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </header>
 

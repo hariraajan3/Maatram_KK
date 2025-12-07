@@ -32,5 +32,5 @@ ON CONFLICT (email) DO NOTHING;
 -- INSERT INTO students (name, phase, guardian_contact_encrypted, group, progress_score) VALUES
 --     ('Mani K', 'Selection', 'encrypted_contact_here', 'KK-2025-A', 78),
 --     ('Harini D', 'Scheduling', 'encrypted_contact_here', 'KK-2025-B', 84),
---     ('Kumar S', 'Attendance', 'encrypted_contact_here', 'KK-2025-C', 66);
+--    ('Kumar S', 'Attendance', 'encrypted_contact_here', 'KK-2025-C', 66);
 

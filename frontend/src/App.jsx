@@ -10,7 +10,6 @@ import Login from './pages/Login';
 import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
-import RoleRoute from './components/RoleRoute';
 import { login as loginApi, signup as signupApi, setAuthToken } from './services/api';
 import './App.css';
 
@@ -77,38 +76,10 @@ const App = () => {
           }
         >
           <Route index element={<Dashboard />} />
-          <Route
-            path="scheduling"
-            element={
-              <RoleRoute allowedRoles={['admin', 'lead']}>
-                <Scheduling />
-              </RoleRoute>
-            }
-          />
-          <Route
-            path="attendance"
-            element={
-              <RoleRoute allowedRoles={['admin', 'lead', 'tutor']}>
-                <Attendance />
-              </RoleRoute>
-            }
-          />
-          <Route
-            path="onboarding"
-            element={
-              <RoleRoute allowedRoles={['admin']}>
-                <Onboarding />
-              </RoleRoute>
-            }
-          />
-          <Route
-            path="admin-logs"
-            element={
-              <RoleRoute allowedRoles={['admin']}>
-                <AdminLogs />
-              </RoleRoute>
-            }
-          />
+          <Route path="scheduling" element={<Scheduling />} />
+          <Route path="attendance" element={<Attendance />} />
+          <Route path="onboarding" element={<Onboarding />} />
+          <Route path="admin-logs" element={<AdminLogs />} />
           <Route path="profile" element={<Profile />} />
         </Route>
         <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />

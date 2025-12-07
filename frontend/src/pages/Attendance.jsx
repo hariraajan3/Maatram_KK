@@ -17,12 +17,32 @@ const Attendance = () => {
       if (session?.user?.name) setTutorName(session.user.name);
 
       const savedStudents = localStorage.getItem('attendance_students');
-      if (savedStudents) setStudents(JSON.parse(savedStudents));
+      if (savedStudents) {
+        setStudents(JSON.parse(savedStudents));
+      } else {
+        // Add dummy students if none exist
+        setStudents([
+          { id: 'STU001', name: 'Mani K', present: true, marks: '85', reviewed: false },
+          { id: 'STU002', name: 'Harini D', present: true, marks: '92', reviewed: false },
+          { id: 'STU003', name: 'Kumar S', present: false, marks: '', reviewed: false },
+        ]);
+      }
 
       const savedClassId = localStorage.getItem('attendance_classId');
-      if (savedClassId) setClassId(savedClassId);
+      if (savedClassId) {
+        setClassId(savedClassId);
+      } else {
+        setClassId('CLASS-2025-A');
+      }
     } catch (error) {
       console.error('Error loading data:', error);
+      // Set dummy data on error
+      setStudents([
+        { id: 'STU001', name: 'Mani K', present: true, marks: '85', reviewed: false },
+        { id: 'STU002', name: 'Harini D', present: true, marks: '92', reviewed: false },
+        { id: 'STU003', name: 'Kumar S', present: false, marks: '', reviewed: false },
+      ]);
+      setClassId('CLASS-2025-A');
     }
   }, []);
 
