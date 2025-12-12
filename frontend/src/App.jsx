@@ -7,7 +7,7 @@ import Attendance from './pages/Attendance';
 import Onboarding from './pages/Onboarding';
 import AdminLogs from './pages/AdminLogs';
 import Login from './pages/Login';
-import Signup from './pages/Signup';
+// import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import { login as loginApi, signup as signupApi, setAuthToken } from './services/api';
@@ -38,11 +38,11 @@ const App = () => {
     localStorage.setItem('kk_session', JSON.stringify(payload));
   };
 
-  const handleSignup = async (userData) => {
-    const payload = await signupApi(userData);
-    setSession(payload);
-    localStorage.setItem('kk_session', JSON.stringify(payload));
-  };
+  // const handleSignup = async (userData) => {
+  //   const payload = await signupApi(userData);
+  //   setSession(payload);
+  //   localStorage.setItem('kk_session', JSON.stringify(payload));
+  // };
 
   const handleLogout = () => {
     localStorage.removeItem('kk_session');
@@ -57,10 +57,10 @@ const App = () => {
           path="/login"
           element={session ? <Navigate to="/" replace /> : <Login onSuccess={handleLogin} />}
         />
-        <Route
+        {/* <Route
           path="/signup"
           element={session ? <Navigate to="/" replace /> : <Signup />}
-        />
+        /> */}
         <Route
           path="/forgot-password"
           element={session ? <Navigate to="/" replace /> : <ForgotPassword />}
