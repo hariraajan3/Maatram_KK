@@ -3,9 +3,11 @@ const dotenvPath = path.resolve(__dirname, '.env');
 require('dotenv').config({ path: dotenvPath });
 console.log(`Loaded env from: ${dotenvPath}`);
 const app = require('./src/app');
+const { registerCronJobs } = require('./src/config/cron');
 
 const PORT = process.env.PORT || 4000;
 
 const server = app.listen(PORT, () => {
   console.log(`Maatram KK running on http://localhost:${PORT}`);
+  registerCronJobs();
 });
