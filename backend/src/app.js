@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const routes = require('./routes');
 const { errorHandler } = require('./middlewares/errorHandler');
-const { registerCronJobs } = require('./config/cron');
 const app = express();
 
 app.use(cors());

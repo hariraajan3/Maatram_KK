@@ -1,5 +1,5 @@
 const path = require('path');
-const dotenvPath = path.resolve(__dirname, '.env');
+const dotenvPath = path.resolve(__dirname, 'config.env');
 require('dotenv').config({ path: dotenvPath });
 console.log(`Loaded env from: ${dotenvPath}`);
 const app = require('./src/app');

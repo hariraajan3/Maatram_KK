@@ -3,6 +3,7 @@ const { validationResult } = require('express-validator');
 const dataStore = require('../models/dataStore');
 const { encrypt, decrypt } = require('../utils/security');
 const { sendNotificationBundle } = require('../utils/notifications');
+const { sendMail } = require('../config/email');
 const { logAction } = require('../utils/auditLogger');
 const bcrypt = require('bcryptjs');
 
@@ -39,6 +40,21 @@ const createOnboarding = async (req, res, next) => {
       html: `<p>Hi ${name},</p><p>Your KK onboarding has started. We'll notify you once verified.</p>`,
       whatsappMessage: `Hi ${name}, your KK onboarding request is pending verification.`,
     });
+
+    const notifyEmail = process.env.ONBOARDING_NOTIFY_EMAIL || process.env.MAIL_FROM;
+    if (notifyEmail) {
+      await sendMail({
+        to: notifyEmail,
+        subject: 'New tutor onboarding request',
+        html: `<p>A new tutor onboarding request was submitted.</p>
+<ul>
+  <li><strong>Name:</strong> ${name}</li>
+  <li><strong>Email:</strong> ${email}</li>
+  <li><strong>Phone:</strong> ${phone}</li>
+</ul>
+<p>Requested by user: ${req.user?.email || 'unknown'}</p>`,
+      });
+    }
 
     logAction(req.user, 'CREATE_ONBOARDING', `Created onboarding request for ${name}`);
 

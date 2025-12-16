@@ -10,7 +10,7 @@ import Login from './pages/Login';
 // import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
-import { login as loginApi, signup as signupApi, setAuthToken } from './services/api';
+import { setAuthToken } from './utils/apiHelper';
 import './App.css';
 
 const App = () => {
@@ -32,18 +32,6 @@ const App = () => {
     }
   }, [session]);
 
-  const handleLogin = async (credentials) => {
-    const payload = await loginApi(credentials);
-    setSession(payload);
-    localStorage.setItem('kk_session', JSON.stringify(payload));
-  };
-
-  // const handleSignup = async (userData) => {
-  //   const payload = await signupApi(userData);
-  //   setSession(payload);
-  //   localStorage.setItem('kk_session', JSON.stringify(payload));
-  // };
-
   const handleLogout = () => {
     localStorage.removeItem('kk_session');
     setSession(null);
@@ -55,7 +43,7 @@ const App = () => {
       <Routes>
         <Route
           path="/login"
-          element={session ? <Navigate to="/" replace /> : <Login onSuccess={handleLogin} />}
+          element={session ? <Navigate to="/" replace /> : <Login />}
         />
         {/* <Route
           path="/signup"
