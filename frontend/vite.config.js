@@ -9,5 +9,14 @@ export default defineConfig({
     watch: {
       usePolling: true, // Helps with file system watching on Windows
     },
+    // Dev-only proxy so frontend can call `/api/*` without CORS issues.
+    // Backend runs on http://localhost:4000 and exposes routes under `/api`.
+    proxy: {
+      '/api': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
   },
 })

@@ -10,7 +10,7 @@ import Login from './pages/Login';
 // import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
-import { setAuthToken } from './utils/apiHelper';
+import { login as loginApi, setAuthToken } from './services/api';
 import './App.css';
 
 const App = () => {
@@ -32,6 +32,12 @@ const App = () => {
     }
   }, [session]);
 
+  const handleLogin = async (credentials) => {
+    const payload = await loginApi(credentials);
+    setSession(payload);
+    localStorage.setItem('kk_session', JSON.stringify(payload));
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('kk_session');
     setSession(null);
@@ -43,7 +49,7 @@ const App = () => {
       <Routes>
         <Route
           path="/login"
-          element={session ? <Navigate to="/" replace /> : <Login />}
+          element={session ? <Navigate to="/" replace /> : <Login onSuccess={handleLogin} />}
         />
         {/* <Route
           path="/signup"
