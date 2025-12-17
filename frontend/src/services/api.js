@@ -67,9 +67,25 @@ export const login = async (credentials) => {
     return session;
   }
 
-  const { data } = await client.post('/auth/login', credentials);
-  setAuthToken(data.token);
-  return data; // { token, user }
+  try {
+    const { data } = await client.post('/auth/login', credentials);
+    setAuthToken(data.token);
+    return data; // { token, user }
+  } catch (error) {
+    // Prototype-friendly fallback:
+    // If backend is missing/unreachable (common on static Vercel deployments),
+    // allow the built-in demo credentials to still log in.
+    const status = error?.response?.status;
+    const backendMissingOrDown = !status || status === 404 || status === 502 || status === 503 || status === 504;
+    if (backendMissingOrDown) {
+      const session = tryMockLogin(credentials);
+      if (session) {
+        setAuthToken(session.token);
+        return session;
+      }
+    }
+    throw error;
+  }
 };
 
 export const signup = async (payload) => {
