@@ -1,14 +1,16 @@
-const { Router } = require('express');
-const authRoutes = require('./auth');
-const dashboardRoutes = require('./dashboard');
-const onboardingRoutes = require('./onboarding');
-const scheduleRoutes = require('./schedule');
-const attendanceRoutes = require('./attendance');
-const dataRoutes = require('./data');
+import express from 'express';
+import authRoutes from './auth.js';
+import dashboardRoutes from './dashboard.js';
+import onboardingRoutes from './onboarding.js';
+import scheduleRoutes from './schedule.js';
+import attendanceRoutes from './attendance.js';
+import dataRoutes from './data.js';
+import adminRoutes from './adminRoutes.js';
+import selectionRoutes from './selection.js';
+import tutorsRoutes from './tutors.js';
+import tutorRoutes from './tutor.js';
 
-const adminRoutes = require('./adminRoutes');
-
-const router = Router();
+const router = express.Router();
 
 router.use('/auth', authRoutes);
 router.use('/dashboard', dashboardRoutes);
@@ -17,6 +19,9 @@ router.use('/schedule', scheduleRoutes);
 router.use('/attendance', attendanceRoutes);
 router.use('/data', dataRoutes);
 router.use('/admin', adminRoutes);
+router.use('/selection', selectionRoutes);
+router.use('/tutors', tutorsRoutes);
+router.use('/tutor', tutorRoutes);
 
-module.exports = router;
+export default router;
 

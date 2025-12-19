@@ -1,11 +1,11 @@
-const { Router } = require('express');
-const { importStudents, exportStudents } = require('../controllers/dataController');
-const { withAuth, requireRole } = require('../middlewares/auth');
+import express from 'express';
+import { importStudents, exportStudents } from '../controllers/dataController.js';
+import { withAuth, requireRole } from '../middlewares/auth.js';
 
-const router = Router();
+const router = express.Router();
 
 router.post('/students/import', withAuth, requireRole('admin'), importStudents);
 router.get('/students/export', withAuth, requireRole('admin', 'tutorLead'), exportStudents);
 
-module.exports = router;
+export default router;
 

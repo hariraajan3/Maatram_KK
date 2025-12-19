@@ -1,11 +1,14 @@
-const { Router } = require('express');
-const { body } = require('express-validator');
-const { recordAttendance, listAttendance } = require('../controllers/attendanceController');
-const { withAuth } = require('../middlewares/auth');
+import express from 'express';
+import validator from 'express-validator';
+import { recordAttendance, listAttendance, getTutorAttendanceOverview, getClassAttendanceDetails } from '../controllers/attendanceController.js';
+import { withAuth } from '../middlewares/auth.js';
 
-const router = Router();
+const { body } = validator;
+const router = express.Router();
 
 router.get('/', withAuth, listAttendance);
+router.get('/overview', withAuth, getTutorAttendanceOverview);
+router.get('/class/:classId', withAuth, getClassAttendanceDetails);
 router.post(
   '/',
   withAuth,
@@ -15,4 +18,4 @@ router.post(
   recordAttendance,
 );
 
-module.exports = router;
+export default router;

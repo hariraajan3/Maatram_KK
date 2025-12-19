@@ -1,13 +1,14 @@
-const { Router } = require('express');
-const { body } = require('express-validator');
-const {
+import express from 'express';
+import validator from 'express-validator';
+import {
   createOnboarding,
   updateOnboardingStatus,
   listOnboarding,
-} = require('../controllers/onboardingController');
-const { requireRole, withAuth } = require('../middlewares/auth');
+} from '../controllers/onboardingController.js';
+import { requireRole, withAuth } from '../middlewares/auth.js';
 
-const router = Router();
+const { body } = validator;
+const router = express.Router();
 
 router.get('/', withAuth, requireRole('admin', 'tutorLead'), listOnboarding);
 router.post(
@@ -17,9 +18,12 @@ router.post(
   body('name').isString(),
   body('email').isEmail(),
   body('phone').isString().isLength({ min: 10 }),
+  body('medium').optional().isIn(['Tamil', 'English']),
+  body('district').optional().isIn(['Chennai', 'Coimbatore', 'Other']),
+  body('subjects').optional().isArray(),
   createOnboarding,
 );
 router.patch('/:id', withAuth, requireRole('admin', 'tutorLead'), updateOnboardingStatus);
 
-module.exports = router;
+export default router;
 

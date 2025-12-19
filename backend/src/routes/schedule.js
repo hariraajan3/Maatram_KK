@@ -1,14 +1,15 @@
-const { Router } = require('express');
-const { body } = require('express-validator');
-const {
+import express from 'express';
+import validator from 'express-validator';
+import {
   listClasses,
   createClass,
   createSwapRequest,
   updateSwapRequest,
-} = require('../controllers/scheduleController');
-const { withAuth, requireRole } = require('../middlewares/auth');
+} from '../controllers/scheduleController.js';
+import { withAuth, requireRole } from '../middlewares/auth.js';
 
-const router = Router();
+const { body } = validator;
+const router = express.Router();
 
 router.get('/', withAuth, listClasses);
 router.post(
@@ -34,5 +35,5 @@ router.post(
 );
 router.patch('/swap/:id', withAuth, requireRole('admin', 'tutorLead'), updateSwapRequest);
 
-module.exports = router;
+export default router;
 

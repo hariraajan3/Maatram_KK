@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 const AES_ALGORITHM = 'aes-256-gcm';
 const KEY_LENGTH = 32;
@@ -43,9 +43,5 @@ const maskValue = (value = '', visible = 4) => {
   return `${'*'.repeat(Math.max(value.length - visible, 0))}${last}`;
 };
 
-module.exports = {
-  encrypt,
-  decrypt,
-  maskValue,
-};
+export { encrypt, decrypt, maskValue };
 

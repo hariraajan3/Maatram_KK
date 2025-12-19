@@ -27,6 +27,7 @@ const Scheduling = () => {
             phase: 'Selection',
             tutorId: 't1',
             tutorName: 'Siva Tutor',
+            subject: 'Physics',
             studentGroup: 'KK-2025-A',
             startTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
             endTime: new Date(Date.now() + 24 * 60 * 60 * 1000 + 90 * 60 * 1000).toISOString(),
@@ -38,6 +39,7 @@ const Scheduling = () => {
             phase: 'Scheduling',
             tutorId: 't1',
             tutorName: 'Siva Tutor',
+            subject: 'Chemistry',
             studentGroup: 'KK-2025-B',
             startTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
             endTime: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000 + 90 * 60 * 1000).toISOString(),
@@ -49,6 +51,7 @@ const Scheduling = () => {
             phase: 'Attendance',
             tutorId: 't2',
             tutorName: 'Priya Tutor',
+            subject: 'Maths',
             studentGroup: 'KK-2025-C',
             startTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
             endTime: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000 + 90 * 60 * 1000).toISOString(),
@@ -79,7 +82,7 @@ const Scheduling = () => {
       <header className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-display font-bold text-black">Scheduling Cockpit</h2>
-          <p className="text-gray-500 mt-1">Manage classes, swaps, and cancellations.</p>
+          <p className="text-gray-500 mt-1">Manage classes, swaps, and cancellations. Classes are matched by subject, medium, and district.</p>
         </div>
         <button className="px-4 py-2 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors shadow-lg">
           + Schedule New Class
@@ -101,6 +104,7 @@ const Scheduling = () => {
               <thead className="bg-gray-50 text-gray-500 font-medium uppercase text-xs">
                 <tr>
                   <th className="px-6 py-4">Phase & Group</th>
+                  <th className="px-6 py-4">Subject</th>
                   <th className="px-6 py-4">Tutor</th>
                   <th className="px-6 py-4">Time</th>
                   <th className="px-6 py-4">Mode</th>
@@ -111,11 +115,11 @@ const Scheduling = () => {
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">Loading classes...</td>
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">Loading classes...</td>
                   </tr>
                 ) : classes.length === 0 ? (
                   <tr>
-                    <td colSpan="6" className="px-6 py-8 text-center text-gray-500">No classes scheduled.</td>
+                    <td colSpan="7" className="px-6 py-8 text-center text-gray-500">No classes scheduled.</td>
                   </tr>
                 ) : (
                   classes.map((cls) => (
@@ -123,6 +127,11 @@ const Scheduling = () => {
                       <td className="px-6 py-4">
                         <p className="font-bold text-black">{cls.phase}</p>
                         <p className="text-xs text-gray-500">{cls.studentGroup}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded text-xs font-bold">
+                          {cls.subject || 'N/A'}
+                        </span>
                       </td>
                       <td className="px-6 py-4 font-medium text-gray-900">{cls.tutorName}</td>
                       <td className="px-6 py-4 text-gray-600">

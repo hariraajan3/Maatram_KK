@@ -1,5 +1,5 @@
-const axios = require('axios');
-const { sendMail } = require('../config/email');
+import axios from 'axios';
+import { sendMail } from '../config/email.js';
 
 const WHATSAPP_TOKEN = process.env.WHATSAPP_TOKEN || '';
 const WHATSAPP_PHONE_ID = process.env.WHATSAPP_PHONE_ID || '';
@@ -37,7 +37,5 @@ const sendNotificationBundle = async ({ toEmail, toPhone, subject, html, whatsap
   await Promise.all(tasks);
 };
 
-module.exports = {
-  sendNotificationBundle,
-};
+export { sendNotificationBundle };
 

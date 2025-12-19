@@ -1,5 +1,5 @@
-const dataStore = require('../models/dataStore');
-const { decrypt, maskValue } = require('../utils/security');
+import prisma from '../config/prisma.js';
+import { decrypt, maskValue } from '../utils/security.js';
 
 const groupBy = (items, key) =>
   items.reduce((acc, item) => {
@@ -8,33 +8,100 @@ const groupBy = (items, key) =>
     return acc;
   }, {});
 
-const getDashboard = (req, res) => {
-  const totalClasses = dataStore.classes.length;
-  const upcoming = dataStore.classes.filter((cls) => new Date(cls.startTime) > new Date()).length;
-  const attendanceRate =
-    dataStore.attendance.reduce((acc, entry) => acc + (entry.present ? 1 : 0), 0) /
-    Math.max(dataStore.attendance.length, 1);
+const getDashboard = async (req, res, next) => {
+  try {
+    const [totalTutors, totalStudents, totalClasses, upcomingClasses, attendanceStats, workloadByPhase, onboardingQueue, swapQueue, recentStudents] = await Promise.all([
+      prisma.tutor.count({ where: { status: 'active' } }),
+      prisma.student.count({ where: { isActive: true } }),
+      prisma.class.count(),
+      prisma.class.count({
+        where: {
+          startTime: { gt: new Date() },
+          status: 'scheduled'
+        }
+      }),
+      prisma.attendance.aggregate({
+        _count: { id: true },
+        _sum: { present: true }
+      }),
+      prisma.class.groupBy({
+        by: ['phase'],
+        _count: { id: true }
+      }),
+      prisma.onboardingRequest.findMany({
+        where: { status: 'pending' },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          requester: {
+            select: { name: true }
+          }
+        }
+      }),
+      prisma.swapRequest.findMany({
+        where: { status: 'pending' },
+        orderBy: { createdAt: 'desc' },
+        take: 5,
+        include: {
+          proposedByTutor: {
+            include: {
+              user: { select: { name: true } }
+            }
+          },
+          class: {
+            select: { subject: true, startTime: true }
+          }
+        }
+      }),
+      prisma.student.findMany({
+        where: { isActive: true },
+        orderBy: { createdAt: 'desc' },
+        take: 5
+      })
+    ]);
 
-  res.json({
-    meta: {
-      totalTutors: dataStore.tutors.length,
-      totalStudents: dataStore.students.length,
-      totalClasses,
-      upcomingClasses: upcoming,
-      attendanceRate: Math.round(attendanceRate * 100),
-    },
-    workloadByPhase: groupBy(dataStore.classes, 'phase'),
-    onboardingQueue: dataStore.onboardingRequests.slice(-5),
-    swapQueue: dataStore.swapRequests.slice(-5),
-    students: dataStore.students.slice(0, 5).map((student) => ({
-      ...student,
-      guardianContact: maskValue(decrypt(student.guardianContact), 3),
-    })),
-    role: req.user.role,
-  });
+    const attendanceRate = attendanceStats._count.id > 0
+      ? Math.round((attendanceStats._sum.present / attendanceStats._count.id) * 100)
+      : 0;
+
+    res.json({
+      meta: {
+        totalTutors,
+        totalStudents,
+        totalClasses,
+        upcomingClasses,
+        attendanceRate,
+      },
+      workloadByPhase: workloadByPhase.reduce((acc, item) => {
+        acc[item.phase] = item._count.id;
+        return acc;
+      }, {}),
+      onboardingQueue: onboardingQueue.map(req => ({
+        id: req.id,
+        name: req.name,
+        email: req.email,
+        requestedBy: req.requester?.name,
+        createdAt: req.createdAt
+      })),
+      swapQueue: swapQueue.map(req => ({
+        id: req.id,
+        tutorName: req.proposedByTutor.user.name,
+        subject: req.class.subject,
+        startTime: req.class.startTime,
+        createdAt: req.createdAt
+      })),
+      students: recentStudents.map((student) => ({
+        ...student,
+        guardianContact: student.guardianContactEncrypted
+          ? maskValue(decrypt(student.guardianContactEncrypted), 3)
+          : null,
+      })),
+      role: req.user.role,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-module.exports = {
-  getDashboard,
-};
+export { getDashboard };
 

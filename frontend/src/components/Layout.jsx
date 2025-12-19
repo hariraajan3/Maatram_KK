@@ -4,10 +4,13 @@ import PropTypes from 'prop-types';
 import maatramLogo from '../Maatram logo.jpg';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: 'dashboard' },
-  { to: '/scheduling', label: 'Scheduling', roles: ['admin', 'lead'], icon: 'calendar_today' },
-  { to: '/attendance', label: 'Attendance', roles: ['admin', 'lead', 'tutor'], icon: 'fact_check' },
+  { to: '/', label: 'Selection', roles: ['admin', 'tutorLead', 'coordinator'], icon: 'how_to_reg' },
+  { to: '/scheduling', label: 'Scheduling', roles: ['admin', 'tutorLead'], icon: 'calendar_today' },
+  { to: '/tutor-attendance', label: 'Mark Attendance', roles: ['tutor', 'tutorLead'], icon: 'edit_note' },
+  { to: '/attendance', label: 'Attendance', roles: ['admin', 'tutorLead', 'tutor'], icon: 'fact_check' },
+  { to: '/overall-attendance', label: 'Overall Attendance', roles: ['admin'], icon: 'assessment' },
   { to: '/onboarding', label: 'Onboarding', roles: ['admin'], icon: 'person_add' },
+  { to: '/dashboard', label: 'Dashboard', icon: 'dashboard', roles: ['admin', 'tutorLead'] },
   { to: '/admin-logs', label: 'Admin Logs', roles: ['admin'], icon: 'admin_panel_settings' },
 ];
 
@@ -42,9 +45,9 @@ const Layout = ({ user, onLogout }) => {
         <div className="px-6 py-5 border-b border-gray-100">
           <Link to="/" className="flex items-center gap-3 group">
             <div className="w-10 h-10 rounded-xl overflow-hidden bg-white flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-              <img 
-                src={maatramLogo} 
-                alt="Maatram Logo" 
+              <img
+                src={maatramLogo}
+                alt="Maatram Logo"
                 className="w-full h-full object-contain p-1"
               />
             </div>
@@ -103,7 +106,6 @@ const Layout = ({ user, onLogout }) => {
                 className="relative p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
               >
                 <span className="material-icons-outlined text-xl">notifications</span>
-                {/* Notification badge - you can add conditional rendering based on notification count */}
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
               </button>
               {notificationsOpen && (
@@ -187,6 +189,7 @@ Layout.propTypes = {
     role: PropTypes.string,
     name: PropTypes.string,
     email: PropTypes.string,
+    avatar: PropTypes.string,
   }).isRequired,
   onLogout: PropTypes.func.isRequired,
 };

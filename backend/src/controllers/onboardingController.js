@@ -1,11 +1,13 @@
-const { v4: uuid } = require('uuid');
-const { validationResult } = require('express-validator');
-const dataStore = require('../models/dataStore');
-const { encrypt, decrypt } = require('../utils/security');
-const { sendNotificationBundle } = require('../utils/notifications');
-const { sendMail } = require('../config/email');
-const { logAction } = require('../utils/auditLogger');
-const bcrypt = require('bcryptjs');
+import { v4 as uuid } from 'uuid';
+import validator from 'express-validator';
+import dataStore from '../models/dataStore.js';
+import { encrypt, decrypt } from '../utils/security.js';
+import { sendNotificationBundle } from '../utils/notifications.js';
+import { sendMail } from '../config/email.js';
+import { logAction } from '../utils/auditLogger.js';
+import bcrypt from 'bcryptjs';
+
+const { validationResult } = validator;
 
 const respondValidation = (req) => {
   const errors = validationResult(req);
@@ -20,13 +22,16 @@ const respondValidation = (req) => {
 const createOnboarding = async (req, res, next) => {
   try {
     respondValidation(req);
-    const { name, email, phone, documents } = req.body;
+    const { name, email, phone, documents, medium, district, subjects } = req.body;
     const request = {
       id: uuid(),
       name,
       email,
       phoneEncrypted: encrypt(phone),
       documents: documents || [],
+      medium: medium || null,
+      district: district || null,
+      subjects: subjects || [],
       status: 'pending',
       requestedBy: req.user.id,
       createdAt: new Date().toISOString(),
@@ -56,7 +61,7 @@ const createOnboarding = async (req, res, next) => {
       });
     }
 
-    logAction(req.user, 'CREATE_ONBOARDING', `Created onboarding request for ${name}`);
+    logAction(req.user, 'CREATE_ONBOARDING', `Created onboarding request for ${name}`, 'OnboardingRequest', onboardingRequest.id);
 
     res.status(201).json({ request });
   } catch (error) {
@@ -102,14 +107,16 @@ const updateOnboardingStatus = async (req, res, next) => {
         email: request.email,
         phone: request.phoneEncrypted,
         status: 'active',
-        subjects: [], // To be filled later
+        medium: request.medium || null,
+        district: request.district || null,
+        subjects: request.subjects || [], // Array of subjects
         avgAttendance: 0,
       };
       dataStore.tutors.push(newTutor);
 
-      logAction(req.user, 'APPROVE_ONBOARDING', `Approved onboarding for ${request.name}. User and Tutor profiles created.`);
+      logAction(req.user, 'APPROVE_ONBOARDING', `Approved onboarding for ${request.name}. User and Tutor profiles created.`, 'OnboardingRequest', id);
     } else {
-      logAction(req.user, 'UPDATE_ONBOARDING_STATUS', `Updated onboarding status for ${request.name} to ${status}`);
+      logAction(req.user, 'UPDATE_ONBOARDING_STATUS', `Updated onboarding status for ${request.name} to ${status}`, 'OnboardingRequest', id);
     }
 
     res.json({ request });
@@ -122,9 +129,5 @@ const listOnboarding = (_req, res) => {
   res.json({ requests: dataStore.onboardingRequests });
 };
 
-module.exports = {
-  createOnboarding,
-  updateOnboardingStatus,
-  listOnboarding,
-};
+export { createOnboarding, updateOnboardingStatus, listOnboarding };
 

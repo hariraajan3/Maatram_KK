@@ -1,8 +1,10 @@
-const { v4: uuid } = require('uuid');
-const { validationResult } = require('express-validator');
-const dataStore = require('../models/dataStore');
-const { sendNotificationBundle } = require('../utils/notifications');
-const { decrypt } = require('../utils/security');
+import { v4 as uuid } from 'uuid';
+import validator from 'express-validator';
+import dataStore from '../models/dataStore.js';
+import { sendNotificationBundle } from '../utils/notifications.js';
+import { decrypt } from '../utils/security.js';
+
+const { validationResult } = validator;
 
 const validate = (req) => {
   const result = validationResult(req);
@@ -114,10 +116,5 @@ const updateSwapRequest = async (req, res, next) => {
   }
 };
 
-module.exports = {
-  listClasses,
-  createClass,
-  createSwapRequest,
-  updateSwapRequest,
-};
+export { listClasses, createClass, createSwapRequest, updateSwapRequest };
 

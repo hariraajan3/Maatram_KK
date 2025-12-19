@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+import nodemailer from 'nodemailer';
 
 const {
   SMTP_HOST,
@@ -37,7 +37,5 @@ const sendMail = async ({ to, subject, html }) => {
   await transporter.sendMail({ to, subject, html, from: MAIL_FROM });
 };
 
-module.exports = {
-  sendMail,
-};
+export { sendMail };
 

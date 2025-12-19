@@ -1,22 +1,24 @@
-const { v4: uuid } = require('uuid');
-const dataStore = require('../models/dataStore');
+import prisma from '../config/prisma.js';
 
-const logAction = (user, action, details) => {
-    const log = {
-        id: uuid(),
-        userId: user ? user.id : 'system',
-        userName: user ? user.name : 'System',
-        userRole: user ? user.role : 'system',
-        action,
-        details,
-        timestamp: new Date().toISOString(),
-    };
-    dataStore.auditLogs.unshift(log); // Add to beginning
-
-    // Keep logs size manageable (e.g., last 1000 logs)
-    if (dataStore.auditLogs.length > 1000) {
-        dataStore.auditLogs.pop();
+const logAction = async (user, action, description, entityType = null, entityId = null, oldData = null, newData = null) => {
+    try {
+        await prisma.auditLog.create({
+            data: {
+                userId: user ? user.id : null,
+                action,
+                entityType,
+                entityId,
+                description,
+                oldData,
+                newData,
+                ipAddress: null, // Would need to get from request
+                userAgent: null, // Would need to get from request
+            }
+        });
+    } catch (error) {
+        console.error('Failed to log audit action:', error);
+        // Don't throw error to avoid breaking the main flow
     }
 };
 
-module.exports = { logAction };
+export { logAction };

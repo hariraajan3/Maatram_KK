@@ -1,7 +1,7 @@
-const cron = require('node-cron');
-const dataStore = require('../models/dataStore');
-const { sendNotificationBundle } = require('../utils/notifications');
-const { decrypt } = require('../utils/security');
+import cron from 'node-cron';
+import dataStore from '../models/dataStore.js';
+import { sendNotificationBundle } from '../utils/notifications.js';
+import { decrypt } from '../utils/security.js';
 
 const summarizeUpcomingClasses = () =>
   dataStore.classes
@@ -51,7 +51,5 @@ const registerCronJobs = () => {
   cron.schedule('0 2 * * 1', archiveOldAttendance);
 };
 
-module.exports = {
-  registerCronJobs,
-};
+export { registerCronJobs };
 

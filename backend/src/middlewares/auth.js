@@ -1,6 +1,6 @@
-const bcrypt = require('bcryptjs');
-const dataStore = require('../models/dataStore');
-const { signToken, verifyToken } = require('../config/auth');
+import bcrypt from 'bcryptjs';
+import dataStore from '../models/dataStore.js';
+import { signToken, verifyToken } from '../config/auth.js';
 
 const authenticateCredentials = (email, password) => {
   const user = dataStore.users.find((candidate) => candidate.email === email);
@@ -47,9 +47,5 @@ const requireRole = (...roles) => (req, res, next) => {
   return next();
 };
 
-module.exports = {
-  login,
-  withAuth,
-  requireRole,
-};
+export { login, withAuth, requireRole };
 

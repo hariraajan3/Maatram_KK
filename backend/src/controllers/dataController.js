@@ -1,5 +1,5 @@
-const dataStore = require('../models/dataStore');
-const { encrypt } = require('../utils/security');
+import dataStore from '../models/dataStore.js';
+import { encrypt } from '../utils/security.js';
 
 const importStudents = (req, res) => {
   const { students } = req.body;
@@ -26,8 +26,5 @@ const exportStudents = (_req, res) => {
   });
 };
 
-module.exports = {
-  importStudents,
-  exportStudents,
-};
+export { importStudents, exportStudents };
 

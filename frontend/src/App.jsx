@@ -1,17 +1,21 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
+import RoleRoute from './components/RoleRoute';
 import Dashboard from './pages/Dashboard';
+import Selection from './pages/Selection';
 import Scheduling from './pages/Scheduling';
 import Attendance from './pages/Attendance';
+import OverallAttendance from './pages/TutorManagement';
+import TutorAttendance from './pages/TutorAttendance';
 import Onboarding from './pages/Onboarding';
 import AdminLogs from './pages/AdminLogs';
 import Login from './pages/Login';
-// import Signup from './pages/Signup';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
 import { login as loginApi, setAuthToken } from './services/api';
 import './App.css';
+
 
 const App = () => {
   const [session, setSession] = useState(() => {
@@ -69,11 +73,70 @@ const App = () => {
             )
           }
         >
-          <Route index element={<Dashboard />} />
-          <Route path="scheduling" element={<Scheduling />} />
-          <Route path="attendance" element={<Attendance />} />
-          <Route path="onboarding" element={<Onboarding />} />
-          <Route path="admin-logs" element={<AdminLogs />} />
+          <Route
+            index
+            element={
+              <RoleRoute allowedRoles={['admin', 'tutorLead', 'coordinator']}>
+                <Selection />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="scheduling"
+            element={
+              <RoleRoute allowedRoles={['admin', 'tutorLead']}>
+                <Scheduling />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="attendance"
+            element={
+              <RoleRoute allowedRoles={['admin', 'tutorLead', 'tutor']}>
+                <Attendance />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="onboarding"
+            element={
+              <RoleRoute allowedRoles={['admin']}>
+                <Onboarding />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="dashboard"
+            element={
+              <RoleRoute allowedRoles={['admin', 'tutorLead']}>
+                <Dashboard />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="admin-logs"
+            element={
+              <RoleRoute allowedRoles={['admin']}>
+                <AdminLogs />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="overall-attendance"
+            element={
+              <RoleRoute allowedRoles={['admin']}>
+                <OverallAttendance />
+              </RoleRoute>
+            }
+          />
+          <Route
+            path="tutor-attendance"
+            element={
+              <RoleRoute allowedRoles={['tutor', 'tutorLead']}>
+                <TutorAttendance />
+              </RoleRoute>
+            }
+          />
           <Route path="profile" element={<Profile />} />
         </Route>
         <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />

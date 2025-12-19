@@ -1,6 +1,6 @@
-const { v4: uuid } = require('uuid');
-const bcrypt = require('bcryptjs');
-const { encrypt } = require('../utils/security');
+import { v4 as uuid } from 'uuid';
+import bcrypt from 'bcryptjs';
+import { encrypt } from '../utils/security.js';
 
 const now = Date.now();
 const daysFromNow = (days) => new Date(now + days * 24 * 60 * 60 * 1000).toISOString();
@@ -136,5 +136,5 @@ const dataStore = {
   ],
 };
 
-module.exports = dataStore;
+export default dataStore;
 

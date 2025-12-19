@@ -1,4 +1,5 @@
-const { Pool } = require('pg');
+import pg from 'pg';
+const { Pool } = pg;
 
 let pool;
 let connectionTested = false;
@@ -57,6 +58,4 @@ const runQuery = async (query, params = []) => {
   }
 };
 
-module.exports = {
-  runQuery,
-};
+export { runQuery };

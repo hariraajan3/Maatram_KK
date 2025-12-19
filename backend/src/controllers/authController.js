@@ -1,5 +1,4 @@
-const dataStore = require('../models/dataStore');
-const { login } = require('../middlewares/auth');
+import { login } from '../middlewares/auth.js';
 
 const loginHandler = (req, res, next) => {
   try {
@@ -21,8 +20,4 @@ const listRoles = (_req, res) => {
   });
 };
 
-module.exports = {
-  loginHandler,
-  meHandler,
-  listRoles,
-};
+export { loginHandler, meHandler, listRoles };

@@ -1,8 +1,19 @@
 import { useEffect, useState } from 'react';
 import { createOnboarding, fetchOnboarding, updateOnboardingStatus } from '../services/api';
 
+const MEDIUMS = ['Tamil', 'English'];
+const DISTRICTS = ['Chennai', 'Coimbatore', 'Other'];
+const SUBJECTS = ['Physics', 'Maths', 'Chemistry', 'Commerce', 'Economics', 'Accounts', 'Tamil', 'English'];
+
 const Onboarding = () => {
-  const [form, setForm] = useState({ name: '', email: '', phone: '' });
+  const [form, setForm] = useState({ 
+    name: '', 
+    email: '', 
+    phone: '',
+    medium: '',
+    district: '',
+    subjects: [],
+  });
   const [requests, setRequests] = useState([]);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
@@ -50,13 +61,22 @@ const Onboarding = () => {
     load();
   }, []);
 
+  const toggleSubject = (subject) => {
+    setForm((prev) => ({
+      ...prev,
+      subjects: prev.subjects.includes(subject)
+        ? prev.subjects.filter((s) => s !== subject)
+        : [...prev.subjects, subject],
+    }));
+  };
+
   const submit = async (event) => {
     event.preventDefault();
     setMessage('');
     try {
       await createOnboarding({ ...form, documents: ['nda.pdf'] });
       setMessage('Invitation sent! Automated onboarding workflow triggered.');
-      setForm({ name: '', email: '', phone: '' });
+      setForm({ name: '', email: '', phone: '', medium: '', district: '', subjects: [] });
       load();
       setTimeout(() => setMessage(''), 5000);
     } catch (error) {
@@ -129,6 +149,52 @@ const Onboarding = () => {
                 className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
                 placeholder="+91 98765 43210"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Medium</label>
+                <select
+                  value={form.medium}
+                  onChange={(e) => setForm({ ...form, medium: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
+                >
+                  <option value="">Select medium</option>
+                  {MEDIUMS.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">District</label>
+                <select
+                  value={form.district}
+                  onChange={(e) => setForm({ ...form, district: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
+                >
+                  <option value="">Select district</option>
+                  {DISTRICTS.map((d) => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Subjects</label>
+              <div className="grid grid-cols-4 gap-2">
+                {SUBJECTS.map((subject) => (
+                  <label key={subject} className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                    <input
+                      type="checkbox"
+                      checked={form.subjects.includes(subject)}
+                      onChange={() => toggleSubject(subject)}
+                      className="rounded"
+                    />
+                    <span className="text-xs font-bold">{subject}</span>
+                  </label>
+                ))}
+              </div>
             </div>
 
             <button
