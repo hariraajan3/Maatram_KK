@@ -22,9 +22,9 @@ const Login = ({ onSuccess }) => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-14 py-12">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl border-2 border-maatram-yellow p-8 space-y-6">
+        <div className="bg-white rounded-2xl shadow-[0_4px_30px_rgba(0,0,0,0.2)] border border-gray-100 p-8 space-y-6">
           {/* Header */}
           <div className="text-center">
             <h1 className="text-4xl font-bold text-black mb-2">Maatram KK</h1>
@@ -40,7 +40,7 @@ const Login = ({ onSuccess }) => {
                 id="email"
                 type="email"
                 required
-                className="w-full border-2 border-black rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-maatram-yellow focus:border-maatram-yellow outline-none transition font-medium"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-maatram-yellow focus:border-maatram-yellow outline-none transition font-medium"
                 placeholder="Enter your email"
                 value={form.email}
                 onChange={(event) => setForm({ ...form, email: event.target.value })}
@@ -54,7 +54,7 @@ const Login = ({ onSuccess }) => {
                 id="password"
                 type="password"
                 required
-                className="w-full border-2 border-black rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-maatram-yellow focus:border-maatram-yellow outline-none transition font-medium"
+                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-maatram-yellow focus:border-maatram-yellow outline-none transition font-medium"
                 placeholder="Enter your password"
                 value={form.password}
                 onChange={(event) => setForm({ ...form, password: event.target.value })}
@@ -62,7 +62,7 @@ const Login = ({ onSuccess }) => {
               <div className="mt-2 text-right">
                 <Link
                   to="/forgot-password"
-                  className="text-sm text-black hover:text-black/70 font-bold underline"
+                  className="text-sm text-black hover:text-black/70 font-bold"
                 >
                   Forgot password?
                 </Link>
@@ -76,7 +76,7 @@ const Login = ({ onSuccess }) => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-maatram-yellow hover:bg-maatram-yellow-dark text-black py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center border-2 border-black"
+              className="w-full bg-maatram-yellow hover:bg-maatram-yellow-dark text-black py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
               {loading ? (
                 <>
@@ -107,11 +107,6 @@ const Login = ({ onSuccess }) => {
               )}
             </button>
           </form>
-
-          {/* Demo credentials hint */}
-          {/* <p className="text-xs text-center text-black/60 pt-2 border-t-2 border-maatram-yellow font-medium">
-            Demo: admin@maatram.org / admin@123
-          </p> */}
         </div>
       </div>
     </div>
@@ -123,4 +118,3 @@ Login.propTypes = {
 };
 
 export default Login;
-
