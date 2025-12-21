@@ -1,17 +1,8 @@
 import axios from 'axios';
-
-// Set this in Vercel / local `.env` as VITE_BACKEND_API=https://your-backend-domain.com
-// If not set:
-// - in dev, Vite proxy in `vite.config.js` forwards `/api` to http://localhost:4000
-// - in prod, you should set VITE_BACKEND_API to your deployed backend URL
 const RAW_BASE = import.meta.env.VITE_BACKEND_API || '';
 
-// Enable demo/mock mode (no backend needed)
-// Local: create `frontend/.env.local` with `VITE_USE_MOCK=true`
-// Vercel: set env var `VITE_USE_MOCK=true`
 const USE_MOCK = String(import.meta.env.VITE_USE_MOCK || '').toLowerCase() === 'true';
 
-// Normalize API_BASE to avoid double /api
 const normalizeBaseURL = (url) => {
   if (!url) return '/api';
   const normalized = url.replace(/\/+$/, '').replace(/\/api$/, '');
@@ -70,14 +61,11 @@ export const login = async (credentials) => {
   try {
     const { data } = await client.post('/auth/login', credentials);
     setAuthToken(data.token);
-    return data; // { token, user }
+    return data; 
   } catch (error) {
-    // Prototype-friendly fallback:
-    // If backend is missing/unreachable (common on static Vercel deployments),
-    // allow the built-in demo credentials to still log in.
-    const status = error?.response?.status;
-    const backendMissingOrDown = !status || status === 404 || status === 502 || status === 503 || status === 504;
-    if (backendMissingOrDown) {
+     const status = error?.response?.status;
+     const backendMissingOrDown = !status || status === 404 || status === 502 || status === 503 || status === 504;
+     if (backendMissingOrDown) {
       const session = tryMockLogin(credentials);
       if (session) {
         setAuthToken(session.token);

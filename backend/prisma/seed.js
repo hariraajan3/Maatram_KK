@@ -41,7 +41,7 @@ async function main() {
       name: 'Latha Lead',
       email: 'lead@maatram.org',
       passwordHash: leadPassword,
-      role: 'tutorLead',
+      role: 'tutor_leads',
       avatar: 'https://ui-avatars.com/api/?name=Latha+Lead',
     },
   });
@@ -67,7 +67,7 @@ async function main() {
       name: 'Priya Coordinator',
       email: 'coord@maatram.org',
       passwordHash: coordPassword,
-      role: 'coordinator',
+      role: 'tutor_leads',
       avatar: 'https://ui-avatars.com/api/?name=Priya+Coord',
     },
   });

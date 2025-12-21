@@ -36,44 +36,43 @@ const ForgotPassword = () => {
 
   if (success) {
     return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
-      <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-2xl border-2 border-maatram-yellow p-8 space-y-6 text-center">
-          <div className="mx-auto w-16 h-16 bg-maatram-yellow rounded-full flex items-center justify-center border-2 border-black">
-            <svg
-              className="w-8 h-8 text-black"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M5 13l4 4L19 7"
-              />
-            </svg>
-          </div>
-          
-          <div>
-            <h1 className="text-2xl font-bold text-black mb-2">Check your email</h1>
-            <p className="text-black/70 font-medium">
-              We've sent a password reset link to <strong className="text-black">{email}</strong>
+      <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="bg-white rounded-2xl shadow-2xl border-2 border-maatram-yellow p-8 space-y-6 text-center">
+            <div className="mx-auto w-16 h-16 bg-maatram-yellow rounded-full flex items-center justify-center border-2 border-black">
+              <svg
+                className="w-8 h-8 text-black"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M5 13l4 4L19 7"
+                />
+              </svg>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-black mb-2">Check your email</h1>
+              <p className="text-black/70 font-medium">
+                We've sent a password reset link to <strong className="text-black">{email}</strong>
+              </p>
+            </div>
+            <p className="text-sm text-black/60 font-medium">
+              Click the link in the email to reset your password. If you don't see it, check your
+              spam folder.
             </p>
+            <Link
+              to="/login"
+              className="block w-full bg-maatram-yellow hover:bg-maatram-yellow-dark text-black py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl border-2 border-black"
+            >
+              Back to Sign in
+            </Link>
           </div>
-          <p className="text-sm text-black/60 font-medium">
-            Click the link in the email to reset your password. If you don't see it, check your
-            spam folder.
-          </p>
-          <Link
-            to="/login"
-            className="block w-full bg-maatram-yellow hover:bg-maatram-yellow-dark text-black py-3 rounded-lg font-bold transition-all shadow-lg hover:shadow-xl border-2 border-black"
-          >
-            Back to Sign in
-          </Link>
         </div>
       </div>
-    </div>
     );
   }
 
@@ -120,7 +119,7 @@ const ForgotPassword = () => {
               {loading ? (
                 <>
                   <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-black"
                     xmlns="http://www.w3.org/2000/svg"
                     fill="none"
                     viewBox="0 0 24 24"
