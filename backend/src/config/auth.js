@@ -10,4 +10,5 @@ if (!JWT_SECRET) {
 const signToken = (payload) => jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_TTL });
 const verifyToken = (token) => jwt.verify(token, JWT_SECRET);
 
-export { JWT_SECRET, TOKEN_TTL, signToken, verifyToken };
+export { TOKEN_TTL, signToken, verifyToken };
+

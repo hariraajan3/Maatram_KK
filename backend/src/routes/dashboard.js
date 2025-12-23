@@ -1,10 +1,10 @@
 import express from 'express';
 import { getDashboard } from '../controllers/dashboardController.js';
-import { withAuth } from '../middlewares/auth.js';
+import { withAuth, requireRole } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-router.get('/', withAuth, getDashboard);
+router.get('/', withAuth, requireRole('ADMIN', 'TUTOR_LEADS'), getDashboard);
 
 export default router;
 

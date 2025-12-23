@@ -44,9 +44,7 @@ const tryMockLogin = (credentials) => {
   return { token: 'mock-token', user };
 };
 
-// ---- Auth ----
 export const login = async (credentials) => {
-  // Demo/mock mode: allow login without any backend.
   if (USE_MOCK) {
     const session = tryMockLogin(credentials);
     if (!session) {
@@ -87,13 +85,11 @@ export const forgotPassword = async (payload) => {
   return data;
 };
 
-// ---- Dashboard ----
 export const fetchDashboard = async () => {
   const { data } = await client.get('/dashboard');
   return data;
 };
 
-// ---- Scheduling ----
 export const fetchClasses = async () => {
   const { data } = await client.get('/schedule');
   return data.classes || [];
@@ -104,13 +100,11 @@ export const requestSwap = async (payload) => {
   return data;
 };
 
-// ---- Attendance ----
 export const recordAttendance = async (payload) => {
   const { data } = await client.post('/attendance', payload);
   return data;
 };
 
-// ---- Onboarding ----
 export const createOnboarding = async (payload) => {
   const { data } = await client.post('/onboarding', payload);
   return data;
@@ -126,7 +120,6 @@ export const updateOnboardingStatus = async (id, status) => {
   return data;
 };
 
-// ---- Admin ----
 export const fetchAuditLogs = async () => {
   const { data } = await client.get('/admin/logs');
   return data.logs || [];
@@ -157,7 +150,6 @@ export const deleteUser = async (userId) => {
   return data;
 };
 
-// ---- Selection Process ----
 export const createApplication = async (payload) => {
   const { data } = await client.post('/selection', payload);
   return data;
@@ -183,7 +175,6 @@ export const updateApplicationPhase = async (id, phase, notes) => {
   return data;
 };
 
-// Simple phase endpoints like admin logs
 export const fetchPhase1 = async () => {
   const { data } = await client.get('/selection/phase1');
   return data.applications || [];
@@ -199,7 +190,6 @@ export const fetchPhase3 = async () => {
   return data.applications || [];
 };
 
-// Keep the old function for backward compatibility (maps to new endpoints)
 export const fetchApplicationsByPhase = async (phase) => {
   const phaseMap = {
     'Phase1_Selection': 'phase1',

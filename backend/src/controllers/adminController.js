@@ -1,4 +1,4 @@
-import prisma from '../config/prisma.js';
+import prisma from '../../lib/prisma.js';
 import { logAction } from '../utils/auditLogger.js';
 
 const getAuditLogs = async (req, res, next) => {

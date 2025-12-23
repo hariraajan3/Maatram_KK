@@ -1,4 +1,4 @@
-import prisma from '../config/prisma.js';
+import prisma from '../../lib/prisma.js';
 import { encrypt } from '../utils/security.js';
 import { logAction } from '../utils/auditLogger.js';
 
@@ -12,8 +12,7 @@ const listTutors = async (req, res, next) => {
                 },
                 _count: {
                     select: {
-                        studentAssignments: true,
-                        classes: true
+                        schedules: true, // properties from schema: schedules, attendances
                     }
                 }
             },
@@ -23,23 +22,23 @@ const listTutors = async (req, res, next) => {
         // Get actual student counts and attendance
         const tutorsWithCounts = await Promise.all(
             tutors.map(async (tutor) => {
-                // Calculate average attendance from classes
-                const classes = await prisma.class.findMany({
+                // Calculate average attendance from schedules
+                const schedules = await prisma.schedule.findMany({
                     where: { tutorId: tutor.id },
                     include: {
-                        attendance: true,
+                        attendances: true,
                         _count: {
-                            select: { attendance: true }
+                            select: { attendances: true }
                         }
                     }
                 });
 
                 let totalAttendance = 0;
                 let totalClasses = 0;
-                classes.forEach(cls => {
-                    if (cls._count.attendance > 0) {
-                        const presentCount = cls.attendance.filter(att => att.present).length;
-                        totalAttendance += (presentCount / cls._count.attendance) * 100;
+                schedules.forEach(sch => {
+                    if (sch._count.attendances > 0) {
+                        const presentCount = sch.attendances.filter(att => att.attendanceStatus === 'PRESENT').length;
+                        totalAttendance += (presentCount / sch._count.attendances) * 100;
                         totalClasses++;
                     }
                 });
@@ -49,12 +48,11 @@ const listTutors = async (req, res, next) => {
                     id: tutor.id,
                     name: tutor.user.name,
                     email: tutor.user.email,
-                    medium: tutor.medium,
-                    district: tutor.district,
-                    subjects: tutor.subjects || [],
-                    status: tutor.status,
-                    studentCount: tutor._count.studentAssignments,
-                    classCount: tutor._count.classes,
+                    medium: tutor.tutoringMedium, // schema: tutoringMedium
+                    district: tutor.tutoringDistrict, // schema: tutoringDistrict
+                    subjects: tutor.tutoringSubjects || [], // schema: tutoringSubjects
+                    status: tutor.onboardingStatus, // schema: onboardingStatus
+                    scheduleCount: tutor._count.schedules,
                     avgAttendance: Math.round(avgAttendance * 100) / 100,
                     createdAt: tutor.createdAt,
                 };
@@ -85,8 +83,8 @@ const createTutor = async (req, res, next) => {
                 data: {
                     name,
                     email,
-                    passwordHash,
-                    role: 'tutor',
+                    password: passwordHash,
+                    role: 'TUTOR', // Enum: TUTOR
                 },
             });
         }
@@ -95,26 +93,29 @@ const createTutor = async (req, res, next) => {
         const tutor = await prisma.tutor.create({
             data: {
                 userId: user.id,
-                name,
-                email,
-                phoneEncrypted: phone ? encrypt(phone) : null,
-                medium: medium || null,
-                district: district || null,
-                subjects: subjects || [],
-                status: 'active',
+                kkId: `TUT${Date.now()}`, // Dummy KKID generation
+                phoneNumber: phone, // schema: phoneNumber
+                tutoringMedium: medium || 'English', // schema: tutoringMedium, Enum
+                tutoringDistrict: district || 'Chennai', // schema: tutoringDistrict, Enum
+                tutoringSubjects: subjects || [], // schema: tutoringSubjects
+                onboardingStatus: 'approved', // schema: onboardingStatus
+                tutorAddress: '',
+                collegeOrCompany: '',
+                alumniOrYearStudying: '',
+                tutoringExperienceYears: 0,
             },
         });
 
-        logAction(req.user, 'CREATE_TUTOR', `Created tutor ${name} (${email})`, 'Tutor', tutor.id);
+        logAction(req.user || { id: 0 }, 'CREATE_TUTOR', `Created tutor ${name} (${email})`, 'Tutor', tutor.id);
 
         res.status(201).json({
             tutor: {
                 id: tutor.id,
-                name: tutor.name,
-                email: tutor.email,
-                medium: tutor.medium,
-                district: tutor.district,
-                subjects: tutor.subjects,
+                name: user.name,
+                email: user.email,
+                medium: tutor.tutoringMedium,
+                district: tutor.tutoringDistrict,
+                subjects: tutor.tutoringSubjects,
                 status: tutor.status,
             },
             message: 'Tutor created successfully. Default password is Maatram@123',

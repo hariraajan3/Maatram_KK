@@ -2,8 +2,7 @@
 // Prisma Schema for Neon PostgreSQL (Serverless)
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -84,23 +83,53 @@ enum SelectionPhase {
 // User - Authentication and Role Management
 
 model User {
-  id           Int      @id @default(autoincrement())
-  email        String   @unique
-  passwordHash String
-  name         String
-  role         Role
-  isActive     Boolean  @default(true)
-  createdAt    DateTime @default(now())
-  tutor        Tutor?
+  id                     Int                     @id @default(autoincrement())
+  email                  String                  @unique
+  password               String
+  name                   String
+  role                   Role
+  isActive               Boolean                 @default(true)
+  createdAt              DateTime                @default(now())
+  admin                  Admin?
+  tutorLead              TutorLead?
+  tutor                  Tutor?
+  selectionTeam          SelectionTeam?
+  attendanceTrackingTeam AttendanceTrackingTeam?
+  classInspectionTeam    ClassInspectionTeam?
 
-  @@map("users")
+  @@map("user")
+}
+
+model Admin {
+  id           Int      @id @default(autoincrement())
+  userId       Int      @unique
+  phoneNumber  String?
+  companyOrOrg String?
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("admin")
+}
+
+model TutorLead {
+  id                     Int      @id @default(autoincrement())
+  userId                 Int      @unique
+  phoneNumber            String?
+  collegeOrCompany       String?
+  yearOfStudyingOrAlumni String?
+  createdAt              DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("tutor_leads")
 }
 
 model Tutor {
   id                      Int              @id @default(autoincrement())
   kkId                    String           @unique
   userId                  Int              @unique
-  tutoringSubjects        Json
+  tutoringSubjects        Subject
   tutoringDistrict        District
   tutoringMedium          Medium
   tutorAddress            String
@@ -117,6 +146,45 @@ model Tutor {
   attendances StudentAttendance[]
 
   @@map("tutor")
+}
+
+model SelectionTeam {
+  id                     Int      @id @default(autoincrement())
+  userId                 Int      @unique
+  phoneNumber            String?
+  collegeOrCompany       String?
+  yearOfStudyingOrAlumni String?
+  createdAt              DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("selection_team")
+}
+
+model AttendanceTrackingTeam {
+  id                     Int      @id @default(autoincrement())
+  userId                 Int      @unique
+  phoneNumber            String?
+  collegeOrCompany       String?
+  yearOfStudyingOrAlumni String?
+  createdAt              DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("attendance_tracking_team")
+}
+
+model ClassInspectionTeam {
+  id                     Int      @id @default(autoincrement())
+  userId                 Int      @unique
+  phoneNumber            String?
+  collegeOrCompany       String?
+  yearOfStudyingOrAlumni String?
+  createdAt              DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("class_inspection_team")
 }
 
 model Student {

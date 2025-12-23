@@ -1,17 +1,18 @@
 import bcrypt from 'bcryptjs';
-import dataStore from '../models/dataStore.js';
+import prisma from '../../lib/prisma.js';
 import { signToken, verifyToken } from '../config/auth.js';
 
-const authenticateCredentials = (email, password) => {
-  const user = dataStore.users.find((candidate) => candidate.email === email);
+
+const authenticateCredentials = async (email, password) => {
+  const user = await prisma.user.findUnique({ where: { email } });
   if (!user) return null;
-  const match = bcrypt.compareSync(password, user.passwordHash);
+  const match = await bcrypt.compare(password, user.password);
   if (!match) return null;
   return user;
 };
 
-const login = (email, password) => {
-  const user = authenticateCredentials(email, password);
+const login = async (email, password) => {
+  const user = await authenticateCredentials(email, password);
   if (!user) {
     const err = new Error('Invalid email or password');
     err.status = 401;
@@ -21,7 +22,7 @@ const login = (email, password) => {
   return { user, token };
 };
 
-const withAuth = (req, res, next) => {
+const withAuth = async (req, res, next) => {
   const header = req.headers.authorization || '';
   const [, token] = header.split(' ');
   if (!token) {
@@ -29,7 +30,7 @@ const withAuth = (req, res, next) => {
   }
   try {
     const decoded = verifyToken(token);
-    const user = dataStore.users.find((candidate) => candidate.id === decoded.id);
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
@@ -48,4 +49,3 @@ const requireRole = (...roles) => (req, res, next) => {
 };
 
 export { login, withAuth, requireRole };
-

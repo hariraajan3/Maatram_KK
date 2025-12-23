@@ -7,12 +7,10 @@ const RoleRoute = ({ allowedRoles, children }) => {
     if (!user) {
         return <Navigate to="/login" replace />;
     }
-
     if (allowedRoles && !allowedRoles.includes(user.role)) {
         // Redirect to home if user doesn't have permission
         return <Navigate to="/" replace />;
     }
-
     return children;
 };
 

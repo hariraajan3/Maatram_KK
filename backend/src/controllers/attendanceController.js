@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import validator from 'express-validator';
-import prisma from '../config/prisma.js';
+import prisma from '../../lib/prisma.js';
 
 const { validationResult } = validator;
 

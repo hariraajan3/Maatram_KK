@@ -9,7 +9,6 @@ const dotenvPath = path.resolve(__dirname, 'config.env');
 dotenv.config({ path: dotenvPath });
 console.log(`Loaded env from: ${dotenvPath}`);
 
-// Important for ESM: load env BEFORE importing app/config that read process.env at module init.
 const appModule = await import('./src/app.js');
 const app = appModule.default;
 const { registerCronJobs } = await import('./src/config/cron.js');

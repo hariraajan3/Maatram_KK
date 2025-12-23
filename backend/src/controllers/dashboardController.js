@@ -1,4 +1,4 @@
-import prisma from '../config/prisma.js';
+import prisma from '../../lib/prisma.js';
 import { decrypt, maskValue } from '../utils/security.js';
 
 const groupBy = (items, key) =>

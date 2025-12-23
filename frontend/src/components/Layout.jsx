@@ -4,14 +4,14 @@ import PropTypes from 'prop-types';
 import maatramLogo from '../Maatram logo.jpg';
 
 const navItems = [
-  { to: '/', label: 'Selection', roles: ['admin', 'tutorLead', 'coordinator'], icon: 'how_to_reg' },
-  { to: '/scheduling', label: 'Scheduling', roles: ['admin', 'tutorLead'], icon: 'calendar_today' },
-  { to: '/tutor-attendance', label: 'Mark Attendance', roles: ['tutor', 'tutorLead'], icon: 'edit_note' },
-  { to: '/attendance', label: 'Attendance', roles: ['admin', 'tutorLead', 'tutor'], icon: 'fact_check' },
-  { to: '/overall-attendance', label: 'Overall Attendance', roles: ['admin'], icon: 'assessment' },
-  { to: '/onboarding', label: 'Onboarding', roles: ['admin'], icon: 'person_add' },
-  { to: '/dashboard', label: 'Dashboard', icon: 'dashboard', roles: ['admin', 'tutorLead'] },
-  { to: '/admin-logs', label: 'Admin Logs', roles: ['admin'], icon: 'admin_panel_settings' },
+  { to: '/', label: 'Selection', roles: ['ADMIN', 'SELECTION_TEAM'], icon: 'how_to_reg' },
+  { to: '/scheduling', label: 'Scheduling', roles: ['ADMIN', 'TUTOR_LEADS', 'CLASS_INSPECTION_TEAM'], icon: 'calendar_today' },
+  { to: '/tutor-attendance', label: 'Mark Attendance', roles: ['TUTOR', 'ADMIN', 'TUTOR_LEADS'], icon: 'edit_note' },
+  { to: '/attendance', label: 'Attendance', roles: ['ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM'], icon: 'fact_check' },
+  { to: '/overall-attendance', label: 'Overall Attendance', roles: ['ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM'], icon: 'assessment' },
+  { to: '/onboarding', label: 'Onboarding', roles: ['ADMIN', 'TUTOR_LEADS'], icon: 'person_add' },
+  { to: '/dashboard', label: 'Dashboard', icon: 'dashboard', roles: ['ADMIN', 'TUTOR_LEADS'] },
+  { to: '/admin-logs', label: 'Admin Logs', roles: ['ADMIN'], icon: 'admin_panel_settings' },
 ];
 
 const Layout = ({ user, onLogout }) => {

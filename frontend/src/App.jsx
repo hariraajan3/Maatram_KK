@@ -76,7 +76,7 @@ const App = () => {
           <Route
             index
             element={
-              <RoleRoute allowedRoles={['admin', 'tutorLead', 'coordinator']}>
+              <RoleRoute allowedRoles={['ADMIN', 'SELECTION_TEAM']}>
                 <Selection />
               </RoleRoute>
             }
@@ -84,7 +84,7 @@ const App = () => {
           <Route
             path="scheduling"
             element={
-              <RoleRoute allowedRoles={['admin', 'tutorLead']}>
+              <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'CLASS_INSPECTION_TEAM']}>
                 <Scheduling />
               </RoleRoute>
             }
@@ -92,7 +92,7 @@ const App = () => {
           <Route
             path="attendance"
             element={
-              <RoleRoute allowedRoles={['admin', 'tutorLead', 'tutor']}>
+              <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM']}>
                 <Attendance />
               </RoleRoute>
             }
@@ -100,7 +100,7 @@ const App = () => {
           <Route
             path="onboarding"
             element={
-              <RoleRoute allowedRoles={['admin']}>
+              <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS']}>
                 <Onboarding />
               </RoleRoute>
             }
@@ -108,7 +108,7 @@ const App = () => {
           <Route
             path="dashboard"
             element={
-              <RoleRoute allowedRoles={['admin', 'tutorLead']}>
+              <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS']}>
                 <Dashboard />
               </RoleRoute>
             }
@@ -116,7 +116,7 @@ const App = () => {
           <Route
             path="admin-logs"
             element={
-              <RoleRoute allowedRoles={['admin']}>
+              <RoleRoute allowedRoles={['ADMIN']}>
                 <AdminLogs />
               </RoleRoute>
             }
@@ -124,7 +124,7 @@ const App = () => {
           <Route
             path="overall-attendance"
             element={
-              <RoleRoute allowedRoles={['admin']}>
+              <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM']}>
                 <OverallAttendance />
               </RoleRoute>
             }
@@ -132,7 +132,7 @@ const App = () => {
           <Route
             path="tutor-attendance"
             element={
-              <RoleRoute allowedRoles={['tutor', 'tutorLead']}>
+              <RoleRoute allowedRoles={['TUTOR', 'ADMIN', 'TUTOR_LEADS']}>
                 <TutorAttendance />
               </RoleRoute>
             }
