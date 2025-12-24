@@ -5,11 +5,25 @@ import { signToken, verifyToken } from '../config/auth.js';
 
 const authenticateCredentials = async (email, password) => {
   const user = await prisma.user.findUnique({ where: { email } });
+  console.log(user)
+
+  const salt = await bcrypt.genSalt(10);
+  const hash = await bcrypt.hash(password, salt);
+  console.log(hash);
+  // Store hash in your password DB
   if (!user) return null;
+
   const match = await bcrypt.compare(password, user.password);
+  console.log(match)
+
   if (!match) return null;
   return user;
 };
+
+
+//hariraajan@gmail.com pass: hari5426
+//gsurya@gmail.com pass: surya3625
+//yogab@mail.com pass: yoga2006
 
 const login = async (email, password) => {
   const user = await authenticateCredentials(email, password);
