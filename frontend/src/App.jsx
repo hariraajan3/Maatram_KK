@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/Layout';
-import RoleRoute from './components/RoleRoute';
+// import RoleRoute from './components/RoleRoute';
 import Dashboard from './pages/Dashboard';
 import Selection from './pages/Selection';
 import Scheduling from './pages/Scheduling';
@@ -55,10 +55,6 @@ const App = () => {
           path="/login"
           element={session ? <Navigate to="/" replace /> : <Login onSuccess={handleLogin} />}
         />
-        {/* <Route
-          path="/signup"
-          element={session ? <Navigate to="/" replace /> : <Signup />}
-        /> */}
         <Route
           path="/forgot-password"
           element={session ? <Navigate to="/" replace /> : <ForgotPassword />}
@@ -76,65 +72,65 @@ const App = () => {
           <Route
             index
             element={
-              <RoleRoute allowedRoles={['ADMIN', 'SELECTION_TEAM']}>
+              // <RoleRoute allowedRoles={['ADMIN', 'SELECTION_TEAM']}>
                 <Selection />
-              </RoleRoute>
+              // </RoleRoute>
             }
           />
           <Route
             path="scheduling"
             element={
-              <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'CLASS_INSPECTION_TEAM']}>
+              // <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'CLASS_INSPECTION_TEAM']}>
                 <Scheduling />
-              </RoleRoute>
+              // </RoleRoute>
             }
           />
           <Route
             path="attendance"
             element={
-              <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM']}>
+              // <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM']}>
                 <Attendance />
-              </RoleRoute>
+              // </RoleRoute>
             }
           />
           <Route
             path="onboarding"
             element={
-              <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS']}>
+              // <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS']}>
                 <Onboarding />
-              </RoleRoute>
+              // </RoleRoute>
             }
           />
           <Route
             path="dashboard"
             element={
-              <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS']}>
+              // <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS']}>
                 <Dashboard />
-              </RoleRoute>
+              // </RoleRoute>
             }
           />
           <Route
             path="admin-logs"
             element={
-              <RoleRoute allowedRoles={['ADMIN']}>
+              // <RoleRoute allowedRoles={['ADMIN']}>
                 <AdminLogs />
-              </RoleRoute>
+              // </RoleRoute>
             }
           />
           <Route
             path="overall-attendance"
             element={
-              <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM']}>
+              // <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM']}>
                 <OverallAttendance />
-              </RoleRoute>
+              
             }
           />
           <Route
             path="tutor-attendance"
             element={
-              <RoleRoute allowedRoles={['TUTOR', 'ADMIN', 'TUTOR_LEADS']}>
+              // <RoleRoute allowedRoles={['TUTOR', 'ADMIN', 'TUTOR_LEADS']}>
                 <TutorAttendance />
-              </RoleRoute>
+              // </RoleRoute>
             }
           />
           <Route path="profile" element={<Profile />} />

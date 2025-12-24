@@ -144,7 +144,7 @@ const AdminLogs = () => {
   };
 
   // const availablePermissions = ['view_tutors', 'manage_onboarding', 'view_classes', 'view_own_classes', 'mark_attendance', 'manage_schedule', 'view_attendance', 'all'];
-  const availableRoles = ['admin', 'tutorLead', 'tutor', 'coordinator'];
+  const availableRoles = ['admin', 'tutorLead', 'tutor', '  selectionTeam', 'classInspectionTeam', 'attendanceTrackingTeam'];
 
   const sections = [
     { id: 'roles', label: 'Roles & Users', icon: 'people' },
