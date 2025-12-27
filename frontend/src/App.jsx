@@ -7,7 +7,7 @@ import Selection from './pages/Selection';
 import Scheduling from './pages/Scheduling';
 import Attendance from './pages/Attendance';
 import OverallAttendance from './pages/TutorManagement';
-import TutorAttendance from './pages/TutorAttendance';
+// import TutorAttendance from './pages/TutorAttendance';
 import Onboarding from './pages/Onboarding';
 import AdminLogs from './pages/AdminLogs';
 import Login from './pages/Login';
@@ -125,14 +125,14 @@ const App = () => {
               
             }
           />
-          <Route
+          {/* <Route
             path="tutor-attendance"
             element={
               // <RoleRoute allowedRoles={['TUTOR', 'ADMIN', 'TUTOR_LEADS']}>
                 <TutorAttendance />
               // </RoleRoute>
             }
-          />
+          /> */}
           <Route path="profile" element={<Profile />} />
         </Route>
         <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />

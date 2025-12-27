@@ -51,26 +51,26 @@ const Attendance = () => {
     if (classId) localStorage.setItem('attendance_classId', classId);
   }, [students, classId]);
 
-  const addStudent = () => {
-    if (!newStudent.name.trim() || !newStudent.id.trim()) {
-      setMessage({ type: 'error', text: 'Please enter both name and ID' });
-      return;
-    }
-    if (students.some((s) => s.id === newStudent.id.trim())) {
-      setMessage({ type: 'error', text: 'Student ID already exists' });
-      return;
-    }
-    setStudents([...students, {
-      id: newStudent.id.trim(),
-      name: newStudent.name.trim(),
-      present: true,
-      marks: '', // Added marks field
-      reviewed: false
-    }]);
-    setNewStudent({ name: '', id: '' });
-    setMessage({ type: 'success', text: 'Student added successfully' });
-    setTimeout(() => setMessage({ type: '', text: '' }), 2000);
-  };
+  // const addStudent = () => {
+  //   if (!newStudent.name.trim() || !newStudent.id.trim()) {
+  //     setMessage({ type: 'error', text: 'Please enter both name and ID' });
+  //     return;
+  //   }
+  //   if (students.some((s) => s.id === newStudent.id.trim())) {
+  //     setMessage({ type: 'error', text: 'Student ID already exists' });
+  //     return;
+  //   }
+  //   setStudents([...students, {
+  //     id: newStudent.id.trim(),
+  //     name: newStudent.name.trim(),
+  //     present: true,
+  //     marks: '', // Added marks field
+  //     reviewed: false
+  //   }]);
+  //   setNewStudent({ name: '', id: '' });
+  //   setMessage({ type: 'success', text: 'Student added successfully' });
+  //   setTimeout(() => setMessage({ type: '', text: '' }), 2000);
+  // };
 
   const removeStudent = (studentId) => {
     setStudents(students.filter((s) => s.id !== studentId));
@@ -81,10 +81,10 @@ const Attendance = () => {
     setAttendanceReviewed(true);
   };
 
-  const updateMarks = (studentId, marks) => {
-    setStudents(students.map((s) => (s.id === studentId ? { ...s, marks, reviewed: true } : s)));
-    setAttendanceReviewed(true);
-  };
+  // const updateMarks = (studentId, marks) => {
+  //   setStudents(students.map((s) => (s.id === studentId ? { ...s, marks, reviewed: true } : s)));
+  //   setAttendanceReviewed(true);
+  // };
 
   const handleSaveAttendance = async () => {
     if (students.length === 0) return setMessage({ type: 'error', text: 'Please add at least one student' });
@@ -100,7 +100,7 @@ const Attendance = () => {
           classId: finalClassId,
           studentId: student.id,
           present: student.present,
-          marks: student.marks, // Save marks
+          // marks: student.marks, // Save marks
           notes: '',
           date: attendanceDate,
         })
@@ -122,7 +122,7 @@ const Attendance = () => {
       <header className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-display font-bold text-black">Attendance & Marks</h2>
-          <p className="text-gray-500 mt-1">Securely log student attendance and assessment scores.</p>
+          {/* <p className="text-gray-500 mt-1">Securely log student attendance and assessment scores.</p> */}
         </div>
         <div className="bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
           <p className="text-xs text-gray-500 uppercase font-bold">Tutor</p>
@@ -158,7 +158,7 @@ const Attendance = () => {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
+          {/* <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
             <h3 className="text-lg font-bold text-black mb-4">Add Student</h3>
             <div className="space-y-4">
               <input
@@ -183,7 +183,7 @@ const Attendance = () => {
                 Add to List
               </button>
             </div>
-          </div>
+          </div> */}
         </section>
 
         {/* Students List */}
@@ -217,7 +217,7 @@ const Attendance = () => {
                     <tr>
                       <th className="px-6 py-4">Student</th>
                       <th className="px-6 py-4 text-center">Attendance</th>
-                      <th className="px-6 py-4">Marks (Optional)</th>
+                      {/* <th className="px-6 py-4">Marks (Optional)</th> */}
                       <th className="px-6 py-4"></th>
                     </tr>
                   </thead>
@@ -239,7 +239,7 @@ const Attendance = () => {
                             {student.present ? 'PRESENT' : 'ABSENT'}
                           </button>
                         </td>
-                        <td className="px-6 py-4">
+                        {/* <td className="px-6 py-4">
                           <input
                             type="number"
                             value={student.marks}
@@ -247,7 +247,7 @@ const Attendance = () => {
                             placeholder="Score"
                             className="w-20 px-3 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow outline-none text-center"
                           />
-                        </td>
+                        </td> */}
                         <td className="px-6 py-4 text-right">
                           <button
                             onClick={() => removeStudent(student.id)}
