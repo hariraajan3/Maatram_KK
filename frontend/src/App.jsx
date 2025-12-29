@@ -13,7 +13,7 @@ import AdminLogs from './pages/AdminLogs';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
-import { login as loginApi, setAuthToken } from './services/api';
+import { setAuthToken } from './services/api';
 import './App.css';
 import { AuthProvider, useAuth } from "./AuthContext";
 import RequirePermission from "./RequirePermission";
@@ -184,6 +184,22 @@ const App = () => {
     }
   });
 
+  // Listen for storage changes (e.g., from Login page)
+  useEffect(() => {
+    const handleStorageChange = () => {
+      try {
+        const saved = localStorage.getItem('kk_session');
+        setSession(saved ? JSON.parse(saved) : null);
+      } catch (error) {
+        console.warn('Unable to parse session from storage', error);
+        setSession(null);
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   useEffect(() => {
     if (session?.token) {
       setAuthToken(session.token);
@@ -192,10 +208,15 @@ const App = () => {
     }
   }, [session]);
 
-  const handleLogin = async (credentials) => {
-    const payload = await loginApi(credentials);
-    setSession(payload);
-    localStorage.setItem('kk_session', JSON.stringify(payload));
+  const handleLogin = async (payload) => {
+    // payload expected to be { token, user }
+    try {
+      setSession(payload);
+      if (payload?.token) setAuthToken(payload.token);
+      localStorage.setItem('kk_session', JSON.stringify(payload));
+    } catch (e) {
+      console.error('Error saving session', e);
+    }
   };
 
   const handleLogout = () => {
@@ -206,6 +227,11 @@ const App = () => {
 
   return (
     <BrowserRouter>
+// frontend_rbac
+      <AuthProvider>
+        <AppRoutes session={session} handleLogout={handleLogout} handleLogin={handleLogin} />
+      </AuthProvider>
+
       <Routes>
         <Route
           path="/login"
@@ -296,5 +322,6 @@ const App = () => {
     </BrowserRouter>
   );
 };
+
 
 export default App;

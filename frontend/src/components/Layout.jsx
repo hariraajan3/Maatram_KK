@@ -1,7 +1,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
+import { getNavItems, ROLE_DESCRIPTIONS } from '../permissions';
 import maatramLogo from '../Maatram logo.jpg';
+
+//frontend_rbac
 
 const navItems = [
   { to: '/selection', label: 'Selection', icon: 'how_to_reg' },
@@ -14,12 +17,16 @@ const navItems = [
   { to: '/admin-logs', label: 'Admin Logs', icon: 'admin_panel_settings' },
 ];
 
+//main
 const Layout = ({ user, onLogout }) => {
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const profileRef = useRef(null);
   const notificationsRef = useRef(null);
+
+  // Get navigation items based on user role
+  const navItems = getNavItems(user?.role);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -37,6 +44,9 @@ const Layout = ({ user, onLogout }) => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
+
+  // Get current page title
+  const currentPageTitle = navItems.find(item => item.to === location.pathname)?.label || 'Dashboard';
 
   return (
     <div className="min-h-screen bg-white-off flex font-sans text-black">
@@ -58,25 +68,23 @@ const Layout = ({ user, onLogout }) => {
         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
-          {navItems.map((item) => {
-            if (item.roles && !item.roles.includes(user.role)) return null;
-
-            return (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ${isActive
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              className={({ isActive }) =>
+                `flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ${
+                  isActive
                     ? 'bg-maatram-yellow text-black shadow-md translate-x-1'
                     : 'text-gray-500 hover:bg-gray-50 hover:text-black hover:translate-x-1'
-                  }`
-                }
-              >
-                <span className="material-icons-outlined text-xl">{item.icon}</span>
-                <span className="font-display tracking-wide">{item.label}</span>
-              </NavLink>
-            );
-          })}
+                }`
+              }
+              title={item.label}
+            >
+              <span className="material-icons-outlined text-xl">{item.icon}</span>
+              <span className="font-display tracking-wide">{item.label}</span>
+            </NavLink>
+          ))}
         </nav>
 
         <div className="p-4 border-t border-gray-100">
@@ -92,8 +100,13 @@ const Layout = ({ user, onLogout }) => {
         <header className="bg-white/80 backdrop-blur-md border-b border-gray-200 px-8 py-4 flex items-center justify-between sticky top-0 z-20">
           <div>
             <h2 className="text-xl font-display font-bold text-black">
-              {navItems.find(item => item.to === location.pathname)?.label || 'Dashboard'}
+              {currentPageTitle}
             </h2>
+            {user?.role && (
+              <p className="text-xs text-gray-500 mt-1 capitalize">
+                {ROLE_DESCRIPTIONS[user.role] || 'User'}
+              </p>
+            )}
           </div>
           <div className="flex items-center gap-3">
             {/* Notifications */}
@@ -104,6 +117,7 @@ const Layout = ({ user, onLogout }) => {
                   setProfileOpen(false);
                 }}
                 className="relative p-2 rounded-full hover:bg-gray-100 text-gray-500 transition-colors"
+                aria-label="Notifications"
               >
                 <span className="material-icons-outlined text-xl">notifications</span>
                 <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
@@ -130,23 +144,26 @@ const Layout = ({ user, onLogout }) => {
                   setNotificationsOpen(false);
                 }}
                 className="flex items-center gap-2 px-2 py-1 rounded-full hover:bg-gray-100 transition-colors"
+                aria-label="User menu"
               >
-                {user.avatar ? (
-                  <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
+                {user?.avatar ? (
+                  <img src={user.avatar} alt={user?.name} className="w-8 h-8 rounded-full" />
                 ) : (
                   <div className="w-8 h-8 rounded-full bg-maatram-yellow text-black flex items-center justify-center text-xs font-bold">
-                    {user.name.charAt(0)}
+                    {user?.name?.charAt(0) || 'U'}
                   </div>
                 )}
-                <span className="text-sm font-bold text-black hidden sm:block">{user.name}</span>
+                <span className="text-sm font-bold text-black hidden sm:block">{user?.name}</span>
                 <span className="material-icons-outlined text-gray-500 text-sm">arrow_drop_down</span>
               </button>
               {profileOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-30">
                   <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-bold text-black">{user.name}</p>
-                    <p className="text-xs text-gray-500">{user.email}</p>
-                    <p className="text-xs text-gray-400 capitalize mt-1">{user.role}</p>
+                    <p className="text-sm font-bold text-black">{user?.name}</p>
+                    <p className="text-xs text-gray-500">{user?.email}</p>
+                    <p className="text-xs text-gray-400 capitalize mt-1">
+                      {user?.role ? ROLE_DESCRIPTIONS[user.role] : 'User'}
+                    </p>
                   </div>
                   <div className="py-1">
                     <Link
@@ -186,6 +203,7 @@ const Layout = ({ user, onLogout }) => {
 
 Layout.propTypes = {
   user: PropTypes.shape({
+    id: PropTypes.string,
     role: PropTypes.string,
     name: PropTypes.string,
     email: PropTypes.string,
@@ -195,3 +213,4 @@ Layout.propTypes = {
 };
 
 export default Layout;
+
