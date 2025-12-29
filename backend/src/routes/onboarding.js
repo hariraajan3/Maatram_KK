@@ -10,11 +10,11 @@ import { requireRole, withAuth } from '../middlewares/auth.js';
 const { body } = validator;
 const router = express.Router();
 
-router.get('/', withAuth, requireRole('admin', 'tutorLead'), listOnboarding);
+router.get('/', withAuth, requireRole('ADMIN', 'TUTOR_LEADS'), listOnboarding);
 router.post(
   '/',
   withAuth,
-  requireRole('admin', 'tutorLead', 'coordinator'),
+  requireRole('ADMIN', 'TUTOR_LEADS'),
   body('name').isString(),
   body('email').isEmail(),
   body('phone').isString().isLength({ min: 10 }),
@@ -23,7 +23,7 @@ router.post(
   body('subjects').optional().isArray(),
   createOnboarding,
 );
-router.patch('/:id', withAuth, requireRole('admin', 'tutorLead'), updateOnboardingStatus);
+router.patch('/:id', withAuth, requireRole('ADMIN', 'TUTOR_LEADS'), updateOnboardingStatus);
 
 export default router;
 

@@ -126,7 +126,6 @@ const Selection = () => {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-display font-bold text-black">Student Selection Process</h1>
-          <p className="text-gray-500 mt-1">Manage student applications through selection phases</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
@@ -138,16 +137,16 @@ const Selection = () => {
       </div>
 
       {/* Phase Tabs - 3 Phases with equal spacing */}
-      <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-2">
-        <div className="flex justify-between gap-2">
+      <div className="">
+        <div className="flex justify-between gap-4 ">
           {Object.entries(PHASES).map(([phase, config]) => (
             <button
               key={phase}
               onClick={() => setActiveTab(phase)}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === phase
+              className={`  flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === phase
                   ? 'bg-maatram-yellow text-black shadow-md'
-                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100'
-                }`}
+                  : ' bg-white text-gray-600 hover:bg-gray-50'
+                }`} 
             >
               <span className="material-icons-outlined text-xl">{config.icon}</span>
               <span className="text-sm">{config.label}: {config.sublabel}</span>

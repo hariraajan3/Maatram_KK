@@ -4,6 +4,20 @@ import PropTypes from 'prop-types';
 import { getNavItems, ROLE_DESCRIPTIONS } from '../permissions';
 import maatramLogo from '../Maatram logo.jpg';
 
+//frontend_rbac
+
+const navItems = [
+  { to: '/selection', label: 'Selection', icon: 'how_to_reg' },
+  { to: '/scheduling', label: 'Scheduling', icon: 'calendar_today' },
+  // { to: '/tutor-attendance', label: 'Mark Attendance', icon: 'edit_note' },
+  { to: '/attendance', label: 'Attendance', icon: 'fact_check' },
+  { to: '/overall-attendance', label: 'Overall Attendance', icon: 'assessment' },
+  { to: '/onboarding', label: 'Onboarding', icon: 'person_add' },
+  { to: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { to: '/admin-logs', label: 'Admin Logs', icon: 'admin_panel_settings' },
+];
+
+//main
 const Layout = ({ user, onLogout }) => {
   const location = useLocation();
   const [profileOpen, setProfileOpen] = useState(false);

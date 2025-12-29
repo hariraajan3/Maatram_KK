@@ -1,17 +1,32 @@
 import bcrypt from 'bcryptjs';
-import dataStore from '../models/dataStore.js';
+import prisma from '../../lib/prisma.js';
 import { signToken, verifyToken } from '../config/auth.js';
 
-const authenticateCredentials = (email, password) => {
-  const user = dataStore.users.find((candidate) => candidate.email === email);
+
+const authenticateCredentials = async (email, password) => {
+  const user = await prisma.user.findUnique({ where: { email } });
+  console.log(user)
+
+  const salt = await bcrypt.genSalt(10);
+  const hash = await bcrypt.hash(password, salt);
+  console.log(hash);
+  // Store hash in your password DB
   if (!user) return null;
-  const match = bcrypt.compareSync(password, user.passwordHash);
+
+  const match = await bcrypt.compare(password, user.password);
+  console.log(match)
+
   if (!match) return null;
   return user;
 };
 
-const login = (email, password) => {
-  const user = authenticateCredentials(email, password);
+
+//hariraajan@gmail.com pass: hari5426
+//gsurya@gmail.com pass: surya3625
+//yogab@mail.com pass: yoga2006
+
+const login = async (email, password) => {
+  const user = await authenticateCredentials(email, password);
   if (!user) {
     const err = new Error('Invalid email or password');
     err.status = 401;
@@ -21,7 +36,7 @@ const login = (email, password) => {
   return { user, token };
 };
 
-const withAuth = (req, res, next) => {
+const withAuth = async (req, res, next) => {
   const header = req.headers.authorization || '';
   const [, token] = header.split(' ');
   if (!token) {
@@ -29,7 +44,7 @@ const withAuth = (req, res, next) => {
   }
   try {
     const decoded = verifyToken(token);
-    const user = dataStore.users.find((candidate) => candidate.id === decoded.id);
+    const user = await prisma.user.findUnique({ where: { id: decoded.id } });
     if (!user) {
       return res.status(401).json({ message: 'User not found' });
     }
@@ -48,4 +63,3 @@ const requireRole = (...roles) => (req, res, next) => {
 };
 
 export { login, withAuth, requireRole };
-

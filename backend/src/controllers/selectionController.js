@@ -1,5 +1,5 @@
 import validator from 'express-validator';
-import prisma from '../config/prisma.js';
+import prisma from '../../lib/prisma.js';
 import { encrypt } from '../utils/security.js';
 import { sendNotificationBundle } from '../utils/notifications.js';
 import { logAction } from '../utils/auditLogger.js';
@@ -49,7 +49,7 @@ const listApplications = async (req, res, next) => {
   try {
     const { phase, medium, district } = req.query;
     const where = {};
-    
+
     if (phase) where.phase = phase;
     if (medium) where.medium = medium;
     if (district) where.district = district;

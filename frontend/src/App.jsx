@@ -227,9 +227,98 @@ const App = () => {
 
   return (
     <BrowserRouter>
+// frontend_rbac
       <AuthProvider>
         <AppRoutes session={session} handleLogout={handleLogout} handleLogin={handleLogin} />
       </AuthProvider>
+
+      <Routes>
+        <Route
+          path="/login"
+          element={session ? <Navigate to="/" replace /> : <Login onSuccess={handleLogin} />}
+        />
+        <Route
+          path="/forgot-password"
+          element={session ? <Navigate to="/" replace /> : <ForgotPassword />}
+        />
+        <Route
+          path="/"
+          element={
+            session ? (
+              <Layout user={session.user} onLogout={handleLogout} />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        >
+          <Route
+            index
+            element={
+              // <RoleRoute allowedRoles={['ADMIN', 'SELECTION_TEAM']}>
+                <Selection />
+              // </RoleRoute>
+            }
+          />
+          <Route
+            path="scheduling"
+            element={
+              // <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'CLASS_INSPECTION_TEAM']}>
+                <Scheduling />
+              // </RoleRoute>
+            }
+          />
+          <Route
+            path="attendance"
+            element={
+              // <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM']}>
+                <Attendance />
+              // </RoleRoute>
+            }
+          />
+          <Route
+            path="onboarding"
+            element={
+              // <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS']}>
+                <Onboarding />
+              // </RoleRoute>
+            }
+          />
+          <Route
+            path="dashboard"
+            element={
+              // <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS']}>
+                <Dashboard />
+              // </RoleRoute>
+            }
+          />
+          <Route
+            path="admin-logs"
+            element={
+              // <RoleRoute allowedRoles={['ADMIN']}>
+                <AdminLogs />
+              // </RoleRoute>
+            }
+          />
+          <Route
+            path="overall-attendance"
+            element={
+              // <RoleRoute allowedRoles={['ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM']}>
+                <OverallAttendance />
+              
+            }
+          />
+          {/* <Route
+            path="tutor-attendance"
+            element={
+              // <RoleRoute allowedRoles={['TUTOR', 'ADMIN', 'TUTOR_LEADS']}>
+                <TutorAttendance />
+              // </RoleRoute>
+            }
+          /> */}
+          <Route path="profile" element={<Profile />} />
+        </Route>
+        <Route path="*" element={<Navigate to={session ? '/' : '/login'} replace />} />
+      </Routes>
     </BrowserRouter>
   );
 };

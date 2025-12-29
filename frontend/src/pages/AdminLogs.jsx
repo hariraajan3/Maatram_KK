@@ -96,23 +96,23 @@ const AdminLogs = () => {
     }
   };
 
-  const handlePermissionChange = async (roleName, permission) => {
-    const role = roles.find(r => r.name === roleName);
-    if (!role) return;
+  // const handlePermissionChange = async (roleName, permission) => {
+  //   const role = roles.find(r => r.name === roleName);
+  //   if (!role) return;
 
-    const newPermissions = role.permissions.includes(permission)
-      ? role.permissions.filter(p => p !== permission)
-      : [...role.permissions, permission];
+  //   const newPermissions = role.permissions.includes(permission)
+  //     ? role.permissions.filter(p => p !== permission)
+  //     : [...role.permissions, permission];
 
-    try {
-      await updateRolePermissions(roleName, newPermissions);
-      setRoles(roles.map(r => r.name === roleName ? { ...r, permissions: newPermissions } : r));
-      setMessage({ type: 'success', text: `Updated permissions for ${roleName}` });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to update permissions' });
-    }
-  };
+  //   try {
+  //     await updateRolePermissions(roleName, newPermissions);
+  //     setRoles(roles.map(r => r.name === roleName ? { ...r, permissions: newPermissions } : r));
+  //     setMessage({ type: 'success', text: `Updated permissions for ${roleName}` });
+  //     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+  //   } catch (error) {
+  //     setMessage({ type: 'error', text: 'Failed to update permissions' });
+  //   }
+  // };
 
   const handleRoleChange = async (userId, newRole) => {
     try {
@@ -143,12 +143,12 @@ const AdminLogs = () => {
     }
   };
 
-  const availablePermissions = ['view_tutors', 'manage_onboarding', 'view_classes', 'view_own_classes', 'mark_attendance', 'manage_schedule', 'view_attendance', 'all'];
-  const availableRoles = ['admin', 'tutorLead', 'tutor', 'coordinator'];
+  // const availablePermissions = ['view_tutors', 'manage_onboarding', 'view_classes', 'view_own_classes', 'mark_attendance', 'manage_schedule', 'view_attendance', 'all'];
+  const availableRoles = ['admin', 'tutorLead', 'tutor', '  selectionTeam', 'classInspectionTeam', 'attendanceTrackingTeam'];
 
   const sections = [
     { id: 'roles', label: 'Roles & Users', icon: 'people' },
-    { id: 'permissions', label: 'Permissions', icon: 'lock' },
+    // { id: 'permissions', label: 'Permissions', icon: 'lock' },
     { id: 'audit', label: 'Audit Logs', icon: 'history' },
   ];
 
@@ -308,7 +308,7 @@ const AdminLogs = () => {
             )}
 
             {/* Permissions Section */}
-            {activeSection === 'permissions' && (
+            {/* {activeSection === 'permissions' && (
               <div className="space-y-4">
                 <h3 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
                   <span className="material-icons-outlined text-xl">lock</span>
@@ -351,7 +351,7 @@ const AdminLogs = () => {
                   ))}
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Audit Logs Section */}
             {activeSection === 'audit' && (

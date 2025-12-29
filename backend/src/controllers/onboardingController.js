@@ -1,6 +1,6 @@
 import { v4 as uuid } from 'uuid';
 import validator from 'express-validator';
-import dataStore from '../models/dataStore.js';
+import prisma from '../../lib/prisma.js';
 import { encrypt, decrypt } from '../utils/security.js';
 import { sendNotificationBundle } from '../utils/notifications.js';
 import { sendMail } from '../config/email.js';
