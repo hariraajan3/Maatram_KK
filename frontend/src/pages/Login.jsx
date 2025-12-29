@@ -4,7 +4,7 @@ import PropTypes from 'prop-types';
 import '../App.css';
 
 const Login = ({ onSuccess }) => {
-  const [form, setForm] = useState();
+  const [form, setForm] = useState({email: '', password: ''});
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
