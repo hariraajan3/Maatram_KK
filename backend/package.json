@@ -8,7 +8,7 @@
     "predev": "npm run swagger:gen",
     "prestart": "npm run swagger:gen",
     "dev": "nodemon --watch . --ext js,json --exec \"node ./server.js\"",
-    "start": "node server.js",
+    "start": "npm run prisma:generate && node server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
