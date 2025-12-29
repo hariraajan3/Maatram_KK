@@ -96,24 +96,6 @@ const AdminLogs = () => {
     }
   };
 
-  // const handlePermissionChange = async (roleName, permission) => {
-  //   const role = roles.find(r => r.name === roleName);
-  //   if (!role) return;
-
-  //   const newPermissions = role.permissions.includes(permission)
-  //     ? role.permissions.filter(p => p !== permission)
-  //     : [...role.permissions, permission];
-
-  //   try {
-  //     await updateRolePermissions(roleName, newPermissions);
-  //     setRoles(roles.map(r => r.name === roleName ? { ...r, permissions: newPermissions } : r));
-  //     setMessage({ type: 'success', text: `Updated permissions for ${roleName}` });
-  //     setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-  //   } catch (error) {
-  //     setMessage({ type: 'error', text: 'Failed to update permissions' });
-  //   }
-  // };
-
   const handleRoleChange = async (userId, newRole) => {
     try {
       await assignRole(userId, newRole);
@@ -306,52 +288,6 @@ const AdminLogs = () => {
                 </div>
               </div>
             )}
-
-            {/* Permissions Section */}
-            {/* {activeSection === 'permissions' && (
-              <div className="space-y-4">
-                <h3 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
-                  <span className="material-icons-outlined text-xl">lock</span>
-                  Role Permissions
-                </h3>
-                <p className="text-xs text-gray-500 mb-4">
-                  Configure which permissions each role can access. Click on permission buttons to toggle access.
-                </p>
-                <div className="space-y-4">
-                  {roles.map((role) => (
-                    <div key={role.name} className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow">
-                      <div className="flex items-center justify-between mb-3">
-                        <div>
-                          <h4 className="text-base font-bold text-black capitalize mb-1">{role.name}</h4>
-                          <p className="text-xs text-gray-500">
-                            {role.permissions.length} permission{role.permissions.length !== 1 ? 's' : ''} active
-                            {role.permissions.includes('all') && ' (Full Access)'}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {availablePermissions.map((perm) => (
-                          <button
-                            key={perm}
-                            onClick={() => handlePermissionChange(role.name, perm)}
-                            className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all duration-200 ${
-                              role.permissions.includes(perm)
-                                ? 'bg-maatram-yellow text-black border-maatram-yellow shadow-sm hover:shadow-md'
-                                : 'bg-white text-gray-400 border-gray-200 hover:border-gray-300 hover:text-gray-600'
-                            }`}
-                          >
-                            <span className="material-icons-outlined text-sm mr-1 align-middle">
-                              {role.permissions.includes(perm) ? 'check_circle' : 'radio_button_unchecked'}
-                            </span>
-                            {perm.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )} */}
 
             {/* Audit Logs Section */}
             {activeSection === 'audit' && (

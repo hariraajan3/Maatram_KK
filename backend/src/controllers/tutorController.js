@@ -50,7 +50,8 @@ const listTutors = async (req, res, next) => {
                     email: tutor.user.email,
                     medium: tutor.tutoringMedium, // schema: tutoringMedium
                     district: tutor.tutoringDistrict, // schema: tutoringDistrict
-                    subjects: tutor.tutoringSubjects || [], // schema: tutoringSubjects
+                    subject: (tutor.tutoringSubjects || [])[0] || 'Unassigned', // Enforce single subject display
+                    subjects: tutor.tutoringSubjects || [], // Keep for compatibility
                     status: tutor.onboardingStatus, // schema: onboardingStatus
                     scheduleCount: tutor._count.schedules,
                     avgAttendance: Math.round(avgAttendance * 100) / 100,
@@ -68,7 +69,12 @@ const listTutors = async (req, res, next) => {
 // Create a new tutor
 const createTutor = async (req, res, next) => {
     try {
-        const { name, email, phone, medium, district, subjects } = req.body;
+        const { name, email, phone, medium, district, subject, subjects } = req.body;
+
+        // Start Enforce Single Subject Rule
+        // If 'subject' string provided, use it. If 'subjects' array provided, take the first one.
+        const primarySubject = subject || (Array.isArray(subjects) && subjects.length > 0 ? subjects[0] : null);
+        // End Enforce Single Subject Rule
 
         // Check if user already exists
         let user = await prisma.user.findUnique({ where: { email } });
@@ -97,7 +103,7 @@ const createTutor = async (req, res, next) => {
                 phoneNumber: phone, // schema: phoneNumber
                 tutoringMedium: medium || 'English', // schema: tutoringMedium, Enum
                 tutoringDistrict: district || 'Chennai', // schema: tutoringDistrict, Enum
-                tutoringSubjects: subjects || [], // schema: tutoringSubjects
+                tutoringSubjects: primarySubject ? [primarySubject] : [], // Store as single-valued array
                 onboardingStatus: 'approved', // schema: onboardingStatus
                 tutorAddress: '',
                 collegeOrCompany: '',
@@ -106,7 +112,7 @@ const createTutor = async (req, res, next) => {
             },
         });
 
-        logAction(req.user || { id: 0 }, 'CREATE_TUTOR', `Created tutor ${name} (${email})`, 'Tutor', tutor.id);
+        logAction(req.user || { id: 0 }, 'CREATE_TUTOR', `Created tutor ${name} (${email}) - ${primarySubject}`, 'Tutor', tutor.id);
 
         res.status(201).json({
             tutor: {
@@ -115,7 +121,7 @@ const createTutor = async (req, res, next) => {
                 email: user.email,
                 medium: tutor.tutoringMedium,
                 district: tutor.tutoringDistrict,
-                subjects: tutor.tutoringSubjects,
+                subject: primarySubject,
                 status: tutor.status,
             },
             message: 'Tutor created successfully. Default password is Maatram@123',
@@ -180,6 +186,7 @@ const getTutorStudents = async (req, res, next) => {
 const getTutorAttendanceHistory = async (req, res, next) => {
     try {
         const { tutorId } = req.params;
+        const { month, year } = req.query;
 
         const tutor = await prisma.tutor.findUnique({
             where: { id: tutorId },
@@ -189,33 +196,76 @@ const getTutorAttendanceHistory = async (req, res, next) => {
             return res.status(404).json({ message: 'Tutor not found' });
         }
 
+        // Date filter
+        let dateFilter = {};
+        if (month && year) {
+            const startDate = new Date(Date.UTC(year, month - 1, 1));
+            const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59));
+            dateFilter = {
+                startTime: {
+                    gte: startDate,
+                    lte: endDate
+                }
+            };
+        }
+
         // Get attendance records for classes taught by this tutor
         const classes = await prisma.class.findMany({
-            where: { tutorId },
+            where: {
+                tutorId,
+                ...dateFilter
+            },
             include: {
                 attendance: {
-                    select: {
-                        date: true,
-                        present: true,
-                    },
+                    include: {
+                        student: {
+                            select: { id: true, name: true }
+                        }
+                    }
                 },
             },
+            orderBy: { startTime: 'asc' },
         });
 
-        // Aggregate by date
+        // 1. Daily Summary (History)
         const dateMap = {};
+        const studentMap = new Map();
+        const records = {};
+
         classes.forEach((cls) => {
+            const dateKey = cls.startTime.toISOString().split('T')[0];
+
+            // Initialize daily summary
+            if (!dateMap[dateKey]) {
+                dateMap[dateKey] = { present: 0, absent: 0, total: 0 };
+            }
+            dateMap[dateKey].total += cls.attendance.length; // Or use enrolled count if available
+
             cls.attendance.forEach((att) => {
-                const dateKey = att.date.toISOString().split('T')[0];
-                if (!dateMap[dateKey]) {
-                    dateMap[dateKey] = { present: 0, absent: 0, total: 0 };
-                }
-                dateMap[dateKey].total += 1;
+                // Update daily summary
                 if (att.present) {
                     dateMap[dateKey].present += 1;
                 } else {
                     dateMap[dateKey].absent += 1;
                 }
+
+                // Collect student info
+                if (!studentMap.has(att.studentId)) {
+                    studentMap.set(att.studentId, {
+                        id: att.studentId,
+                        name: att.student.name
+                    });
+                }
+
+                // Build detailed record
+                if (!records[att.studentId]) {
+                    records[att.studentId] = {};
+                }
+                records[att.studentId][dateKey] = {
+                    status: att.present ? 'P' : 'A',
+                    notes: att.notes || (att.absentReason),
+                    marks: att.marks
+                };
             });
         });
 
@@ -223,7 +273,27 @@ const getTutorAttendanceHistory = async (req, res, next) => {
             .map(([date, counts]) => ({ date, ...counts }))
             .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-        res.json({ history });
+        const detailed = {
+            dates: classes.map(c => ({
+                date: c.startTime.toISOString().split('T')[0],
+                classId: c.id
+            })), // unique dates
+            students: Array.from(studentMap.values()).sort((a, b) => a.name.localeCompare(b.name)),
+            records
+        };
+
+        // Filter unique dates in detailed.dates just in case multiple classes per day
+        const uniqueDates = [];
+        const seenDates = new Set();
+        detailed.dates.forEach(d => {
+            if (!seenDates.has(d.date)) {
+                seenDates.add(d.date);
+                uniqueDates.push(d);
+            }
+        });
+        detailed.dates = uniqueDates;
+
+        res.json({ history, detailed });
     } catch (error) {
         next(error);
     }

@@ -15,6 +15,20 @@ const OverallAttendance = () => {
     const [tutorStudents, setTutorStudents] = useState([]);
     const [attendanceHistory, setAttendanceHistory] = useState([]);
     const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+    const [attendanceDetail, setAttendanceDetail] = useState(null);
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+    useEffect(() => {
+        if (selectedTutor) {
+            fetchTutorAttendanceHistory(selectedTutor.id, { month: selectedMonth, year: selectedYear })
+                .then(data => {
+                    setAttendanceHistory(data.history || []);
+                    setAttendanceDetail(data.detailed || null);
+                })
+                .catch(console.error);
+        }
+    }, [selectedMonth, selectedYear, selectedTutor?.id]);
 
     useEffect(() => {
         loadTutors();
@@ -79,12 +93,13 @@ const OverallAttendance = () => {
         setSelectedTutor(tutor);
 
         try {
-            const [students, history] = await Promise.all([
+            const [students, attendanceData] = await Promise.all([
                 fetchTutorStudents(tutor.id),
-                fetchTutorAttendanceHistory(tutor.id),
+                fetchTutorAttendanceHistory(tutor.id, { month: selectedMonth, year: selectedYear }),
             ]);
             setTutorStudents(students);
-            setAttendanceHistory(history);
+            setAttendanceHistory(attendanceData.history || []);
+            setAttendanceDetail(attendanceData.detailed || null);
         } catch (error) {
             console.error('Failed to load tutor details:', error);
             // Demo data
@@ -98,6 +113,32 @@ const OverallAttendance = () => {
                 { date: '2025-12-17', present: 14, absent: 1, total: 15 },
                 { date: '2025-12-16', present: 13, absent: 2, total: 15 },
             ]);
+            // Demo Detailed Data
+            setAttendanceDetail({
+                dates: [
+                    { date: '2025-12-18', classId: 'c1' },
+                    { date: '2025-12-17', classId: 'c2' },
+                    { date: '2025-12-16', classId: 'c3' },
+                    { date: '2025-12-15', classId: 'c4' },
+                    { date: '2025-12-14', classId: 'c5' },
+                ],
+                students: [
+                    { id: 'STU-001', name: 'Arun Kumar' },
+                    { id: 'STU-002', name: 'Divya Lakshmi' },
+                    { id: 'STU-003', name: 'Karthik Raja' },
+                ],
+                records: {
+                    'STU-001': {
+                        '2025-12-18': { status: 'P' }, '2025-12-17': { status: 'P' }, '2025-12-16': { status: 'P' }, '2025-12-15': { status: 'A', notes: 'Fever' }, '2025-12-14': { status: 'P' }
+                    },
+                    'STU-002': {
+                        '2025-12-18': { status: 'P' }, '2025-12-17': { status: 'A', notes: 'Absent' }, '2025-12-16': { status: 'P' }, '2025-12-15': { status: 'P' }, '2025-12-14': { status: 'P' }
+                    },
+                    'STU-003': {
+                        '2025-12-18': { status: 'A', notes: 'Not Informed' }, '2025-12-17': { status: 'P' }, '2025-12-16': { status: 'P' }, '2025-12-15': { status: 'P' }, '2025-12-14': { status: 'P' }
+                    }
+                }
+            });
         }
     };
 
@@ -156,60 +197,129 @@ const OverallAttendance = () => {
 
                 {/* Subjects */}
                 <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
-                    <h3 className="text-lg font-bold text-black mb-4">Subjects Teaching</h3>
+                    <h3 className="text-lg font-bold text-black mb-4">Subject Handling</h3>
                     <div className="flex flex-wrap gap-2">
-                        {(selectedTutor.subjects || []).map((subject) => (
-                            <span key={subject} className={`px-4 py-2 rounded-xl text-sm font-bold ${getSubjectColor(subject)}`}>
-                                {subject}
-                            </span>
-                        ))}
+                        {/* Enforcing Single Subject Display */}
+                        {(() => {
+                            const sub = selectedTutor.subject || (selectedTutor.subjects && selectedTutor.subjects[0]) || 'Unassigned';
+                            return (
+                                <span className={`px-4 py-2 rounded-xl text-sm font-bold ${getSubjectColor(sub)}`}>
+                                    {sub}
+                                </span>
+                            );
+                        })()}
                     </div>
                 </div>
 
                 <div className="grid lg:grid-cols-3 gap-6">
-                    {/* Attendance Summary */}
-                    <div className="bg-white rounded-2xl shadow-card border border-gray-100 p-6">
-                        <h3 className="text-lg font-bold text-black mb-4 flex items-center gap-2">
-                            <span className="material-icons-outlined text-maatram-yellow">event_available</span>
-                            Attendance History
-                        </h3>
+                    {/* Attendance Detail Matrix */}
+                    <div className="lg:col-span-3 bg-white rounded-2xl shadow-card border border-gray-100 p-6 overflow-hidden">
+                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+                            <h3 className="text-lg font-bold text-black flex items-center gap-2">
+                                <span className="material-icons-outlined text-maatram-yellow">grid_on</span>
+                                Student Attendance Record
+                            </h3>
 
-                        <div className="mb-4">
-                            <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Select Date</label>
-                            <input
-                                type="date"
-                                value={selectedDate}
-                                onChange={(e) => setSelectedDate(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                            />
+                            {/* Month Filter */}
+                            <div className="flex bg-gray-50 rounded-xl p-1 border border-gray-100">
+                                <select
+                                    value={selectedMonth}
+                                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                    className="bg-transparent border-none text-sm font-bold focus:ring-0 cursor-pointer py-2 pl-3 pr-8"
+                                >
+                                    {Array.from({ length: 12 }, (_, i) => (
+                                        <option key={i + 1} value={i + 1}>
+                                            {new Date(0, i).toLocaleString('default', { month: 'long' })}
+                                        </option>
+                                    ))}
+                                </select>
+                                <div className="w-px bg-gray-200 my-2"></div>
+                                <select
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                    className="bg-transparent border-none text-sm font-bold focus:ring-0 cursor-pointer py-2 pl-3 pr-8"
+                                >
+                                    {[2024, 2025, 2026].map(year => (
+                                        <option key={year} value={year}>{year}</option>
+                                    ))}
+                                </select>
+                            </div>
                         </div>
 
-                        {attendanceHistory.length > 0 && (
-                            <div className="space-y-3">
-                                {attendanceHistory.slice(0, 5).map((record) => (
-                                    <div
-                                        key={record.date}
-                                        className={`p-4 rounded-xl border ${record.date === selectedDate
-                                            ? 'bg-maatram-yellow/10 border-maatram-yellow'
-                                            : 'bg-gray-50 border-transparent'
-                                            }`}
-                                    >
-                                        <div className="flex justify-between items-center mb-2">
-                                            <span className="font-bold text-sm">{new Date(record.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })}</span>
-                                            <span className="text-xs text-gray-500">{record.total} students</span>
-                                        </div>
-                                        <div className="flex gap-4">
-                                            <div className="flex items-center gap-1">
-                                                <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                                                <span className="text-sm font-bold text-green-700">{record.present} Present</span>
-                                            </div>
-                                            <div className="flex items-center gap-1">
-                                                <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                                                <span className="text-sm font-bold text-red-700">{record.absent} Absent</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
+                        {loading || !attendanceDetail ? (
+                            <div className="p-12 text-center text-gray-500">
+                                <div className="animate-spin w-8 h-8 border-4 border-maatram-yellow border-t-transparent rounded-full mx-auto mb-4"></div>
+                                Loading attendance data...
+                            </div>
+                        ) : attendanceDetail?.dates?.length > 0 ? (
+                            <div className="overflow-x-auto">
+                                <table className="w-full border-collapse">
+                                    <thead>
+                                        <tr>
+                                            <th className="sticky left-0 z-10 bg-gray-50 p-3 text-left min-w-[200px] border-b border-gray-200 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                                <span className="text-xs font-bold text-gray-500 uppercase">Student Name</span>
+                                            </th>
+                                            {attendanceDetail.dates.map((d) => (
+                                                <th key={d.date} className="p-2 min-w-[60px] text-center border-b border-gray-200 bg-white">
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="text-xs font-bold text-gray-700">
+                                                            {new Date(d.date).getDate()}
+                                                        </span>
+                                                        <span className="text-[10px] text-gray-400 uppercase">
+                                                            {new Date(d.date).toLocaleString('default', { weekday: 'short' })}
+                                                        </span>
+                                                    </div>
+                                                </th>
+                                            ))}
+                                            <th className="p-3 text-center min-w-[80px] border-b border-gray-200 bg-gray-50">
+                                                <span className="text-xs font-bold text-gray-500 uppercase">Total %</span>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {attendanceDetail.students.map((student) => {
+                                            const studentRecord = attendanceDetail.records[student.id] || {};
+                                            const presentCount = Object.values(studentRecord).filter(r => r.status === 'P').length;
+                                            const totalClasses = attendanceDetail.dates.length;
+                                            const percentage = totalClasses > 0 ? Math.round((presentCount / totalClasses) * 100) : 0;
+
+                                            return (
+                                                <tr key={student.id} className="hover:bg-gray-50 transition-colors">
+                                                    <td className="sticky left-0 z-10 bg-white hover:bg-gray-50 p-3 border-r border-gray-100 shadow-[2px_0_5px_-2px_rgba(0,0,0,0.1)]">
+                                                        <div className="font-bold text-sm text-black">{student.name}</div>
+                                                        <div className="text-xs text-gray-400 font-mono">{student.id.split('-')[1]}</div>
+                                                    </td>
+                                                    {attendanceDetail.dates.map((d) => {
+                                                        const status = studentRecord[d.date]?.status;
+                                                        return (
+                                                            <td key={d.date} className="p-2 text-center border-r border-gray-50 last:border-0">
+                                                                {status === 'P' ? (
+                                                                    <span className="inline-block w-6 h-6 rounded bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center mx-auto">
+                                                                        P
+                                                                    </span>
+                                                                ) : status === 'A' ? (
+                                                                    <span className="inline-block w-6 h-6 rounded bg-red-100 text-red-700 text-xs font-bold flex items-center justify-center mx-auto" title={studentRecord[d.date]?.notes}>
+                                                                        A
+                                                                    </span>
+                                                                ) : (
+                                                                    <span className="text-gray-200">-</span>
+                                                                )}
+                                                            </td>
+                                                        );
+                                                    })}
+                                                    <td className="p-3 text-center bg-gray-50 font-bold text-sm text-gray-700">
+                                                        {percentage}%
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="p-12 text-center text-gray-500 bg-gray-50 rounded-xl">
+                                <span className="material-icons-outlined text-4xl mb-2 opacity-30">event_busy</span>
+                                <p>No attendance records found for {new Date(0, selectedMonth - 1).toLocaleString('default', { month: 'long' })} {selectedYear}</p>
                             </div>
                         )}
                     </div>
@@ -343,7 +453,7 @@ const OverallAttendance = () => {
                                     <th className="px-6 py-4 text-left">Name</th>
                                     <th className="px-6 py-4 text-left">Medium</th>
                                     <th className="px-6 py-4 text-left">District</th>
-                                    <th className="px-6 py-4 text-left">Subjects</th>
+                                    <th className="px-6 py-4 text-left">Subject</th>
                                     <th className="px-6 py-4 text-center">Students</th>
                                     <th className="px-6 py-4 text-center">Status</th>
                                     <th className="px-6 py-4"></th>
@@ -381,18 +491,14 @@ const OverallAttendance = () => {
                                             </span>
                                         </td>
                                         <td className="px-6 py-4">
-                                            <div className="flex flex-wrap gap-1">
-                                                {(tutor.subjects || []).slice(0, 3).map((subject) => (
-                                                    <span key={subject} className={`px-2 py-1 rounded text-xs font-bold ${getSubjectColor(subject)}`}>
-                                                        {subject}
+                                            {(() => {
+                                                const sub = tutor.subject || (tutor.subjects && tutor.subjects[0]) || 'Unassigned';
+                                                return (
+                                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${getSubjectColor(sub)}`}>
+                                                        {sub}
                                                     </span>
-                                                ))}
-                                                {(tutor.subjects || []).length > 3 && (
-                                                    <span className="px-2 py-1 bg-gray-100 rounded text-xs font-bold text-gray-600">
-                                                        +{tutor.subjects.length - 3}
-                                                    </span>
-                                                )}
-                                            </div>
+                                                );
+                                            })()}
                                         </td>
                                         <td className="px-6 py-4 text-center">
                                             <span className="font-bold text-black">{tutor.studentCount || 0}</span>
@@ -418,7 +524,3 @@ const OverallAttendance = () => {
 };
 
 export default OverallAttendance;
-
-// Also export as TutorManagement for backward compatibility with App.jsx import
-export { OverallAttendance as TutorManagement };
-

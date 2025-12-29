@@ -4,12 +4,9 @@ import PropTypes from 'prop-types';
 import { getNavItems, ROLE_DESCRIPTIONS } from '../permissions';
 import maatramLogo from '../Maatram logo.jpg';
 
-//frontend_rbac
-
 const navItems = [
   { to: '/selection', label: 'Selection', icon: 'how_to_reg' },
   { to: '/scheduling', label: 'Scheduling', icon: 'calendar_today' },
-  // { to: '/tutor-attendance', label: 'Mark Attendance', icon: 'edit_note' },
   { to: '/attendance', label: 'Attendance', icon: 'fact_check' },
   { to: '/overall-attendance', label: 'Overall Attendance', icon: 'assessment' },
   { to: '/onboarding', label: 'Onboarding', icon: 'person_add' },
@@ -102,11 +99,6 @@ const Layout = ({ user, onLogout }) => {
             <h2 className="text-xl font-display font-bold text-black">
               {currentPageTitle}
             </h2>
-            {user?.role && (
-              <p className="text-xs text-gray-500 mt-1 capitalize">
-                {ROLE_DESCRIPTIONS[user.role] || 'User'}
-              </p>
-            )}
           </div>
           <div className="flex items-center gap-3">
             {/* Notifications */}
@@ -159,10 +151,9 @@ const Layout = ({ user, onLogout }) => {
               {profileOpen && (
                 <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-lg border border-gray-200 py-2 z-30">
                   <div className="px-4 py-3 border-b border-gray-100">
-                    <p className="text-sm font-bold text-black">{user?.name}</p>
                     <p className="text-xs text-gray-500">{user?.email}</p>
                     <p className="text-xs text-gray-400 capitalize mt-1">
-                      {user?.role ? ROLE_DESCRIPTIONS[user.role] : 'User'}
+                      {user?.role ? user.role : 'User'}
                     </p>
                   </div>
                   <div className="py-1">
@@ -213,4 +204,3 @@ Layout.propTypes = {
 };
 
 export default Layout;
-

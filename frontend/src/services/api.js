@@ -59,11 +59,11 @@ export const login = async (credentials) => {
   try {
     const { data } = await client.post('/auth/login', credentials);
     setAuthToken(data.token);
-    return data; 
+    return data;
   } catch (error) {
-     const status = error?.response?.status;
-     const backendMissingOrDown = !status || status === 404 || status === 502 || status === 503 || status === 504;
-     if (backendMissingOrDown) {
+    const status = error?.response?.status;
+    const backendMissingOrDown = !status || status === 404 || status === 502 || status === 503 || status === 504;
+    if (backendMissingOrDown) {
       const session = tryMockLogin(credentials);
       if (session) {
         setAuthToken(session.token);
@@ -215,9 +215,10 @@ export const fetchTutorStudents = async (tutorId) => {
   return data.students || [];
 };
 
-export const fetchTutorAttendanceHistory = async (tutorId) => {
-  const { data } = await client.get(`/tutors/${tutorId}/attendance`);
-  return data.history || [];
+export const fetchTutorAttendanceHistory = async (tutorId, params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  const { data } = await client.get(`/tutors/${tutorId}/attendance-history?${query}`);
+  return data; // Returns { history, detailed }
 };
 
 // ---- Tutor's Own Students (for tutor role) ----

@@ -47,7 +47,9 @@ export const ROLES = {
   ADMIN: "admin",
   TUTOR_LEAD: "tutorLead",
   TUTOR: "tutor",
-  COORDINATOR: "coordinator",
+  STUDENTS_TRACKING_TEAM: "studentsTrackingTeam",
+  ATTENDANCE_TRACKING_TEAM: "attendanceTrackingTeam" ,
+  SELECTION_TEAM: "selectionTeam",
 };
 
 // Role descriptions for UI
@@ -55,21 +57,13 @@ export const ROLE_DESCRIPTIONS = {
   admin: "Full system access and management",
   tutorLead: "Manage selections, scheduling, and attendance for tutors",
   tutor: "Mark attendance and manage own information",
-  coordinator: "Review selections and attendance approvals",
+  studentsTrackingTeam: "Review selections and attendance approvals",
+  attendanceTrackingTeam: "Review attendance approvals",
+  selectionTeam: "Manage selection phase",
 };
 
 // Navigation items configuration
 export const getNavItems = (role) => {
-  const baseItems = [
-    {
-      to: "/profile",
-      label: "Profile",
-      icon: "person",
-      permission: PERMISSIONS.PROFILE_VIEW,
-      roles: [ROLES.ADMIN, ROLES.TUTOR_LEAD, ROLES.TUTOR, ROLES.COORDINATOR],
-    },
-  ];
-
   const roleItems = {
     admin: [
       {
@@ -86,13 +80,13 @@ export const getNavItems = (role) => {
         permission: PERMISSIONS.SCHEDULING_VIEW,
         roles: [ROLES.ADMIN],
       },
-      {
-        to: "/attendance",
-        label: "Attendance",
-        icon: "fact_check",
-        permission: PERMISSIONS.ATTENDANCE_VIEW,
-        roles: [ROLES.ADMIN],
-      },
+      // {
+      //   to: "/attendance",
+      //   label: "Attendance",
+      //   icon: "fact_check",
+      //   permission: PERMISSIONS.ATTENDANCE_VIEW,
+      //   roles: [ROLES.ADMIN],
+      // },
       {
         to: "/overall-attendance",
         label: "Overall Attendance",
@@ -137,20 +131,13 @@ export const getNavItems = (role) => {
         permission: PERMISSIONS.SCHEDULING_VIEW,
         roles: [ROLES.TUTOR_LEAD],
       },
-      {
-        to: "/tutor-attendance",
-        label: "Mark Attendance",
-        icon: "edit_note",
-        permission: PERMISSIONS.TUTOR_ATTENDANCE_VIEW,
-        roles: [ROLES.TUTOR_LEAD],
-      },
-      {
-        to: "/attendance",
-        label: "Attendance",
-        icon: "fact_check",
-        permission: PERMISSIONS.ATTENDANCE_VIEW,
-        roles: [ROLES.TUTOR_LEAD],
-      },
+      // {
+      //   to: "/attendance",
+      //   label: "Attendance",
+      //   icon: "fact_check",
+      //   permission: PERMISSIONS.ATTENDANCE_VIEW,
+      //   roles: [ROLES.TUTOR_LEAD],
+      // },
       {
         to: "/dashboard",
         label: "Dashboard",
@@ -161,17 +148,17 @@ export const getNavItems = (role) => {
     ],
     tutor: [
       {
-        to: "/tutor-attendance",
-        label: "Mark Attendance",
-        icon: "edit_note",
-        permission: PERMISSIONS.TUTOR_ATTENDANCE_MANAGE,
-        roles: [ROLES.TUTOR],
-      },
-      {
         to: "/attendance",
         label: "Attendance",
         icon: "fact_check",
         permission: PERMISSIONS.ATTENDANCE_VIEW,
+        roles: [ROLES.TUTOR],
+      },
+      {
+        to: "/scheduling",
+        label: "Scheduling",
+        icon: "calendar_today",
+        permission: PERMISSIONS.SCHEDULING_VIEW,
         roles: [ROLES.TUTOR],
       },
     ],
@@ -193,5 +180,5 @@ export const getNavItems = (role) => {
     ],
   };
 
-  return [...(roleItems[role] || []), ...baseItems];
+  return [...(roleItems[role] || [])];
 };

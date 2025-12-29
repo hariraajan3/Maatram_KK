@@ -16,11 +16,8 @@ const RoleRoute = ({ allowedRoles, children, fallbackPath = '/' }) => {
     if (!user) {
         return <Navigate to="/login" replace />;
     }
-// frontend_rbac
 
     // User doesn't have required role
-
-// main
     if (allowedRoles && !allowedRoles.includes(user.role)) {
         // Log unauthorized access attempt
         console.warn(
