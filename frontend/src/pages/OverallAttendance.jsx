@@ -376,7 +376,6 @@ const OverallAttendance = () => {
             {/* Header */}
             <div>
                 <h1 className="text-3xl font-display font-bold text-black">Overall Attendance</h1>
-                <p className="text-gray-500 mt-1">View all tutors and their attendance records</p>
             </div>
 
             {/* Stats */}
@@ -431,7 +430,6 @@ const OverallAttendance = () => {
             <div className="bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
                 <div className="p-6 border-b border-gray-100">
                     <h3 className="text-lg font-bold text-black">All Tutors</h3>
-                    <p className="text-sm text-gray-500">Click on a tutor to view their attendance details</p>
                 </div>
 
                 {loading ? (

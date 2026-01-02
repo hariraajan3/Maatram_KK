@@ -12,32 +12,34 @@ const __dirname = path.dirname(__filename);
 const pathToSwaggerUi = swaggerUiDist.absolutePath();
 
 const app = express();
-// app.get('/health', (req, res) => {
-//   res.json({ status: 'ok', timestamp: new Date().toISOString() });
-// });
+
+// Enable CORS for frontend and backend origins
+app.use(cors({
+    origin: ['http://localhost:4000', 'http://localhost:5173'],
+    credentials: true
+}));
+
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true }));
 
 // 1. Serve your generated swagger.json file
-// Ensure this path matches the one you put in the replacement below
 app.get('/swagger.json', (req, res) => {
     res.sendFile(path.join(__dirname, 'swagger-output.json'));
 });
 
-// 2. Override the initializer file (This is where the Petstore URL actually lives)
+// 2. Override the initializer file for Swagger UI
 app.get('/docs/swagger-initializer.js', (req, res) => {
     const initializerPath = path.join(pathToSwaggerUi, 'swagger-initializer.js');
     const content = fs.readFileSync(initializerPath, 'utf8')
-        .replace("https://petstore.swagger.io/v2/swagger.json", "/swagger.json"); // Your API path
+        .replace("https://petstore.swagger.io/v2/swagger.json", "/swagger.json");
     res.type('application/javascript').send(content);
 });
 
 // 3. Serve the rest of the static assets
 app.use('/docs', express.static(pathToSwaggerUi));
 
-// 4. Redirect root /docs to index.html for ease of use
+// 4. Redirect root /docs to index.html
 app.get('/docs', (req, res) => res.redirect('/docs/index.html'));
-app.use(cors({ origin: ['http://localhost:4000'] }));
-app.use(express.json({ limit: '1mb' }));
-app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', routes);
 

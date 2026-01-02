@@ -52,7 +52,6 @@ export const ROLES = {
   SELECTION_TEAM: "selectionTeam",
 };
 
-// Role descriptions for UI
 export const ROLE_DESCRIPTIONS = {
   admin: "Full system access and management",
   tutorLead: "Manage selections, scheduling, and attendance for tutors",
@@ -80,25 +79,11 @@ export const getNavItems = (role) => {
         permission: PERMISSIONS.SCHEDULING_VIEW,
         roles: [ROLES.ADMIN],
       },
-      // {
-      //   to: "/attendance",
-      //   label: "Attendance",
-      //   icon: "fact_check",
-      //   permission: PERMISSIONS.ATTENDANCE_VIEW,
-      //   roles: [ROLES.ADMIN],
-      // },
       {
         to: "/overall-attendance",
         label: "Overall Attendance",
         icon: "assessment",
         permission: PERMISSIONS.ATTENDANCE_OVERALL_VIEW,
-        roles: [ROLES.ADMIN],
-      },
-      {
-        to: "/onboarding",
-        label: "Onboarding",
-        icon: "person_add",
-        permission: PERMISSIONS.ONBOARDING_VIEW,
         roles: [ROLES.ADMIN],
       },
       {
@@ -131,13 +116,6 @@ export const getNavItems = (role) => {
         permission: PERMISSIONS.SCHEDULING_VIEW,
         roles: [ROLES.TUTOR_LEAD],
       },
-      // {
-      //   to: "/attendance",
-      //   label: "Attendance",
-      //   icon: "fact_check",
-      //   permission: PERMISSIONS.ATTENDANCE_VIEW,
-      //   roles: [ROLES.TUTOR_LEAD],
-      // },
       {
         to: "/dashboard",
         label: "Dashboard",
@@ -162,20 +140,40 @@ export const getNavItems = (role) => {
         roles: [ROLES.TUTOR],
       },
     ],
-    coordinator: [
+    selectionTeam: [
       {
         to: "/",
         label: "Selection",
         icon: "how_to_reg",
         permission: PERMISSIONS.SELECTION_VIEW,
-        roles: [ROLES.COORDINATOR],
+        roles: [ROLES.SELECTION_TEAM],
+      },
+    ],
+
+    attendanceTrackingTeam: [
+      {
+        to: "/overall-attendance",
+        label: "Overall Attendance",
+        icon: "assessment",
+        permission: PERMISSIONS.ATTENDANCE_OVERALL_VIEW,
+        roles: [ROLES.ATTENDANCE_TRACKING_TEAM],
+      },
+    ],
+
+    studentsTrackingTeam: [
+      {
+        to: "/overall-attendance",
+        label: "Overall Attendance",
+        icon: "assessment",
+        permission: PERMISSIONS.ATTENDANCE_OVERALL_VIEW,
+        roles: [ROLES.STUDENTS_TRACKING_TEAM],
       },
       {
-        to: "/attendance",
-        label: "Attendance",
-        icon: "fact_check",
-        permission: PERMISSIONS.ATTENDANCE_VIEW,
-        roles: [ROLES.COORDINATOR],
+        to: "/dashboard",
+        label: "Dashboard",
+        icon: "dashboard",
+        permission: PERMISSIONS.DASHBOARD_VIEW,
+        roles: [ROLES.STUDENTS_TRACKING_TEAM],
       },
     ],
   };

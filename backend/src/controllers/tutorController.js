@@ -149,10 +149,16 @@ const getTutorStudents = async (req, res, next) => {
 
         // Get students based on matching medium, district, and subjects
         // In production, you'd have a StudentTutorAssignment table
+        // Get students based on matching medium, district category, and subjects
+        const districtCategory = tutor.tutoringDistrict;
+        const districtFilter = districtCategory === 'Other'
+            ? { notIn: ['Chennai', 'Coimbatore'] }
+            : districtCategory;
+
         const students = await prisma.student.findMany({
             where: {
-                medium: tutor.medium,
-                district: tutor.district,
+                medium: tutor.tutoringMedium,
+                district: districtFilter,
                 phase: { in: ['Selection', 'Scheduling', 'Attendance'] },
             },
             select: {
@@ -167,10 +173,10 @@ const getTutorStudents = async (req, res, next) => {
         });
 
         // Filter students whose subjects overlap with tutor's subjects
-        const tutorSubjects = tutor.subjects || [];
+        const tutorSubjects = tutor.tutoringSubjects || [];
         const matchedStudents = students.filter((student) => {
             const studentSubjects = student.requestedSubjects || [];
-            return studentSubjects.some((subject) => tutorSubjects.includes(subject));
+            return Array.isArray(studentSubjects) && studentSubjects.some((subject) => tutorSubjects.includes(subject));
         }).map((student) => ({
             ...student,
             subjects: (student.requestedSubjects || []).filter((s) => tutorSubjects.includes(s)),
@@ -202,7 +208,7 @@ const getTutorAttendanceHistory = async (req, res, next) => {
             const startDate = new Date(Date.UTC(year, month - 1, 1));
             const endDate = new Date(Date.UTC(year, month, 0, 23, 59, 59));
             dateFilter = {
-                startTime: {
+                scheduleAt: {
                     gte: startDate,
                     lte: endDate
                 }
@@ -210,13 +216,13 @@ const getTutorAttendanceHistory = async (req, res, next) => {
         }
 
         // Get attendance records for classes taught by this tutor
-        const classes = await prisma.class.findMany({
+        const classes = await prisma.schedule.findMany({
             where: {
-                tutorId,
+                tutorId: parseInt(tutorId),
                 ...dateFilter
             },
             include: {
-                attendance: {
+                attendances: {
                     include: {
                         student: {
                             select: { id: true, name: true }
@@ -224,7 +230,7 @@ const getTutorAttendanceHistory = async (req, res, next) => {
                     }
                 },
             },
-            orderBy: { startTime: 'asc' },
+            orderBy: { scheduleAt: 'asc' },
         });
 
         // 1. Daily Summary (History)
@@ -232,18 +238,18 @@ const getTutorAttendanceHistory = async (req, res, next) => {
         const studentMap = new Map();
         const records = {};
 
-        classes.forEach((cls) => {
-            const dateKey = cls.startTime.toISOString().split('T')[0];
+        classes.forEach((sch) => {
+            const dateKey = sch.scheduleAt.toISOString().split('T')[0];
 
             // Initialize daily summary
             if (!dateMap[dateKey]) {
                 dateMap[dateKey] = { present: 0, absent: 0, total: 0 };
             }
-            dateMap[dateKey].total += cls.attendance.length; // Or use enrolled count if available
+            dateMap[dateKey].total += sch.attendances.length;
 
-            cls.attendance.forEach((att) => {
+            sch.attendances.forEach((att) => {
                 // Update daily summary
-                if (att.present) {
+                if (att.attendanceStatus === 'PRESENT') {
                     dateMap[dateKey].present += 1;
                 } else {
                     dateMap[dateKey].absent += 1;
@@ -262,9 +268,8 @@ const getTutorAttendanceHistory = async (req, res, next) => {
                     records[att.studentId] = {};
                 }
                 records[att.studentId][dateKey] = {
-                    status: att.present ? 'P' : 'A',
-                    notes: att.notes || (att.absentReason),
-                    marks: att.marks
+                    status: att.attendanceStatus === 'PRESENT' ? 'P' : 'A',
+                    notes: att.remarks,
                 };
             });
         });
@@ -275,9 +280,9 @@ const getTutorAttendanceHistory = async (req, res, next) => {
 
         const detailed = {
             dates: classes.map(c => ({
-                date: c.startTime.toISOString().split('T')[0],
+                date: c.scheduleAt.toISOString().split('T')[0],
                 classId: c.id
-            })), // unique dates
+            })),
             students: Array.from(studentMap.values()).sort((a, b) => a.name.localeCompare(b.name)),
             records
         };
@@ -311,10 +316,16 @@ const getMyStudents = async (req, res, next) => {
         }
 
         // Use the same logic as getTutorStudents
+        // Get students based on matching medium, district category, and subjects
+        const districtCategory = tutor.tutoringDistrict;
+        const districtFilter = districtCategory === 'Other'
+            ? { notIn: ['Chennai', 'Coimbatore'] }
+            : districtCategory;
+
         const students = await prisma.student.findMany({
             where: {
-                medium: tutor.medium,
-                district: tutor.district,
+                medium: tutor.tutoringMedium,
+                district: districtFilter,
                 phase: { in: ['Selection', 'Scheduling', 'Attendance'] },
             },
             select: {
@@ -329,10 +340,10 @@ const getMyStudents = async (req, res, next) => {
         });
 
         // Filter students whose subjects overlap with tutor's subjects
-        const tutorSubjects = tutor.subjects || [];
+        const tutorSubjects = tutor.tutoringSubjects || [];
         const matchedStudents = students.filter((student) => {
             const studentSubjects = student.requestedSubjects || [];
-            return studentSubjects.some((subject) => tutorSubjects.includes(subject));
+            return Array.isArray(studentSubjects) && studentSubjects.some((subject) => tutorSubjects.includes(subject));
         }).map((student) => ({
             ...student,
             subjects: (student.requestedSubjects || []).filter((s) => tutorSubjects.includes(s)),
@@ -359,28 +370,26 @@ const recordTutorAttendance = async (req, res, next) => {
         }
 
         // Get or create a class for today
-        let cls = await prisma.class.findFirst({
+        let sch = await prisma.schedule.findFirst({
             where: {
                 tutorId: tutor.id,
-                startTime: {
+                scheduleAt: {
                     gte: new Date(date + 'T00:00:00Z'),
                     lt: new Date(date + 'T23:59:59Z'),
                 },
             },
         });
 
-        if (!cls) {
-            cls = await prisma.class.create({
+        if (!sch) {
+            sch = await prisma.schedule.create({
                 data: {
-                    phase: 'Attendance',
+                    scheduleDate: new Date(date),
+                    scheduleAt: new Date(date + 'T09:00:00Z'),
                     tutorId: tutor.id,
-                    subject: (tutor.subjects || ['Maths'])[0],
-                    studentGroup: `${tutor.medium}-${tutor.district}`,
-                    startTime: new Date(date + 'T09:00:00Z'),
-                    endTime: new Date(date + 'T10:00:00Z'),
-                    status: 'completed',
-                    modality: 'virtual',
-                    createdBy: req.user.id,
+                    subject: (tutor.tutoringSubjects || ['Maths'])[0],
+                    medium: tutor.tutoringMedium,
+                    district: tutor.tutoringDistrict,
+                    status: 'COMPLETED',
                 },
             });
         }
@@ -389,36 +398,34 @@ const recordTutorAttendance = async (req, res, next) => {
         const results = await Promise.all(
             attendance.map(async (record) => {
                 try {
-                    const existing = await prisma.attendance.findFirst({
+                    const existing = await prisma.studentAttendance.findFirst({
                         where: {
-                            classId: cls.id,
+                            schedulingId: sch.id,
                             studentId: record.studentId,
-                            date: new Date(date),
                         },
                     });
 
-                    const notes = record.present
+                    const remarks = record.present
                         ? (record.marks ? `Marks: ${record.marks}` : null)
                         : (record.absentReason || 'No reason provided');
 
                     if (existing) {
-                        return await prisma.attendance.update({
+                        return await prisma.studentAttendance.update({
                             where: { id: existing.id },
                             data: {
-                                present: record.present,
-                                notes,
-                                recordedBy: req.user.id,
+                                attendanceStatus: record.present ? 'PRESENT' : 'ABSENT',
+                                remarks,
                             },
                         });
                     } else {
-                        return await prisma.attendance.create({
+                        return await prisma.studentAttendance.create({
                             data: {
-                                classId: cls.id,
+                                schedulingId: sch.id,
                                 studentId: record.studentId,
-                                present: record.present,
-                                notes,
-                                recordedBy: req.user.id,
-                                date: new Date(date),
+                                classDate: new Date(date),
+                                tutorId: tutor.id,
+                                attendanceStatus: record.present ? 'PRESENT' : 'ABSENT',
+                                remarks,
                             },
                         });
                     }

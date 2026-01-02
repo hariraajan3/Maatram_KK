@@ -10,9 +10,12 @@ import tutorsRoutes from './tutors.js';
 import tutorRoutes from './tutor.js';
 import authRoutes from './auth.js';
 
+import userRoutes from './userRoutes.js';
+
 const router = express.Router();
 
 router.use('/auth', authRoutes);
+router.use('/user', userRoutes);
 router.use('/dashboard', dashboardRoutes);
 router.use('/onboarding', onboardingRoutes);
 router.use('/schedule', scheduleRoutes);

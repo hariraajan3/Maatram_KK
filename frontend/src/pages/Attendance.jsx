@@ -121,8 +121,7 @@ const Attendance = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-3xl font-display font-bold text-black">Attendance & Marks</h2>
-          {/* <p className="text-gray-500 mt-1">Securely log student attendance and assessment scores.</p> */}
+          <h2 className="text-3xl font-display font-bold text-black">Attendance </h2>
         </div>
         <div className="bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm">
           <p className="text-xs text-gray-500 uppercase font-bold">Tutor</p>

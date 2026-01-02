@@ -15,39 +15,76 @@ import AdminLogs from './pages/AdminLogs';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
-import './App.css'
-import { AuthProvider, useAuth } from './AuthContext';
+
+import './App.css';
+
+import { AuthProvider } from './AuthContext';
 import { setAuthToken } from './services/api';
 import { PERMISSIONS } from './permissions';
+import { ROLES } from './permissions';
+import { useAuth } from './AuthContext';
 
 const ProtectedLayout = ({ session, onLogout }) => {
-  const { setUser } = useAuth();
-
-  useEffect(() => {
-    setUser(session?.user || null);
-  }, [session, setUser]);
-
   if (!session) return <Navigate to="/login" replace />;
-
   return <Layout user={session.user} onLogout={onLogout} />;
+};
+
+const HomeRedirect = () => {
+  const { user } = useAuth();
+
+  if (!user) return <Navigate to="/login" replace />;
+
+  if (user.role === ROLES.TUTOR || user.role === ROLES.ATTENDANCE_TRACKING_TEAM) {
+    return <Navigate to="/attendance" replace />;
+  }
+
+  if (user.role === ROLES.STUDENTS_TRACKING_TEAM) {
+    return <Navigate to="/overall-attendance" replace />;
+  }
+
+  // Default for admin, tutorLead, selectionTeam
+  return (
+    <RoleRoute
+      allowedRoles={[
+        ROLES.ADMIN,
+        ROLES.TUTOR_LEAD,
+        ROLES.SELECTION_TEAM
+      ]}
+    >
+      <RequirePermission permission={PERMISSIONS.SELECTION_VIEW}>
+        <Selection />
+      </RequirePermission>
+    </RoleRoute>
+  );
 };
 
 const App = () => {
   const [session, setSession] = useState(() => {
     try {
       const saved = localStorage.getItem('kk_session');
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+
+      const ROLE_MAP = {
+        'ADMIN': 'admin',
+        'TUTOR_LEADS': 'tutorLead',
+        'TUTOR': 'tutor',
+        'SELECTION_TEAM': 'selectionTeam',
+        'ATTENDANCE_TRACKING_TEAM': 'attendanceTrackingTeam',
+        'CLASS_INSPECTION_TEAM': 'studentsTrackingTeam',
+      };
+
+      if (parsed.user && parsed.user.role) {
+        parsed.user.role = ROLE_MAP[parsed.user.role] || parsed.user.role;
+      }
+      return parsed;
     } catch {
       return null;
     }
   });
 
   useEffect(() => {
-    if (session?.token) {
-      setAuthToken(session.token);
-    } else {
-      setAuthToken(null);
-    }
+    setAuthToken(session?.token || null);
   }, [session]);
 
   const handleLogin = (payload) => {
@@ -64,43 +101,56 @@ const App = () => {
 
   return (
     <BrowserRouter>
-      <AuthProvider>
+      <AuthProvider userData={session?.user}>
         <Routes>
 
-          {/* Public Routes */}
+          {/* ================= PUBLIC ROUTES ================= */}
           <Route
             path="/login"
             element={
-              session ? <Navigate to="/" replace /> : <Login onSuccess={handleLogin} />
+              session
+                ? <Navigate to="/" replace />
+                : <Login onSuccess={handleLogin} />
             }
           />
+
           <Route
             path="/forgot-password"
             element={
-              session ? <Navigate to="/" replace /> : <ForgotPassword />
+              session
+                ? <Navigate to="/" replace />
+                : <ForgotPassword />
             }
           />
 
-          {/* Protected Routes */}
+          {/* ================= PROTECTED LAYOUT ================= */}
           <Route
             path="/"
-            element={<ProtectedLayout session={session} onLogout={handleLogout} />}
+            element={
+              <ProtectedLayout
+                session={session}
+                onLogout={handleLogout}
+              />
+            }
           >
+
+            {/* ================= SELECTION ================= */}
             <Route
               index
-              element={
-                <RoleRoute allowedRoles={['admin', 'tutorLead', 'coordinator']}>
-                  <RequirePermission permission={PERMISSIONS.SELECTION_VIEW}>
-                    <Selection />
-                  </RequirePermission>
-                </RoleRoute>
-              }
+              element={<HomeRedirect />}
             />
 
+            {/* ================= SCHEDULING ================= */}
             <Route
               path="scheduling"
               element={
-                <RoleRoute allowedRoles={['admin', 'tutorLead']}>
+                <RoleRoute
+                  allowedRoles={[
+                    ROLES.ADMIN,
+                    ROLES.TUTOR_LEAD,
+                    ROLES.TUTOR,
+                  ]}
+                >
                   <RequirePermission permission={PERMISSIONS.SCHEDULING_VIEW}>
                     <Scheduling />
                   </RequirePermission>
@@ -108,10 +158,18 @@ const App = () => {
               }
             />
 
+            {/* ================= ATTENDANCE ================= */}
             <Route
               path="attendance"
               element={
-                <RoleRoute allowedRoles={['admin', 'tutorLead', 'tutor', 'coordinator']}>
+                <RoleRoute
+                  allowedRoles={[
+                    ROLES.ADMIN,
+                    ROLES.TUTOR_LEAD,
+                    ROLES.TUTOR,
+                    ROLES.ATTENDANCE_TRACKING_TEAM,
+                  ]}
+                >
                   <RequirePermission permission={PERMISSIONS.ATTENDANCE_VIEW}>
                     <Attendance />
                   </RequirePermission>
@@ -119,43 +177,17 @@ const App = () => {
               }
             />
 
-            <Route
-              path="onboarding"
-              element={
-                <RoleRoute allowedRoles={['admin']}>
-                  <RequirePermission permission={PERMISSIONS.ONBOARDING_MANAGE}>
-                    <Onboarding />
-                  </RequirePermission>
-                </RoleRoute>
-              }
-            />
-
-            <Route
-              path="dashboard"
-              element={
-                <RoleRoute allowedRoles={['admin', 'tutorLead']}>
-                  <RequirePermission permission={PERMISSIONS.DASHBOARD_VIEW}>
-                    <Dashboard />
-                  </RequirePermission>
-                </RoleRoute>
-              }
-            />
-
-            <Route
-              path="admin-logs"
-              element={
-                <RoleRoute allowedRoles={['admin']}>
-                  <RequirePermission permission={PERMISSIONS.ADMIN_LOGS}>
-                    <AdminLogs />
-                  </RequirePermission>
-                </RoleRoute>
-              }
-            />
-
+            {/* ================= OVERALL ATTENDANCE ================= */}
             <Route
               path="overall-attendance"
               element={
-                <RoleRoute allowedRoles={['admin']}>
+                <RoleRoute
+                  allowedRoles={[
+                    ROLES.ADMIN,
+                    ROLES.ATTENDANCE_TRACKING_TEAM,
+                    ROLES.STUDENTS_TRACKING_TEAM,
+                  ]}
+                >
                   <RequirePermission permission={PERMISSIONS.ATTENDANCE_OVERALL_VIEW}>
                     <OverallAttendance />
                   </RequirePermission>
@@ -163,6 +195,49 @@ const App = () => {
               }
             />
 
+            {/* ================= ONBOARDING ================= */}
+            <Route
+              path="onboarding"
+              element={
+                <RoleRoute allowedRoles={[ROLES.TUTOR_LEAD]}>
+                  <RequirePermission permission={PERMISSIONS.ONBOARDING_MANAGE}>
+                    <Onboarding />
+                  </RequirePermission>
+                </RoleRoute>
+              }
+            />
+
+            {/* ================= DASHBOARD ================= */}
+            <Route
+              path="dashboard"
+              element={
+                <RoleRoute
+                  allowedRoles={[
+                    ROLES.ADMIN,
+                    ROLES.TUTOR_LEAD,
+                    ROLES.STUDENTS_TRACKING_TEAM,
+                  ]}
+                >
+                  <RequirePermission permission={PERMISSIONS.DASHBOARD_VIEW}>
+                    <Dashboard />
+                  </RequirePermission>
+                </RoleRoute>
+              }
+            />
+
+            {/* ================= ADMIN LOGS ================= */}
+            <Route
+              path="admin-logs"
+              element={
+                <RoleRoute allowedRoles={[ROLES.ADMIN]}>
+                  <RequirePermission permission={PERMISSIONS.ADMIN_LOGS}>
+                    <AdminLogs />
+                  </RequirePermission>
+                </RoleRoute>
+              }
+            />
+
+            {/* ================= PROFILE ================= */}
             <Route
               path="profile"
               element={
@@ -171,13 +246,17 @@ const App = () => {
                 </RequirePermission>
               }
             />
+
           </Route>
 
-          {/* Catch-all */}
+          {/* ================= CATCH ALL ================= */}
           <Route
             path="*"
-            element={<Navigate to={session ? '/' : '/login'} replace />}
+            element={
+              <Navigate to={session ? '/' : '/login'} replace />
+            }
           />
+
         </Routes>
       </AuthProvider>
     </BrowserRouter>

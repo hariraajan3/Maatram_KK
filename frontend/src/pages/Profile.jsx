@@ -1,275 +1,256 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
+import { fetchProfile, updateProfile } from '../services/api';
+import { useAuth } from '../AuthContext';
+
+const DISTRICTS = ['Chennai', 'Coimbatore', 'Other'];
+const MEDIUMS = ['Tamil', 'English'];
+const SUBJECTS = ['Physics', 'Maths', 'Chemistry', 'Commerce', 'Economics', 'Accounts', 'Tamil', 'English'];
 
 const Profile = () => {
-  const navigate = useNavigate();
-  const { user, onLogout } = useOutletContext();
+  const { onLogout } = useOutletContext();
   const [profileData, setProfileData] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-  useEffect(() => {
-    // Load user data from session
+  // Form state
+  const [formData, setFormData] = useState({});
+
+  const loadProfile = useCallback(async () => {
     try {
-      const session = JSON.parse(localStorage.getItem('kk_session') || '{}');
-      if (session?.user) {
-        setProfileData(session.user);
-      }
-    } catch (error) {
-      console.error('Error loading profile:', error);
+      setLoading(true);
+      const data = await fetchProfile();
+      setProfileData(data);
+
+      const currentSubject = Array.isArray(data.tutoringSubjects) ? data.tutoringSubjects[0] : data.tutoringSubjects;
+
+      setFormData({
+        phoneNumber: data.phoneNumber || '',
+        collegeOrCompany: data.collegeOrCompany || '',
+        companyOrOrg: data.companyOrOrg || '',
+        tutorAddress: data.tutorAddress || '',
+        yearOfStudyingOrAlumni: data.yearOfStudyingOrAlumni || '',
+        alumniOrYearStudying: data.alumniOrYearStudying || '',
+        tutoringExperienceYears: data.tutoringExperienceYears || 0,
+        tutoringDistrict: data.tutoringDistrict || '',
+        tutoringMedium: data.tutoringMedium || '',
+        tutoringSubjects: currentSubject || '',
+      });
+    } catch (err) {
+      console.error('Failed to load profile:', err);
+      setError('Failed to load profile details.');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  if (!profileData) {
+  useEffect(() => {
+    loadProfile();
+  }, [loadProfile]);
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setSaving(true);
+      setError('');
+      setSuccess('');
+
+      const submitData = {
+        ...formData,
+        tutoringSubjects: formData.tutoringSubjects ? [formData.tutoringSubjects] : []
+      };
+
+      await updateProfile(submitData);
+      await loadProfile();
+      setSuccess('Profile updated successfully!');
+      setIsEditing(false);
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError('Failed to update profile.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <p className="text-black/70 font-medium">Loading profile...</p>
+      <div className="flex items-center justify-center min-h-[300px]">
+        <div className="w-8 h-8 border-4 border-maatram-yellow border-t-transparent rounded-full animate-spin"></div>
       </div>
     );
   }
 
-  const getRoleBadgeColor = (role) => {
-    switch (role?.toLowerCase()) {
-      case 'admin':
-        return 'bg-maatram-yellow text-black border-2 border-black';
-      case 'tutorlead':
-        return 'bg-maatram-yellow text-black border-2 border-black';
-      case 'tutor':
-        return 'bg-maatram-yellow text-black border-2 border-black';
-      case 'coordinator':
-        return 'bg-maatram-yellow text-black border-2 border-black';
-      default:
-        return 'bg-maatram-yellow text-black border-2 border-black';
-    }
-  };
-
-  const getRoleDisplayName = (role) => {
-    switch (role?.toLowerCase()) {
-      case 'tutorlead':
-        return 'Tutor Lead';
-      case 'admin':
-        return 'Administrator';
-      case 'tutor':
-        return 'Tutor';
-      case 'coordinator':
-        return 'Coordinator';
-      default:
-        return role || 'User';
-    }
-  };
-
-  const getInitials = (name) => {
-    if (!name) return 'U';
-    return name
-      .split(' ')
-      .map((n) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  const role = profileData?.role;
+  const initials = profileData?.name?.charAt(0).toUpperCase() || 'U';
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <header>
-        <h2 className="text-2xl font-bold text-black">My Profile</h2>
-        <p className="text-sm text-black/70 font-medium">View and manage your account information</p>
-      </header>
+    <div className="max-w-4xl mx-auto pb-12 animate-in fade-in duration-500">
+      {/* Top Header - No Edit Button here */}
+      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 mb-8 flex flex-col md:flex-row items-center gap-8">
+        <div className="w-24 h-24 rounded-full bg-maatram-yellow flex items-center justify-center text-4xl font-black text-black">
+          {initials}
+        </div>
 
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Profile Card - Left Side */}
-        <div className="lg:col-span-1">
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-maatram-yellow p-6">
-            {/* Avatar Section */}
-            <div className="text-center mb-6">
-              <div className="inline-flex items-center justify-center w-24 h-24 rounded-full bg-maatram-yellow text-black text-3xl font-bold mb-4 border-2 border-black">
-                {profileData.avatar ? (
-                  <img
-                    src={profileData.avatar}
-                    alt={profileData.name}
-                    className="w-full h-full rounded-full object-cover"
-                  />
-                ) : (
-                  getInitials(profileData.name)
-                )}
-              </div>
-              <h3 className="text-xl font-bold text-black mb-1">{profileData.name}</h3>
-              <span
-                className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${getRoleBadgeColor(
-                  profileData.role
-                )}`}
-              >
-                {getRoleDisplayName(profileData.role)}
-              </span>
-            </div>
-
-            {/* Quick Stats */}
-            <div className="space-y-3 pt-6 border-t border-maatram-yellow">
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-black/70">Account Status</span>
-                <span className="px-2 py-1 bg-maatram-yellow text-black border border-black text-xs font-semibold rounded-full">
-                  Active
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-black/70">Member Since</span>
-                <span className="text-sm font-medium text-black">
-                  {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="mt-4 space-y-3">
-            <button
-              onClick={() => navigate('/')}
-              className="w-full bg-maatram-yellow hover:bg-maatram-yellow-dark text-black border-2 border-black font-bold py-3 rounded-lg transition-colors"
-            >
-              Back to Dashboard
-            </button>
-            <button
-              onClick={onLogout}
-              className="w-full bg-black hover:bg-black/90 text-white border-2 border-black text-black font-semibold py-3 rounded-lg transition-colors"
-            >
-              Logout
-            </button>
+        <div className="flex-1 space-y-1 text-center md:text-left">
+          <h1 className="text-3xl font-black text-black tracking-tight">{profileData?.name}</h1>
+          <p className="text-gray-400 font-medium flex items-center justify-center md:justify-start gap-2">
+            <span className="material-icons-outlined text-sm">alternate_email</span>
+            {profileData?.email}
+          </p>
+          <div className="inline-flex items-center px-3 py-1 bg-gray-900 text-white rounded-lg text-[10px] font-black uppercase tracking-widest mt-2">
+            {role?.replace('_', ' ')}
           </div>
         </div>
 
-        {/* Details Card - Right Side */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Personal Information */}
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-maatram-yellow p-6">
-            <h3 className="text-lg font-semibold text-black mb-6">Personal Information</h3>
-            <div className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-black/60 uppercase tracking-wide mb-2">
-                    Full Name
-                  </label>
-                  <div className="p-3 bg-maatram-yellow/20 rounded-lg border border-maatram-yellow">
-                    <p className="text-sm font-medium text-black">{profileData.name}</p>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-black/60 uppercase tracking-wide mb-2">
-                    Email Address
-                  </label>
-                  <div className="p-3 bg-maatram-yellow/20 rounded-lg border border-maatram-yellow">
-                    <p className="text-sm font-medium text-black">{profileData.email}</p>
-                  </div>
-                </div>
+        <button onClick={onLogout} className="p-3 bg-gray-50 text-gray-400 rounded-2xl hover:bg-rose-50 hover:text-rose-500 transition-all">
+          <span className="material-icons-outlined">logout</span>
+        </button>
+      </div>
+
+      {success && <div className="mb-6 px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl text-sm font-bold border border-emerald-100">{success}</div>}
+      {error && <div className="mb-6 px-4 py-3 bg-rose-50 text-rose-600 rounded-xl text-sm font-bold border border-rose-100">{error}</div>}
+
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Personal Information Card */}
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-sm p-8 space-y-8">
+          {/* Section Header with Edit Tool */}
+          <div className="flex items-center justify-between border-b border-gray-50 pb-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-sky-100 rounded-xl">
+                <span className="material-icons-outlined text-sky-500">person</span>
               </div>
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-medium text-black/60 uppercase tracking-wide mb-2">
-                    User ID
-                  </label>
-                  <div className="p-3 bg-maatram-yellow/20 rounded-lg border border-maatram-yellow">
-                    <p className="text-sm font-medium text-black">{profileData.id || 'N/A'}</p>
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-black/60 uppercase tracking-wide mb-2">
-                    Role
-                  </label>
-                  <div className="p-3 bg-maatram-yellow/20 rounded-lg border border-maatram-yellow">
-                    <span
-                      className={`inline-block px-3 py-1 rounded-full text-xs font-semibold ${getRoleBadgeColor(
-                        profileData.role
-                      )}`}
-                    >
-                      {getRoleDisplayName(profileData.role)}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <h3 className="text-xl font-black text-black">General Information</h3>
             </div>
+
+            <button
+              type="button"
+              onClick={() => setIsEditing(!isEditing)}
+              className={`p-2 rounded-xl transition-all ${isEditing ? 'bg-maatram-yellow text-black' : 'bg-gray-100 text-gray-400 hover:text-black'}`}
+              title={isEditing ? 'Cancel Edit' : 'Edit Profile'}
+            >
+              <span className="material-icons-outlined">{isEditing ? 'close' : 'edit'}</span>
+            </button>
           </div>
 
-          {/* Account Settings */}
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-maatram-yellow p-6">
-            <h3 className="text-lg font-semibold text-black mb-6">Account Settings</h3>
-            <div className="space-y-4">
-              <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <div className="flex items-start">
-                  <svg
-                    className="w-5 h-5 text-blue-600 mt-0.5 mr-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div>
-                    <p className="text-sm font-medium text-blue-900">Profile Management</p>
-                    <p className="text-xs text-blue-700 mt-1">
-                      To update your profile information, please contact your administrator.
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                <div className="flex items-start">
-                  <svg
-                    className="w-5 h-5 text-amber-600 mt-0.5 mr-3"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                    />
-                  </svg>
-                  <div>
-                    <p className="text-sm font-medium text-amber-900">Password Security</p>
-                    <p className="text-xs text-amber-700 mt-1">
-                      Use the "Forgot Password" option on the login page to reset your password.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <div className="grid md:grid-cols-2 gap-x-12 gap-y-8">
+            <DataField label="Phone Number" name="phoneNumber" value={formData.phoneNumber} onChange={handleInputChange} isEditing={isEditing} />
+
+            {role === 'ADMIN' ? (
+              <DataField label="Organization" name="companyOrOrg" value={formData.companyOrOrg} onChange={handleInputChange} isEditing={isEditing} />
+            ) : (
+              <DataField label="College / Company" name="collegeOrCompany" value={formData.collegeOrCompany} onChange={handleInputChange} isEditing={isEditing} />
+            )}
+
+            {/* Team Specifics */}
+            {['TUTOR_LEADS', 'SELECTION_TEAM', 'ATTENDANCE_TRACKING_TEAM', 'CLASS_INSPECTION_TEAM'].includes(role) && (
+              <DataField label="Academic / Alumni Status" name="yearOfStudyingOrAlumni" value={formData.yearOfStudyingOrAlumni} onChange={handleInputChange} isEditing={isEditing} />
+            )}
+
+            {/* Tutor Specifics */}
+            {role === 'TUTOR' && (
+              <>
+                <DataField label="KK ID" value={profileData.kkId} readOnlyOnly />
+                <DataField label="District" name="tutoringDistrict" value={formData.tutoringDistrict} onChange={handleInputChange} isEditing={isEditing} options={DISTRICTS} />
+                <DataField label="Medium" name="tutoringMedium" value={formData.tutoringMedium} onChange={handleInputChange} isEditing={isEditing} options={MEDIUMS} />
+                <DataField label="Subject" name="tutoringSubjects" value={formData.tutoringSubjects} onChange={handleInputChange} isEditing={isEditing} options={SUBJECTS} />
+                <DataField label="Year / Alumni" name="alumniOrYearStudying" value={formData.alumniOrYearStudying} onChange={handleInputChange} isEditing={isEditing} />
+                <DataField label="Experience (Years)" name="tutoringExperienceYears" value={formData.tutoringExperienceYears} onChange={handleInputChange} isEditing={isEditing} type="number" />
+              </>
+            )}
           </div>
 
-          {/* Activity Summary */}
-          <div className="bg-white rounded-2xl shadow-lg border-2 border-maatram-yellow p-6">
-            <h3 className="text-lg font-semibold text-black mb-6">Activity Summary</h3>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="p-4 bg-maatram-yellow/20 rounded-lg border border-maatram-yellow">
-                <p className="text-xs text-black/60 mb-1">Last Login</p>
-                <p className="text-sm font-semibold text-black">
-                  {new Date().toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric',
-                    year: 'numeric',
-                  })}
-                </p>
-              </div>
-              <div className="p-4 bg-maatram-yellow/20 rounded-lg border border-maatram-yellow">
-                <p className="text-xs text-black/60 mb-1">Account Type</p>
-                <p className="text-sm font-semibold text-black">
-                  {getRoleDisplayName(profileData.role)}
-                </p>
-              </div>
-              <div className="p-4 bg-maatram-yellow/20 rounded-lg border border-maatram-yellow">
-                <p className="text-xs text-black/60 mb-1">Status</p>
-                <p className="text-sm font-semibold text-green-600">Active</p>
-              </div>
+          {role === 'TUTOR' && (
+            <div className="space-y-4 pt-4">
+              <label className="block text-xs font-black text-gray-400 uppercase tracking-widest ml-1">Residential Address</label>
+              {isEditing ? (
+                <textarea
+                  name="tutorAddress"
+                  value={formData.tutorAddress}
+                  onChange={handleInputChange}
+                  rows="2"
+                  className="w-full p-4 rounded-2xl border bg-white border-maatram-yellow shadow-inner ring-4 ring-maatram-yellow/5 font-bold text-sm outline-none"
+                  placeholder="Enter full address"
+                />
+              ) : (
+                <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 text-black/60 font-bold text-sm min-h-[60px]">
+                  {formData.tutorAddress || 'No address provided'}
+                </div>
+              )}
             </div>
+          )}
+        </div>
+
+        {isEditing && (
+          <div className="flex justify-end pt-4 animate-in slide-in-from-bottom-2">
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-10 py-4 bg-maatram-yellow text-black rounded-2xl font-black shadow-xl hover:shadow-maatram-yellow/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center gap-3 disabled:opacity-50"
+            >
+              {saving ? (
+                <div className="w-5 h-5 border-2 border-black border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                <span className="material-icons-outlined">check_circle</span>
+              )}
+              Update Profile
+            </button>
           </div>
+        )}
+      </form>
+    </div>
+  );
+};
+
+const DataField = ({ label, name, value, onChange, isEditing, options, type = "text", readOnlyOnly }) => {
+  if (readOnlyOnly) {
+    return (
+      <div className="space-y-1">
+        <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+        <div className="p-4 bg-gray-50 rounded-2xl border border-gray-50 text-gray-400 font-bold text-sm">
+          {value || 'N/A'}
         </div>
       </div>
+    );
+  }
+
+  return (
+    <div className="space-y-1">
+      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">{label}</label>
+      {!isEditing ? (
+        <div className="p-4 border-b border-gray-100 font-bold text-black text-sm">
+          {value || <span className="text-gray-300 font-medium">Not set</span>}
+        </div>
+      ) : (
+        options ? (
+          <select
+            name={name}
+            value={value}
+            onChange={onChange}
+            className="w-full p-4 rounded-2xl border bg-white border-maatram-yellow shadow-inner ring-4 ring-maatram-yellow/5 font-bold text-sm outline-none"
+          >
+            <option value="">Select {label}</option>
+            {options.map(o => <option key={o} value={o}>{o}</option>)}
+          </select>
+        ) : (
+          <input
+            type={type}
+            name={name}
+            value={value}
+            onChange={onChange}
+            className="w-full p-4 rounded-2xl border bg-white border-maatram-yellow shadow-inner ring-4 ring-maatram-yellow/5 font-bold text-sm outline-none"
+          />
+        )
+      )}
     </div>
   );
 };
 
 export default Profile;
-

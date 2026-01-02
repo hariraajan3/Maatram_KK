@@ -157,7 +157,6 @@ const Dashboard = () => {
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-16 -mt-16 blur-3xl"></div>
         <div className="relative z-10 max-w-2xl mx-auto">
           <h2 className="text-3xl font-display font-bold text-black mb-2">Student Growth Tracker</h2>
-          <p className="text-black/70 mb-6 font-medium">Search to view detailed performance improvement and stats.</p>
 
           <div className="flex gap-4 bg-white p-2 rounded-xl shadow-lg">
             <input

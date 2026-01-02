@@ -97,6 +97,13 @@ model User {
   attendanceTrackingTeam AttendanceTrackingTeam?
   classInspectionTeam    ClassInspectionTeam?
 
+  // Student Application Relations
+  createdApplications StudentApplication[] @relation("CreatedApplications")
+  phase1Applications  StudentApplication[] @relation("Phase1Reviewer")
+  phase2Applications  StudentApplication[] @relation("Phase2Reviewer")
+  phase3Applications  StudentApplication[] @relation("Phase3Reviewer")
+  auditLogs           AuditLog[]
+
   @@map("user")
 }
 
@@ -188,23 +195,24 @@ model ClassInspectionTeam {
 }
 
 model Student {
-  id                 Int       @id @default(autoincrement())
-  kkId               String    @unique
+  id                 Int      @id @default(autoincrement())
+  kkId               String   @unique
   name               String
   schoolName         String?
-  district           District?
+  district           String?
   email              String?
-  yearOfStudying     String    @default("12th")
+  yearOfStudying     String   @default("12th")
   tutoringSubjects   Json
   address            String?
   class11PublicMarks Json
   subjectMarks       Json
   parentName         String?
   phoneNumber        String?
-  createdAt          DateTime  @default(now())
+  createdAt          DateTime @default(now())
 
   attendances       StudentAttendance[]
   overallAttendance OverallAttendance[]
+  application       StudentApplication?
 
   @@map("student")
 }
@@ -317,4 +325,58 @@ model TutorOnboarding {
   acceptedOn       DateTime?
 
   @@map("tutor_invitations")
+}
+
+model StudentApplication {
+  id                       Int     @id @default(autoincrement())
+  name                     String
+  email                    String?
+  phoneEncrypted           String?
+  guardianContactEncrypted String?
+  medium                   Medium?
+  district                 String?
+  requestedSubjects        Json
+  phase                    String  @default("Phase1_Selection")
+
+  createdBy Int
+  creator   User @relation("CreatedApplications", fields: [createdBy], references: [id])
+
+  phase1Notes      String?
+  phase1ReviewedBy Int?
+  phase1Reviewer   User?     @relation("Phase1Reviewer", fields: [phase1ReviewedBy], references: [id])
+  phase1ReviewedAt DateTime?
+
+  phase2TeleverificationNotes String?
+  phase2ReviewedBy            Int?
+  phase2Reviewer              User?     @relation("Phase2Reviewer", fields: [phase2ReviewedBy], references: [id])
+  phase2ReviewedAt            DateTime?
+
+  phase3PanelInterviewNotes String?
+  phase3ReviewedBy          Int?
+  phase3Reviewer            User?     @relation("Phase3Reviewer", fields: [phase3ReviewedBy], references: [id])
+  phase3ReviewedAt          DateTime?
+
+  studentId Int?     @unique
+  student   Student? @relation(fields: [studentId], references: [id])
+
+  createdAt DateTime @default(now())
+
+  @@map("student_applications")
+}
+
+model AuditLog {
+  id          Int      @id @default(autoincrement())
+  userId      Int?
+  user        User?    @relation(fields: [userId], references: [id])
+  action      String
+  entityType  String?
+  entityId    String?
+  description String?
+  oldData     Json?
+  newData     Json?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+
+  @@map("audit_log")
 }

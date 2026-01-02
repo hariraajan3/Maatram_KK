@@ -88,6 +88,83 @@
         }
       }
     },
+    "/api/user/profile": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      },
+      "put": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "phoneNumber": {
+                  "example": "any"
+                },
+                "collegeOrCompany": {
+                  "example": "any"
+                },
+                "companyOrOrg": {
+                  "example": "any"
+                },
+                "tutorAddress": {
+                  "example": "any"
+                },
+                "yearOfStudyingOrAlumni": {
+                  "example": "any"
+                },
+                "alumniOrYearStudying": {
+                  "example": "any"
+                },
+                "tutoringExperienceYears": {
+                  "example": "any"
+                },
+                "tutoringDistrict": {
+                  "example": "any"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "404": {
+            "description": "Not Found"
+          }
+        }
+      }
+    },
     "/api/dashboard/": {
       "get": {
         "description": "",
@@ -1083,6 +1160,9 @@
                 "district": {
                   "example": "any"
                 },
+                "subject": {
+                  "example": "any"
+                },
                 "subjects": {
                   "example": "any"
                 }
@@ -1145,6 +1225,16 @@
           {
             "name": "authorization",
             "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "month",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "year",
+            "in": "query",
             "type": "string"
           }
         ],

@@ -81,8 +81,7 @@ const Scheduling = () => {
     <div className="space-y-8">
       <header className="flex justify-between items-end">
         <div>
-          <h2 className="text-3xl font-display font-bold text-black">Scheduling Cockpit</h2>
-          <p className="text-gray-500 mt-1">Manage classes, swaps, and cancellations. Classes are matched by subject, medium, and district.</p>
+          <h2 className="text-3xl font-display font-bold text-black">Scheduling</h2>
         </div>
         <button className="px-4 py-2 bg-black text-white rounded-lg text-sm font-bold hover:bg-gray-800 transition-colors shadow-lg">
           + Schedule New Class

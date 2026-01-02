@@ -144,9 +144,9 @@ const Selection = () => {
               key={phase}
               onClick={() => setActiveTab(phase)}
               className={`  flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === phase
-                  ? 'bg-maatram-yellow text-black shadow-md'
-                  : ' bg-white text-gray-600 hover:bg-gray-50'
-                }`} 
+                ? 'bg-maatram-yellow text-black shadow-md'
+                : ' bg-white text-gray-600 hover:bg-gray-50'
+                }`}
             >
               <span className="material-icons-outlined text-xl">{config.icon}</span>
               <span className="text-sm">{config.label}: {config.sublabel}</span>

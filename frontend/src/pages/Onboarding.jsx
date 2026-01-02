@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react';
 import { createOnboarding, fetchOnboarding, updateOnboardingStatus } from '../services/api';
+import { ROLES } from '../permissions';
 
 const MEDIUMS = ['Tamil', 'English'];
 const DISTRICTS = ['Chennai', 'Coimbatore', 'Other'];
 const SUBJECTS = ['Physics', 'Maths', 'Chemistry', 'Commerce', 'Economics', 'Accounts', 'Tamil', 'English'];
 
 const Onboarding = () => {
-  const [form, setForm] = useState({ 
-    name: '', 
-    email: '', 
+  const [form, setForm] = useState({
+    role: ROLES.TUTOR,
+    name: '',
+    email: '',
     phone: '',
     medium: '',
     district: '',
@@ -76,7 +78,7 @@ const Onboarding = () => {
     try {
       await createOnboarding({ ...form, documents: ['nda.pdf'] });
       setMessage('Invitation sent! Automated onboarding workflow triggered.');
-      setForm({ name: '', email: '', phone: '', medium: '', district: '', subjects: [] });
+      setForm({ role: ROLES.TUTOR, name: '', email: '', phone: '', medium: '', district: '', subjects: [] });
       load();
       setTimeout(() => setMessage(''), 5000);
     } catch (error) {
@@ -98,7 +100,6 @@ const Onboarding = () => {
       <header className="flex justify-between items-end">
         <div>
           <h2 className="text-3xl font-display font-bold text-black">Tutor Onboarding</h2>
-          <p className="text-gray-500 mt-1">Automate approvals, document collection, and welcome emails.</p>
         </div>
         <div className="flex gap-3">
           <div className="px-4 py-2 bg-green-50 text-green-700 rounded-lg text-sm font-bold border border-green-100">
@@ -113,8 +114,24 @@ const Onboarding = () => {
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Invite Form */}
         <section className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 h-fit">
-          <h3 className="text-lg font-bold text-black mb-4">Invite New Tutor</h3>
+          <h3 className="text-lg font-bold text-black mb-4">Invite New User</h3>
           <form onSubmit={submit} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Role</label>
+              <select
+                value={form.role}
+                onChange={(e) => setForm({ ...form, role: e.target.value })}
+                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
+              >
+                <option value={ROLES.TUTOR}>Tutor</option>
+                <option value={ROLES.TUTOR_LEAD}>Tutor Lead</option>
+                <option value={ROLES.ADMIN}>Admin</option>
+                <option value={ROLES.SELECTION_TEAM}>Selection Team</option>
+                <option value={ROLES.ATTENDANCE_TRACKING_TEAM}>Attendance Tracking Team</option>
+                <option value={ROLES.STUDENTS_TRACKING_TEAM}>Students Tracking Team</option>
+              </select>
+            </div>
+
             <div>
               <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Full Name</label>
               <input
@@ -151,51 +168,55 @@ const Onboarding = () => {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Medium</label>
-                <select
-                  value={form.medium}
-                  onChange={(e) => setForm({ ...form, medium: e.target.value })}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
-                >
-                  <option value="">Select medium</option>
-                  {MEDIUMS.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
+            {(form.role === ROLES.TUTOR || form.role === ROLES.TUTOR_LEAD) && (
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Medium</label>
+                  <select
+                    value={form.medium}
+                    onChange={(e) => setForm({ ...form, medium: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
+                  >
+                    <option value="">Select medium</option>
+                    {MEDIUMS.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">District</label>
+                  <select
+                    value={form.district}
+                    onChange={(e) => setForm({ ...form, district: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
+                  >
+                    <option value="">Select district</option>
+                    {DISTRICTS.map((d) => (
+                      <option key={d} value={d}>{d}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">District</label>
-                <select
-                  value={form.district}
-                  onChange={(e) => setForm({ ...form, district: e.target.value })}
-                  className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
-                >
-                  <option value="">Select district</option>
-                  {DISTRICTS.map((d) => (
-                    <option key={d} value={d}>{d}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
+            )}
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Subjects</label>
-              <div className="grid grid-cols-4 gap-2">
-                {SUBJECTS.map((subject) => (
-                  <label key={subject} className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
-                    <input
-                      type="checkbox"
-                      checked={form.subjects.includes(subject)}
-                      onChange={() => toggleSubject(subject)}
-                      className="rounded"
-                    />
-                    <span className="text-xs font-bold">{subject}</span>
-                  </label>
-                ))}
+            {form.role === ROLES.TUTOR && (
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Subjects</label>
+                <div className="grid grid-cols-4 gap-2">
+                  {SUBJECTS.map((subject) => (
+                    <label key={subject} className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
+                      <input
+                        type="checkbox"
+                        checked={form.subjects.includes(subject)}
+                        onChange={() => toggleSubject(subject)}
+                        className="rounded"
+                      />
+                      <span className="text-xs font-bold">{subject}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <button
               type="submit"

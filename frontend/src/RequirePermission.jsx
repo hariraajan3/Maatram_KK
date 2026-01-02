@@ -45,3 +45,4 @@ RequirePermission.propTypes = {
   children: PropTypes.node.isRequired,
   fallback: PropTypes.node,
 };
+

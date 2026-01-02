@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import '../App.css';
-import { login as loginApi } from '../services/api';
+import { login} from '../services/api';
 
 const Login = ({ onSuccess }) => {
   const [form, setForm] = useState({email: '', password: ''});
@@ -14,7 +14,7 @@ const Login = ({ onSuccess }) => {
     setError('');
     setLoading(true);
     try {
-      const payload = await loginApi(form);
+      const payload = await login(form);
       if (typeof onSuccess === 'function') {
         await onSuccess(payload);
         // navigate to root (App will render authenticated routes)
@@ -84,7 +84,7 @@ const Login = ({ onSuccess }) => {
             </div>
             {error && (
               <div className="bg-red-100 border-2 border-red-500 text-red-900 px-4 py-3 rounded-lg text-sm font-bold">
-                {error}
+                Please Enter valid Email and Password
               </div>
             )}
             <button

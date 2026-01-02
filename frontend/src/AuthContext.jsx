@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useMemo } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, useEffect } from "react";
 
 const AuthContext = createContext(null);
 
@@ -63,26 +63,72 @@ const ROLE_PERMISSIONS = {
     "attendance:view",
     "tutor-attendance:manage",
     "tutor-attendance:view",
+    // Scheduling
+    "scheduling:view",
     // Profile
     "profile:view",
     "profile:edit",
   ],
-  coordinator: [
+  selectionTeam: [
     // Selection
     "selection:manage",
     "selection:view",
     "selection:edit",
+    // Profile
+    "profile:view",
+    "profile:edit",
+  ],
+  attendanceTrackingTeam: [
     // Attendance
     "attendance:view",
+    "attendance:overall-view",
     "attendance:approve",
+    // Profile
+    "profile:view",
+    "profile:edit",
+  ],
+  studentsTrackingTeam: [
+    // Attendance
+    "attendance:overall-view",
+    // Dashboard
+    "dashboard:view",
     // Profile
     "profile:view",
     "profile:edit",
   ],
 };
 
-export function AuthProvider({ children }) {
-  const [user, _setUser] = useState(null);
+const ROLE_MAP = {
+  'ADMIN': 'admin',
+  'TUTOR_LEADS': 'tutorLead',
+  'TUTOR': 'tutor',
+  'SELECTION_TEAM': 'selectionTeam',
+  'ATTENDANCE_TRACKING_TEAM': 'attendanceTrackingTeam',
+  'CLASS_INSPECTION_TEAM': 'studentsTrackingTeam',
+};
+
+export function AuthProvider({ children, userData }) {
+  // Helper to augment user with permissions
+  const augmentUser = (u) => {
+    if (!u) return null;
+
+    // Normalize role from backend (e.g., "ADMIN" -> "admin")
+    const normalizedRole = ROLE_MAP[u.role] || u.role;
+    
+
+    const derivedPermissions = Array.isArray(u.permissions)
+      ? u.permissions
+      : ROLE_PERMISSIONS[normalizedRole] || [];
+
+    return { ...u, role: normalizedRole, permissions: derivedPermissions };
+  };
+
+  // Initialize state from prop
+  const [user, _setUser] = useState(() => augmentUser(userData));
+  
+  useEffect(() => {
+    _setUser(augmentUser(userData));
+  }, [userData]);
 
   // Ensure permissions are present on the user object. If backend returns
   // explicit permissions, use them; otherwise derive from role mapping.
@@ -91,19 +137,12 @@ export function AuthProvider({ children }) {
       _setUser(null);
       try {
         localStorage.removeItem('kk_session');
-      } catch {
-        /* ignore */
-      }
+      } catch { /* ignore */ }
       return;
     }
 
-    const derivedPermissions = Array.isArray(u.permissions)
-      ? u.permissions
-      : ROLE_PERMISSIONS[u.role] || [];
-
-    const augmented = { ...u, permissions: derivedPermissions };
+    const augmented = augmentUser(u);
     _setUser(augmented);
-
     // Persist augmented user back into kk_session if session exists or token provided
     try {
       const existing = localStorage.getItem('kk_session');
@@ -125,19 +164,17 @@ export function AuthProvider({ children }) {
     } catch {
       console.warn('Unable to persist session user');
     }
-  }, []);
+  }, [augmentUser]);
 
   // Memoized permission checker
   const hasPermission = useCallback(
     (permission) => {
       if (!user) return false;
-      const userPermissions = Array.isArray(user.permissions)
-        ? user.permissions
-        : ROLE_PERMISSIONS[user.role] || [];
-      return userPermissions.includes(permission);
+      return user.permissions.includes(permission);
     },
     [user]
   );
+  
 
   // Memoized role checker
   const hasRole = useCallback(

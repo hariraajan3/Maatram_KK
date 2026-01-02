@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import { getNavItems, ROLE_DESCRIPTIONS } from '../permissions';
+import { getNavItems } from '../permissions';
 import maatramLogo from '../Maatram logo.jpg';
 
 const navItems = [
@@ -22,10 +22,8 @@ const Layout = ({ user, onLogout }) => {
   const profileRef = useRef(null);
   const notificationsRef = useRef(null);
 
-  // Get navigation items based on user role
   const navItems = getNavItems(user?.role);
 
-  // Close dropdowns when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (profileRef.current && !profileRef.current.contains(event.target)) {
@@ -35,14 +33,12 @@ const Layout = ({ user, onLogout }) => {
         setNotificationsOpen(false);
       }
     };
-
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, []);
 
-  // Get current page title
   const currentPageTitle = navItems.find(item => item.to === location.pathname)?.label || 'Dashboard';
 
   return (

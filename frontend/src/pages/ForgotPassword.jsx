@@ -17,8 +17,7 @@ const ForgotPassword = () => {
       setError('Please enter your email address');
       return;
     }
-
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(email)) {
       setError('Please enter a valid email address');
       return;
     }
@@ -110,7 +109,7 @@ const ForgotPassword = () => {
                 {error}
               </div>
             )}
-
+            
             <button
               type="submit"
               disabled={loading}
