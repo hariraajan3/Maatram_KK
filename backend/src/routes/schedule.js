@@ -11,11 +11,11 @@ import { withAuth, requireRole } from '../middlewares/auth.js';
 const { body } = validator;
 const router = express.Router();
 
-router.get('/', withAuth, requireRole('ADMIN', 'TUTOR_LEADS', 'TUTOR', 'CLASS_INSPECTION_TEAM'), listClasses);
+router.get('/', withAuth, requireRole('ADMIN', 'TUTOR_LEAD', 'TUTOR', 'CLASS_INSPECTION_TEAM'), listClasses);
 router.post(
   '/',
   withAuth,
-  requireRole('ADMIN', 'TUTOR_LEADS'),
+  requireRole('ADMIN', 'TUTOR_LEAD'),
   body('phase').isString(),
   body('tutorId').isString(),
   body('studentGroup').isString(),
@@ -26,7 +26,7 @@ router.post(
 router.post(
   '/swap',
   withAuth,
-  requireRole('TUTOR', 'ADMIN', 'TUTOR_LEADS'),
+  requireRole('TUTOR', 'ADMIN', 'TUTOR_LEAD'),
   body('classId').isString(),
   body('reason').isLength({ min: 10 }),
   body('proposedByTutorId').isString(),
@@ -34,7 +34,7 @@ router.post(
   body('desiredDate').isISO8601(),
   createSwapRequest,
 );
-router.patch('/swap/:id', withAuth, requireRole('ADMIN', 'TUTOR_LEADS'), updateSwapRequest);
+router.patch('/swap/:id', withAuth, requireRole('ADMIN', 'TUTOR_LEAD'), updateSwapRequest);
 
 export default router;
 

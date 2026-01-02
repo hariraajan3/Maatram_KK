@@ -39,7 +39,7 @@ const Layout = ({ user, onLogout }) => {
     };
   }, []);
 
-  const currentPageTitle = navItems.find(item => item.to === location.pathname)?.label || 'Dashboard';
+  const currentPageTitle = navItems.find(item => item.to === location.pathname)?.label ;
 
   return (
     <div className="min-h-screen bg-white-off flex font-sans text-black">

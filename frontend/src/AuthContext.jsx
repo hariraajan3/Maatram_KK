@@ -100,7 +100,7 @@ const ROLE_PERMISSIONS = {
 
 const ROLE_MAP = {
   'ADMIN': 'admin',
-  'TUTOR_LEADS': 'tutorLead',
+  'TUTOR_LEAD': 'tutorLead',
   'TUTOR': 'tutor',
   'SELECTION_TEAM': 'selectionTeam',
   'ATTENDANCE_TRACKING_TEAM': 'attendanceTrackingTeam',
@@ -114,7 +114,7 @@ export function AuthProvider({ children, userData }) {
 
     // Normalize role from backend (e.g., "ADMIN" -> "admin")
     const normalizedRole = ROLE_MAP[u.role] || u.role;
-    
+
 
     const derivedPermissions = Array.isArray(u.permissions)
       ? u.permissions
@@ -125,7 +125,7 @@ export function AuthProvider({ children, userData }) {
 
   // Initialize state from prop
   const [user, _setUser] = useState(() => augmentUser(userData));
-  
+
   useEffect(() => {
     _setUser(augmentUser(userData));
   }, [userData]);
@@ -174,7 +174,7 @@ export function AuthProvider({ children, userData }) {
     },
     [user]
   );
-  
+
 
   // Memoized role checker
   const hasRole = useCallback(

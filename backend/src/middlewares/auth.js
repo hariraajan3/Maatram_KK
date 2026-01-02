@@ -17,12 +17,12 @@ const authenticateCredentials = async (email, password) => {
 };
 
 
-//hariraajan@gmail.com pass: hari5426
-//gsurya@gmail.com pass: surya3625
-//yogab@mail.com pass: yoga2006
-//sailesh@gmail.com pass: sailesh2005
-//abdul@gmail.com pass: abdul2006
-//madhan@gmail.com pass: madhan2006
+// hariraajan@gmail.com pass: hari5426
+// gsurya@gmail.com pass: surya3625
+// yogab@mail.com pass: yoga2006
+// sailesh@gmail.com pass: sailesh2005
+// abdul@gmail.com pass: abdul2006
+// madhan@gmail.com pass: madhan2006
 
 
 const login = async (email, password) => {

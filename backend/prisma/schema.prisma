@@ -13,7 +13,7 @@ datasource db {
 
 enum Role {
   ADMIN
-  TUTOR_LEADS
+  TUTOR_LEAD
   SELECTION_TEAM
   TUTOR
   ATTENDANCE_TRACKING_TEAM
@@ -75,10 +75,17 @@ enum Subject {
 }
 
 enum SelectionPhase {
-  Phase1_Selection
-  Phase2_Televerification
-  Phase3_PanelInterview
+  TELE_VERIFICATION
+  PANEL_INTERVIEW
+  FINAL_SELECTION
 }
+
+enum SelectionStatus {
+  PENDING
+  SELECTED
+  REJECTED
+}
+
 
 // User - Authentication and Role Management
 
@@ -96,13 +103,6 @@ model User {
   selectionTeam          SelectionTeam?
   attendanceTrackingTeam AttendanceTrackingTeam?
   classInspectionTeam    ClassInspectionTeam?
-
-  // Student Application Relations
-  createdApplications StudentApplication[] @relation("CreatedApplications")
-  phase1Applications  StudentApplication[] @relation("Phase1Reviewer")
-  phase2Applications  StudentApplication[] @relation("Phase2Reviewer")
-  phase3Applications  StudentApplication[] @relation("Phase3Reviewer")
-  auditLogs           AuditLog[]
 
   @@map("user")
 }
@@ -129,7 +129,7 @@ model TutorLead {
 
   user User @relation(fields: [userId], references: [id])
 
-  @@map("tutor_leads")
+  @@map("tutor_lead")
 }
 
 model Tutor {
@@ -210,12 +210,11 @@ model Student {
   phoneNumber        String?
   createdAt          DateTime @default(now())
 
-  attendances       StudentAttendance[]
-  overallAttendance OverallAttendance[]
-  application       StudentApplication?
+  application        StudentApplication?
 
   @@map("student")
 }
+
 
 model Schedule {
   id           Int            @id @default(autoincrement())
@@ -252,7 +251,6 @@ model StudentAttendance {
 
   schedule Schedule @relation(fields: [schedulingId], references: [id])
   tutor    Tutor    @relation(fields: [tutorId], references: [id])
-  student  Student  @relation(fields: [studentId], references: [id])
 
   @@unique([schedulingId, studentId])
   @@map("student_attendance")
@@ -265,8 +263,6 @@ model OverallAttendance {
   totalClasses         Int
   classesAttended      Int
   attendancePercentage Decimal @db.Decimal(5, 2)
-
-  student Student @relation(fields: [studentId], references: [id])
 
   @@unique([studentId, subject])
   @@map("overall_attendance")
@@ -328,46 +324,30 @@ model TutorOnboarding {
 }
 
 model StudentApplication {
-  id                       Int     @id @default(autoincrement())
-  name                     String
-  email                    String?
-  phoneEncrypted           String?
-  guardianContactEncrypted String?
-  medium                   Medium?
-  district                 String?
-  requestedSubjects        Json
-  phase                    String  @default("Phase1_Selection")
+  id              Int @id @default(autoincrement())
+  studentId       Int @unique
+  student         Student @relation(fields: [studentId], references: [id])
 
-  createdBy Int
-  creator   User @relation("CreatedApplications", fields: [createdBy], references: [id])
+  currentPhase    SelectionPhase @default(TELE_VERIFICATION)
 
-  phase1Notes      String?
-  phase1ReviewedBy Int?
-  phase1Reviewer   User?     @relation("Phase1Reviewer", fields: [phase1ReviewedBy], references: [id])
-  phase1ReviewedAt DateTime?
+  teleStatus      SelectionStatus @default(PENDING)
+  teleRemarks     String?
 
-  phase2TeleverificationNotes String?
-  phase2ReviewedBy            Int?
-  phase2Reviewer              User?     @relation("Phase2Reviewer", fields: [phase2ReviewedBy], references: [id])
-  phase2ReviewedAt            DateTime?
+  panelStatus     SelectionStatus @default(PENDING)
+  panelRemarks    String?
 
-  phase3PanelInterviewNotes String?
-  phase3ReviewedBy          Int?
-  phase3Reviewer            User?     @relation("Phase3Reviewer", fields: [phase3ReviewedBy], references: [id])
-  phase3ReviewedAt          DateTime?
+  finalStatus     SelectionStatus @default(PENDING)
 
-  studentId Int?     @unique
-  student   Student? @relation(fields: [studentId], references: [id])
+  assignedTutorId Int?
 
-  createdAt DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  createdAt       DateTime @default(now())
 
-  @@map("student_applications")
+  @@map("student_application")
 }
-
 model AuditLog {
   id          Int      @id @default(autoincrement())
   userId      Int?
-  user        User?    @relation(fields: [userId], references: [id])
   action      String
   entityType  String?
   entityId    String?

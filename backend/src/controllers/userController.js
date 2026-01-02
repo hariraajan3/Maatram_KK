@@ -22,7 +22,7 @@ export const getProfile = async (req, res, next) => {
         // Flatten the role-specific data
         let profileDetails = {};
         if (user.role === 'ADMIN' && user.admin) profileDetails = user.admin;
-        if (user.role === 'TUTOR_LEADS' && user.tutorLead) profileDetails = user.tutorLead;
+        if (user.role === 'TUTOR_LEAD' && user.tutorLead) profileDetails = user.tutorLead;
         if (user.role === 'TUTOR' && user.tutor) profileDetails = user.tutor;
         if (user.role === 'SELECTION_TEAM' && user.selectionTeam) profileDetails = user.selectionTeam;
         if (user.role === 'ATTENDANCE_TRACKING_TEAM' && user.attendanceTrackingTeam) profileDetails = user.attendanceTrackingTeam;
@@ -79,7 +79,7 @@ export const updateProfile = async (req, res, next) => {
                 where: { id: user.admin.id },
                 data: { phoneNumber, companyOrOrg }
             });
-        } else if (user.role === 'TUTOR_LEADS' && user.tutorLead) {
+        } else if (user.role === 'TUTOR_LEAD' && user.tutorLead) {
             await prisma.tutorLead.update({
                 where: { id: user.tutorLead.id },
                 data: { phoneNumber, collegeOrCompany, yearOfStudyingOrAlumni }

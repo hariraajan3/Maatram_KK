@@ -110,6 +110,13 @@ export const getNavItems = (role) => {
         roles: [ROLES.TUTOR_LEAD],
       },
       {
+        to: "/onboarding",
+        label: "Onboarding",
+        icon: "how_to_reg",
+        permission: PERMISSIONS.ONBOARDING_VIEW,
+        roles: [ROLES.TUTOR_LEAD],
+      },
+      {
         to: "/scheduling",
         label: "Scheduling",
         icon: "calendar_today",

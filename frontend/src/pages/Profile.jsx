@@ -150,7 +150,7 @@ const Profile = () => {
             )}
 
             {/* Team Specifics */}
-            {['TUTOR_LEADS', 'SELECTION_TEAM', 'ATTENDANCE_TRACKING_TEAM', 'CLASS_INSPECTION_TEAM'].includes(role) && (
+            {['TUTOR_LEAD', 'SELECTION_TEAM', 'ATTENDANCE_TRACKING_TEAM', 'CLASS_INSPECTION_TEAM'].includes(role) && (
               <DataField label="Academic / Alumni Status" name="yearOfStudyingOrAlumni" value={formData.yearOfStudyingOrAlumni} onChange={handleInputChange} isEditing={isEditing} />
             )}
 

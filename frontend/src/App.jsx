@@ -67,7 +67,7 @@ const App = () => {
 
       const ROLE_MAP = {
         'ADMIN': 'admin',
-        'TUTOR_LEADS': 'tutorLead',
+        'TUTOR_LEAD': 'tutorLead',
         'TUTOR': 'tutor',
         'SELECTION_TEAM': 'selectionTeam',
         'ATTENDANCE_TRACKING_TEAM': 'attendanceTrackingTeam',

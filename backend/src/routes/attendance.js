@@ -6,13 +6,13 @@ import { withAuth, requireRole } from '../middlewares/auth.js';
 const { body } = validator;
 const router = express.Router();
 
-router.get('/', withAuth, requireRole('ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM'), listAttendance);
-router.get('/overview', withAuth, requireRole('ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM'), getTutorAttendanceOverview);
-router.get('/class/:classId', withAuth, requireRole('ADMIN', 'TUTOR_LEADS', 'ATTENDANCE_TRACKING_TEAM'), getClassAttendanceDetails);
+router.get('/', withAuth, requireRole('ADMIN', 'TUTOR_LEAD', 'ATTENDANCE_TRACKING_TEAM'), listAttendance);
+router.get('/overview', withAuth, requireRole('ADMIN', 'TUTOR_LEAD', 'ATTENDANCE_TRACKING_TEAM'), getTutorAttendanceOverview);
+router.get('/class/:classId', withAuth, requireRole('ADMIN', 'TUTOR_LEAD', 'ATTENDANCE_TRACKING_TEAM'), getClassAttendanceDetails);
 router.post(
   '/',
   withAuth,
-  requireRole('ADMIN', 'TUTOR_LEADS', 'TUTOR'),
+  requireRole('ADMIN', 'TUTOR_LEAD', 'TUTOR'),
   body('classId').isString(),
   body('studentId').isString(),
   body('present').isBoolean(),
