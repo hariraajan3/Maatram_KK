@@ -15,7 +15,7 @@ const app = express();
 
 // Enable CORS for frontend and backend origins
 app.use(cors({
-    origin: ['http://localhost:4000', 'http://localhost:5173'],
+    origin: ['http://localhost:4000', 'https://maatram-kk.vercel.app'],
     credentials: true
 }));
 
