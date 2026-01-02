@@ -1,5 +1,11 @@
 import axios from "axios";
-const BASE_URL = import.meta.env.VITE_BACKEND_API;
+const getBaseUrl = () => {
+  let url = 'http://localhost:4000';
+  if (!url.endsWith('/api')) url += '/api';
+  return url;
+};
+
+const BASE_URL = getBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,
@@ -17,16 +23,17 @@ export const setAuthToken = (token) => {
 };
 
 export const login = async (credentials) => {
+  // Use relative path - axios will append to baseURL if no leading slash
   const { data } = await apiClient.post('/auth/login', credentials);
   setAuthToken(data.token);
   return data;
 };
 
-export const signup = async (payload) => {
-  const { data } = await apiClient.post('/auth/signup', payload);
-  if (data?.token) setAuthToken(data.token);
-  return data;
-};
+// export const signup = async (payload) => {
+//   const { data } = await apiClient.post('/auth/signup', payload);
+//   if (data?.token) setAuthToken(data.token);
+//   return data;
+// };
 
 export const forgotPassword = async (payload) => {
   const { data } = await apiClient.post('/auth/forgot-password', payload);

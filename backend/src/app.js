@@ -14,13 +14,44 @@ const pathToSwaggerUi = swaggerUiDist.absolutePath();
 const app = express();
 
 // Enable CORS for frontend and backend origins
+const allowedOrigins = [
+    'http://localhost:4000',
+    'http://localhost:5173',
+    'https://maatram-kk.vercel.app'
+];
+
 app.use(cors({
-    origin: ['http://localhost:4000', 'https://maatram-kk.vercel.app'],
-    credentials: true
+    origin: (origin, callback) => {
+        // Allow if no origin (like mobile apps/curl)
+        if (!origin) return callback(null, true);
+
+        // Allow if in allowedOrigins OR if it's any localhost port
+        const isLocalhost = origin.startsWith('http://localhost:');
+        const isAllowed = allowedOrigins.includes(origin);
+
+        if (isLocalhost || isAllowed) {
+            callback(null, true);
+        } else {
+            console.error('CORS blocked origin:', origin);
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 
 app.use(express.json({ limit: '1mb' }));
 app.use(express.urlencoded({ extended: true }));
+
+// Health Check Route
+app.get('/', (req, res) => {
+    res.json({
+        status: 'ok',
+        message: 'Maatram KK API is running',
+        timestamp: new Date().toISOString()
+    });
+});
 
 // 1. Serve your generated swagger.json file
 app.get('/swagger.json', (req, res) => {
