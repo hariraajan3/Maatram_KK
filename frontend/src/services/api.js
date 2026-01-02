@@ -1,6 +1,6 @@
 import axios from "axios";
 const getBaseUrl = () => {
-  let url = 'http://localhost:4000';
+  let url = import.meta.env.VITE_BACKEND_API ;
   if (!url.endsWith('/api')) url += '/api';
   return url;
 };
