@@ -15,6 +15,7 @@ import AdminLogs from './pages/AdminLogs';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
 import Profile from './pages/Profile';
+import SetPassword from './pages/SetPassword';
 
 import './App.css';
 
@@ -121,6 +122,11 @@ const App = () => {
                 ? <Navigate to="/" replace />
                 : <ForgotPassword />
             }
+          />
+
+          <Route
+            path="/set-password"
+            element={<SetPassword />}
           />
 
           {/* ================= PROTECTED LAYOUT ================= */}

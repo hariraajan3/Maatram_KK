@@ -1,70 +1,80 @@
-import { v4 as uuid } from 'uuid';
-import validator from 'express-validator';
 import prisma from '../../lib/prisma.js';
-import { encrypt, decrypt } from '../utils/security.js';
-import { sendNotificationBundle } from '../utils/notifications.js';
 import { sendMail } from '../config/email.js';
 import { logAction } from '../utils/auditLogger.js';
-import bcrypt from 'bcryptjs';
-
-const { validationResult } = validator;
-
-const respondValidation = (req) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    const err = new Error('Validation failed');
-    err.status = 422;
-    err.details = errors.array();
-    throw err;
-  }
-};
+import { signToken } from '../config/auth.js';
 
 const createOnboarding = async (req, res, next) => {
   try {
-    respondValidation(req);
-    const { name, email, phone, documents, medium, district, subjects } = req.body;
-    const request = {
-      id: uuid(),
-      name,
-      email,
-      phoneEncrypted: encrypt(phone),
-      documents: documents || [],
-      medium: medium || null,
-      district: district || null,
-      subjects: subjects || [],
-      status: 'pending',
-      requestedBy: req.user.id,
-      createdAt: new Date().toISOString(),
-    };
-    dataStore.onboardingRequests.push(request);
-
-    await sendNotificationBundle({
-      toEmail: email,
-      toPhone: phone,
-      subject: 'Tutor onboarding initiated',
-      html: `<p>Hi ${name},</p><p>Your KK onboarding has started. We'll notify you once verified.</p>`,
-      whatsappMessage: `Hi ${name}, your KK onboarding request is pending verification.`,
-    });
-
-    const notifyEmail = process.env.ONBOARDING_NOTIFY_EMAIL || process.env.MAIL_FROM;
-    if (notifyEmail) {
-      await sendMail({
-        to: notifyEmail,
-        subject: 'New tutor onboarding request',
-        html: `<p>A new tutor onboarding request was submitted.</p>
-<ul>
-  <li><strong>Name:</strong> ${name}</li>
-  <li><strong>Email:</strong> ${email}</li>
-  <li><strong>Phone:</strong> ${phone}</li>
-</ul>
-<p>Requested by user: ${req.user?.email || 'unknown'}</p>`,
-      });
+    const { name, email, role, medium, district, subject } = req.body;
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ message: 'User with this email already exists' });
     }
 
-    logAction(req.user, 'CREATE_ONBOARDING', `Created onboarding request for ${name}`, 'OnboardingRequest', onboardingRequest.id);
+    // Map frontend roles to backend Prisma Enum (e.g., tutorLead -> TUTOR_LEAD)
+    const roleMapping = {
+      'admin': 'ADMIN',
+      'tutorLead': 'TUTOR_LEAD',
+      'tutor': 'TUTOR',
+      'selectionTeam': 'SELECTION_TEAM',
+      'attendanceTrackingTeam': 'ATTENDANCE_TRACKING_TEAM',
+      'studentsTrackingTeam': 'CLASS_INSPECTION_TEAM', // Assuming this mapping
+    };
 
-    res.status(201).json({ request });
+    const prismaRole = roleMapping[role] || role.replace(/([A-Z])/g, '_$1').toUpperCase();
+
+    // Create or update onboarding record
+    const request = await prisma.OnboardingUsers.create({
+      data: {
+        fullName: name,
+        email: email,
+        role: prismaRole,
+        medium: medium || null,
+        district: district || null,
+        subject: subject || null,
+        onboardingStatus: 'pending'
+      },
+    });
+    console.log('Onboarding record created:', request);
+
+    // Generate token for setting password (valid for 7 days)
+    const token = signToken({
+      onboardingId: request.id,
+      email: request.email,
+      purpose: 'setup_account'
+    });
+    console.log('Token generated:', token);
+
+    const setupUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/set-password?token=${token}`;
+
+    await sendMail({
+      to: email,
+      from: req.user.email,
+      subject: 'Welcome to Maatram - Complete Your Registration',
+      html: `
+        <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
+          <h2 style="color: #000;">Welcome to Maatram Foundation!</h2>
+          <p>Hi ${name},</p>
+          <p>You have been invited to join the Maatram KK platform as a <strong>${role}</strong>.</p>
+          <p>To get started and access your account, please click the button below to set your password:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${setupUrl}" style="background-color: #000; color: #fff; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold;">Set My Password</a>
+          </div>
+          <p>Or copy and paste this link in your browser:</p>
+          <p style="word-break: break-all; font-size: 12px; color: #666;">${setupUrl}</p>
+          <p>This link will expire in 7 days.</p>
+          <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;" />
+          <p style="font-size: 12px; color: #999;">If you were not expecting this invitation, please ignore this email.</p>
+        </div>
+      `,
+    });
+
+    logAction(req.user, 'CREATE_ONBOARDING', `Created onboarding invitation for ${name} (${role})`, 'TutorOnboarding', request.id);
+
+    res.status(201).json({ message: 'Invitation sent successfully', request });
   } catch (error) {
+    console.error('Onboarding Error:', error);
     next(error);
   }
 };
@@ -73,51 +83,11 @@ const updateOnboardingStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const request = dataStore.onboardingRequests.find((item) => item.id === id);
-    if (!request) {
-      return res.status(404).json({ message: 'Request not found' });
-    }
-    request.status = status;
-    request.updatedAt = new Date().toISOString();
 
-    await sendNotificationBundle({
-      toEmail: request.email,
-      toPhone: decrypt(request.phoneEncrypted),
-      subject: `Onboarding ${status}`,
-      html: `<p>Your onboarding status is now <strong>${status}</strong>.</p>`,
-      whatsappMessage: `Your KK onboarding status is now ${status}.`,
+    const request = await prisma.tutorOnboarding.update({
+      where: { id: parseInt(id) },
+      data: { onboardingStatus: status }
     });
-
-    if (status === 'approved') {
-      // Create User
-      const newUser = {
-        id: uuid(),
-        name: request.name,
-        email: request.email,
-        passwordHash: bcrypt.hashSync('tutor@123', 10), // Default password
-        role: 'tutor',
-        avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(request.name)}`,
-      };
-      dataStore.users.push(newUser);
-
-      // Create Tutor Profile
-      const newTutor = {
-        id: newUser.id,
-        name: request.name,
-        email: request.email,
-        phone: request.phoneEncrypted,
-        status: 'active',
-        medium: request.medium || null,
-        district: request.district || null,
-        subjects: request.subjects || [], // Array of subjects
-        avgAttendance: 0,
-      };
-      dataStore.tutors.push(newTutor);
-
-      logAction(req.user, 'APPROVE_ONBOARDING', `Approved onboarding for ${request.name}. User and Tutor profiles created.`, 'OnboardingRequest', id);
-    } else {
-      logAction(req.user, 'UPDATE_ONBOARDING_STATUS', `Updated onboarding status for ${request.name} to ${status}`, 'OnboardingRequest', id);
-    }
 
     res.json({ request });
   } catch (error) {
@@ -125,9 +95,22 @@ const updateOnboardingStatus = async (req, res, next) => {
   }
 };
 
-const listOnboarding = (_req, res) => {
-  res.json({ requests: dataStore.onboardingRequests });
+const listOnboarding = async (_req, res, next) => {
+  try {
+    const requests = await prisma.tutorOnboarding.findMany({
+      orderBy: { invitedOn: 'desc' }
+    });
+    // Transform fields to match frontend expectations if necessary
+    const transformed = requests.map(r => ({
+      ...r,
+      name: r.fullName,
+      createdAt: r.invitedOn,
+      status: r.onboardingStatus
+    }));
+    res.json(transformed);
+  } catch (error) {
+    next(error);
+  }
 };
 
 export { createOnboarding, updateOnboardingStatus, listOnboarding };
-

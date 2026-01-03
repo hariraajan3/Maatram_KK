@@ -30,11 +30,16 @@ const buildTransport = () => {
 
 const transporter = buildTransport();
 
-const sendMail = async ({ to, subject, html }) => {
+const sendMail = async ({ to, subject, html, from }) => {
   if (!to) {
     throw new Error('sendMail: "to" is required');
   }
-  await transporter.sendMail({ to, subject, html, from: MAIL_FROM });
+  await transporter.sendMail({
+    to,
+    subject,
+    html,
+    from: MAIL_FROM
+  });
 };
 
 export { sendMail };

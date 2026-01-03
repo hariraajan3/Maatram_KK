@@ -86,7 +86,6 @@ enum SelectionStatus {
   REJECTED
 }
 
-
 // User - Authentication and Role Management
 
 model User {
@@ -210,11 +209,10 @@ model Student {
   phoneNumber        String?
   createdAt          DateTime @default(now())
 
-  application        StudentApplication?
+  application StudentApplication?
 
   @@map("student")
 }
-
 
 model Schedule {
   id           Int            @id @default(autoincrement())
@@ -308,43 +306,44 @@ model ClassCancellation {
   @@map("class_cancellations")
 }
 
-model TutorOnboarding {
+model OnboardingUsers {
   id               Int              @id @default(autoincrement())
   fullName         String
   email            String           @unique
-  phoneNumber      String?
-  medium           Medium
-  district         District
-  subject          Subject
+  role             Role             
+  medium           Medium?
+  district         District?
+  subject          Subject?
   onboardingStatus OnboardingStatus @default(pending)
   invitedOn        DateTime         @default(now())
   acceptedOn       DateTime?
 
-  @@map("tutor_invitations")
+  @@map("Onboarding_Users")
 }
 
 model StudentApplication {
-  id              Int @id @default(autoincrement())
-  studentId       Int @unique
-  student         Student @relation(fields: [studentId], references: [id])
+  id        Int     @id @default(autoincrement())
+  studentId Int     @unique
+  student   Student @relation(fields: [studentId], references: [id])
 
-  currentPhase    SelectionPhase @default(TELE_VERIFICATION)
+  currentPhase SelectionPhase @default(TELE_VERIFICATION)
 
-  teleStatus      SelectionStatus @default(PENDING)
-  teleRemarks     String?
+  teleStatus  SelectionStatus @default(PENDING)
+  teleRemarks String?
 
-  panelStatus     SelectionStatus @default(PENDING)
-  panelRemarks    String?
+  panelStatus  SelectionStatus @default(PENDING)
+  panelRemarks String?
 
-  finalStatus     SelectionStatus @default(PENDING)
+  finalStatus SelectionStatus @default(PENDING)
 
   assignedTutorId Int?
 
-  updatedAt       DateTime @updatedAt
-  createdAt       DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
 
   @@map("student_application")
 }
+
 model AuditLog {
   id          Int      @id @default(autoincrement())
   userId      Int?

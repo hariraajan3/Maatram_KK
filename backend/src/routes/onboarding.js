@@ -17,10 +17,9 @@ router.post(
   requireRole('ADMIN', 'TUTOR_LEAD'),
   body('name').isString(),
   body('email').isEmail(),
-  body('phone').isString().isLength({ min: 10 }),
   body('medium').optional().isIn(['Tamil', 'English']),
   body('district').optional().isIn(['Chennai', 'Coimbatore', 'Other']),
-  body('subjects').optional().isArray(),
+  body('subject').optional().isString(),
   createOnboarding,
 );
 router.patch('/:id', withAuth, requireRole('ADMIN', 'TUTOR_LEAD'), updateOnboardingStatus);

@@ -8,13 +8,12 @@ const SUBJECTS = ['Physics', 'Maths', 'Chemistry', 'Commerce', 'Economics', 'Acc
 
 const Onboarding = () => {
   const [form, setForm] = useState({
-    role: ROLES.TUTOR,
+    role: ROLES.TUTOR || 'TUTOR',
     name: '',
     email: '',
-    phone: '',
     medium: '',
     district: '',
-    subjects: [],
+    subject: '',
   });
   const [requests, setRequests] = useState([]);
   const [message, setMessage] = useState('');
@@ -25,37 +24,8 @@ const Onboarding = () => {
       setRequests(data);
       setLoading(false);
     })
-    .catch(() => {
-      // Fallback dummy data
-      setRequests([
-        {
-          id: 'req1',
-          name: 'Rajesh Kumar',
-          email: 'rajesh@example.com',
-          phoneEncrypted: 'encrypted_phone',
-          status: 'pending',
-          requestedBy: 'admin1',
-          createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 'req2',
-          name: 'Meera Sharma',
-          email: 'meera@example.com',
-          phoneEncrypted: 'encrypted_phone',
-          status: 'pending',
-          requestedBy: 'admin1',
-          createdAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 'req3',
-          name: 'Arjun Patel',
-          email: 'arjun@example.com',
-          phoneEncrypted: 'encrypted_phone',
-          status: 'approved',
-          requestedBy: 'admin1',
-          createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ]);
+    .catch((err) => {
+      console.error('Fetch error:', err);
       setLoading(false);
     });
 
@@ -63,26 +33,24 @@ const Onboarding = () => {
     load();
   }, []);
 
-  const toggleSubject = (subject) => {
-    setForm((prev) => ({
-      ...prev,
-      subjects: prev.subjects.includes(subject)
-        ? prev.subjects.filter((s) => s !== subject)
-        : [...prev.subjects, subject],
-    }));
-  };
-
   const submit = async (event) => {
     event.preventDefault();
     setMessage('');
     try {
-      await createOnboarding({ ...form, documents: ['nda.pdf'] });
-      setMessage('Invitation sent! Automated onboarding workflow triggered.');
-      setForm({ role: ROLES.TUTOR, name: '', email: '', phone: '', medium: '', district: '', subjects: [] });
+      await createOnboarding(form);
+      setMessage('Invitation sent successfully!');
+      setForm({
+        role: ROLES.TUTOR || 'TUTOR',
+        name: '',
+        email: '',
+        medium: '',
+        district: '',
+        subject: ''
+      });
       load();
       setTimeout(() => setMessage(''), 5000);
     } catch (error) {
-      setMessage('Failed to send invitation. Please try again.');
+      setMessage(error.response?.data?.message || 'Failed to send invitation.');
     }
   };
 
@@ -155,19 +123,6 @@ const Onboarding = () => {
                 placeholder="john@example.com"
               />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Phone Number</label>
-              <input
-                required
-                type="tel"
-                name="phone"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
-                placeholder="+91 98765 43210"
-              />
-            </div>
-
             {(form.role === ROLES.TUTOR || form.role === ROLES.TUTOR_LEAD) && (
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -201,20 +156,17 @@ const Onboarding = () => {
 
             {form.role === ROLES.TUTOR && (
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Subjects</label>
-                <div className="grid grid-cols-4 gap-2">
-                  {SUBJECTS.map((subject) => (
-                    <label key={subject} className="flex items-center gap-2 p-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50">
-                      <input
-                        type="checkbox"
-                        checked={form.subjects.includes(subject)}
-                        onChange={() => toggleSubject(subject)}
-                        className="rounded"
-                      />
-                      <span className="text-xs font-bold">{subject}</span>
-                    </label>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Subject</label>
+                <select
+                  value={form.subject}
+                  onChange={(e) => setForm({ ...form, subject: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
+                >
+                  <option value="">Select subject</option>
+                  {SUBJECTS.map((s) => (
+                    <option key={s} value={s}>{s}</option>
                   ))}
-                </div>
+                </select>
               </div>
             )}
 

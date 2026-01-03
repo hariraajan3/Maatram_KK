@@ -46,6 +46,9 @@ const ROLE_PERMISSIONS = {
     "scheduling:manage",
     "scheduling:view",
     "scheduling:edit",
+    //onboarding
+    "onboarding:manage",
+    "onboarding:view",
     // Attendance
     "attendance:manage",
     "attendance:view",
