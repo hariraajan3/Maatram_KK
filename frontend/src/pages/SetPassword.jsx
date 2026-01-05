@@ -27,9 +27,6 @@ const SetPassword = () => {
                 return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
             }).join(''));
             return JSON.parse(jsonPayload);
-            console.log(jsonPayload);
-            console.log(base64);
-
         } catch (e) {
             return null;
         }

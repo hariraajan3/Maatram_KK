@@ -41,29 +41,50 @@ const setupAccountHandler = async (req, res, next) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const user = await prisma.user.create({
-      data: {
-        name: onboarding.fullName,
-        email: onboarding.email,
-        password: hashedPassword,
-        role: onboarding.role,
-        tutor: onboarding.role === 'TUTOR' ? {
-          create: {
-            kkId: `TUTOR-${Date.now()}`,
-            tutoringMedium: onboarding.medium,
-            tutoringDistrict: onboarding.district,
-            tutoringSubjects: onboarding.subject,
-            // These fields are required by your schema (schema.prisma)
-            tutorAddress: 'N/A',
-            phoneNumber: 'N/A',
-            collegeOrCompany: 'N/A',
-            alumniOrYearStudying: 'N/A',
-            tutoringExperienceYears: 0,
-            onboardingStatus: 'completed'
-          }
-        } : undefined
-      }
+    // Check if user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: onboarding.email }
     });
+
+    if (existingUser) {
+      return res.status(400).json({ message: 'An account with this email already exists.' });
+    }
+
+    const userData = {
+      name: onboarding.fullName,
+      email: onboarding.email,
+      password: hashedPassword,
+      role: onboarding.role,
+      tutor: onboarding.role === 'TUTOR' ? {
+        create: {
+          kkId: `TUTOR-${Date.now()}`,
+          tutoringMedium: onboarding.medium,
+          tutoringDistrict: onboarding.district,
+          tutoringSubjects: onboarding.subject,
+          // These fields are required by your schema (schema.prisma)
+          tutorAddress: 'N/A',
+          phoneNumber: 'N/A',
+          collegeOrCompany: 'N/A',
+          alumniOrYearStudying: 'N/A',
+          tutoringExperienceYears: 0,
+          onboardingStatus: 'completed'
+        }
+      } : undefined
+    };
+
+    let user;
+    try {
+      user = await prisma.user.create({ data: userData });
+    } catch (e) {
+      if (e.code === 'P2002') {
+        // Fix ID sequence out of sync
+        await prisma.$queryRaw`SELECT setval(pg_get_serial_sequence('"user"', 'id'), (SELECT COALESCE(MAX(id), 0) + 1 FROM "user"), false)`;
+        // Retry
+        user = await prisma.user.create({ data: userData });
+      } else {
+        throw e;
+      }
+    }
 
     // Mark onboarding as completed
     await prisma.onboardingUsers.update({
@@ -78,10 +99,6 @@ const setupAccountHandler = async (req, res, next) => {
     console.error("Error in setupAccountHandler:", error); // Log the full error
     if (error.name === 'TokenExpiredError') {
       return res.status(400).json({ message: 'Setup link has expired. Please contact admin.' });
-    }
-    // Check for unique constraint violation (P2002) which likely means email already exists in User table
-    if (error.code === 'P2002') {
-      return res.status(400).json({ message: 'An account with this email already exists.' });
     }
     next(error);
   }

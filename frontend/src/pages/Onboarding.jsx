@@ -229,7 +229,7 @@ const Onboarding = () => {
                         </div>
                         <div className="w-8 h-0.5 bg-gray-200"></div>
                         <div className="flex flex-col items-center gap-1">
-                          <div className={`w-2 h-2 rounded-full ${request.status === 'completed' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                          <div className={`w-2 h-2 rounded-full ${request.status !== 'pending' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
                           <span className="text-[10px] text-gray-400 font-bold uppercase">Active</span>
                         </div>
                       </div>
@@ -241,14 +241,6 @@ const Onboarding = () => {
                           }`}>
                           {request.status}
                         </span>
-                        {request.status === 'pending' && (
-                          <button
-                            onClick={() => handleApprove(request.id)}
-                            className="px-3 py-1 bg-black text-white text-xs font-bold rounded hover:bg-gray-800 transition-colors"
-                          >
-                            Approve
-                          </button>
-                        )}
                       </div>
                     </div>
                   </div>
