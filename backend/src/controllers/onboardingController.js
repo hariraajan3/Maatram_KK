@@ -42,7 +42,8 @@ const createOnboarding = async (req, res, next) => {
     const token = signToken({
       onboardingId: request.id,
       email: request.email,
-      purpose: 'setup_account'
+      purpose: 'setup_account',
+
     });
     console.log('Token generated:', token);
 
@@ -50,7 +51,7 @@ const createOnboarding = async (req, res, next) => {
 
     await sendMail({
       to: email,
-      from: req.user.email,
+      from: process.env.MAIL_FROM,
       subject: 'Welcome to Maatram - Complete Your Registration',
       html: `
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #eee; border-radius: 10px;">
@@ -70,9 +71,9 @@ const createOnboarding = async (req, res, next) => {
       `,
     });
 
-    logAction(req.user, 'CREATE_ONBOARDING', `Created onboarding invitation for ${name} (${role})`, 'TutorOnboarding', request.id);
+    logAction(req.user, 'CREATE_ONBOARDING', `Created onboarding invitation for ${name} (${role})`, 'TutorOnboarding', String(request.id));
 
-    res.status(201).json({ message: 'Invitation sent successfully', request });
+    res.status(201).json({ message: 'Invitation sent successfully', request, token });
   } catch (error) {
     console.error('Onboarding Error:', error);
     next(error);
@@ -84,7 +85,7 @@ const updateOnboardingStatus = async (req, res, next) => {
     const { id } = req.params;
     const { status } = req.body;
 
-    const request = await prisma.tutorOnboarding.update({
+    const request = await prisma.OnboardingUsers.update({
       where: { id: parseInt(id) },
       data: { onboardingStatus: status }
     });
@@ -97,7 +98,7 @@ const updateOnboardingStatus = async (req, res, next) => {
 
 const listOnboarding = async (_req, res, next) => {
   try {
-    const requests = await prisma.tutorOnboarding.findMany({
+    const requests = await prisma.OnboardingUsers.findMany({
       orderBy: { invitedOn: 'desc' }
     });
     // Transform fields to match frontend expectations if necessary

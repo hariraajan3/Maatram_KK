@@ -10,14 +10,12 @@ const authenticateCredentials = async (email, password) => {
   // const hash = await bcrypt.hash(password, salt);
   // console.log(hash);
   // // Store hash in your password DB
-  // if (!user) return null;
-  
-  const match = await bcrypt.compare(password, user.password);
+  if (!user) return null;
 
+  const match = await bcrypt.compare(password, user.password);
   if (!match) return null;
   return user;
 };
-
 
 // hariraajan@gmail.com pass: hari5426
 // gsurya@gmail.com pass: surya3625
@@ -25,6 +23,7 @@ const authenticateCredentials = async (email, password) => {
 // sailesh@gmail.com pass: sailesh2005
 // abdul@gmail.com pass: abdul2006
 // madhan@gmail.com pass: madhan2006
+//hariraajan.gq10@gmail.com pass: hari050426
 
 
 const login = async (email, password) => {

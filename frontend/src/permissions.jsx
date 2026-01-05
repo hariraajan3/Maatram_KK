@@ -48,7 +48,7 @@ export const ROLES = {
   TUTOR_LEAD: "tutorLead",
   TUTOR: "tutor",
   STUDENTS_TRACKING_TEAM: "studentsTrackingTeam",
-  ATTENDANCE_TRACKING_TEAM: "attendanceTrackingTeam" ,
+  ATTENDANCE_TRACKING_TEAM: "attendanceTrackingTeam",
   SELECTION_TEAM: "selectionTeam",
 };
 
@@ -112,7 +112,7 @@ export const getNavItems = (role) => {
       {
         to: "/onboarding",
         label: "Onboarding",
-        icon: "how_to_reg",
+        icon: "assignment_ind",
         permission: PERMISSIONS.ONBOARDING_VIEW,
         roles: [ROLES.TUTOR_LEAD],
       },

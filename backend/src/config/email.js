@@ -1,24 +1,22 @@
 import nodemailer from 'nodemailer';
 
-const {
-  SMTP_HOST,
-  SMTP_PORT = 587,
-  SMTP_USER,
-  SMTP_PASS,
-  SMTP_SECURE,
-  MAIL_FROM = 'noreply@maatram.org',
-} = process.env;
-
 const buildTransport = () => {
-  if (SMTP_HOST && SMTP_USER && SMTP_PASS) {
+  // Check for required env vars
+  if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const port = Number(process.env.SMTP_PORT) || 587;
+
+    const isSecure = port === 465;
     return nodemailer.createTransport({
-      host: SMTP_HOST,
-      port: Number(SMTP_PORT),
-      secure: SMTP_SECURE === 'true' || Number(SMTP_PORT) === 465,
+      host: process.env.SMTP_HOST,
+      port: port,
+      secure: isSecure, // true for 465, false for other ports
       auth: {
-        user: SMTP_USER,
-        pass: SMTP_PASS,
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS
       },
+      tls: {
+        rejectUnauthorized: false
+      }
     });
   }
 
@@ -35,10 +33,10 @@ const sendMail = async ({ to, subject, html, from }) => {
     throw new Error('sendMail: "to" is required');
   }
   await transporter.sendMail({
-    to,
-    subject,
-    html,
-    from: MAIL_FROM
+      to,
+      subject,
+      html,
+    from: process.env.MAIL_FROM 
   });
 };
 

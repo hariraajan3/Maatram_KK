@@ -9,7 +9,7 @@ const navItems = [
   { to: '/scheduling', label: 'Scheduling', icon: 'calendar_today' },
   { to: '/attendance', label: 'Attendance', icon: 'fact_check' },
   { to: '/overall-attendance', label: 'Overall Attendance', icon: 'assessment' },
-  { to: '/onboarding', label: 'Onboarding', icon: 'person_add' },
+  { to: '/onboarding', label: 'Onboarding', icon: 'assignment_ind' },
   { to: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
   { to: '/admin-logs', label: 'Admin Logs', icon: 'admin_panel_settings' },
 ];
@@ -39,7 +39,7 @@ const Layout = ({ user, onLogout }) => {
     };
   }, []);
 
-  const currentPageTitle = navItems.find(item => item.to === location.pathname)?.label ;
+  const currentPageTitle = navItems.find(item => item.to === location.pathname)?.label;
 
   return (
     <div className="min-h-screen bg-white-off flex font-sans text-black">
@@ -66,10 +66,9 @@ const Layout = ({ user, onLogout }) => {
               key={item.to}
               to={item.to}
               className={({ isActive }) =>
-                `flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ${
-                  isActive
-                    ? 'bg-maatram-yellow text-black shadow-md translate-x-1'
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-black hover:translate-x-1'
+                `flex items-center gap-4 px-4 py-3.5 rounded-2xl text-sm font-medium transition-all duration-300 ${isActive
+                  ? 'bg-maatram-yellow text-black shadow-md translate-x-1'
+                  : 'text-gray-500 hover:bg-gray-50 hover:text-black hover:translate-x-1'
                 }`
               }
               title={item.label}

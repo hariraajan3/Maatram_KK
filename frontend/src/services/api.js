@@ -1,6 +1,6 @@
 import axios from "axios";
 const getBaseUrl = () => {
-   let url = import.meta.env.VITE_BACKEND_API ;
+  let url="import.meta.env.VITE_BACKEND_API";
   // let url='http://localhost:4000';
   if (!url.endsWith('/api')) url += '/api';
   return url;
@@ -12,7 +12,7 @@ export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: {
     "Content-Type": "application/json",
-  },
+  }
 });
 
 export const setAuthToken = (token) => {

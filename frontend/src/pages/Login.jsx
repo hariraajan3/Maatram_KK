@@ -2,12 +2,15 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import '../App.css';
-import { login} from '../services/api';
+import { login } from '../services/api';
+import { Eye, EyeOff } from 'lucide-react';
+
 
 const Login = ({ onSuccess }) => {
-  const [form, setForm] = useState({email: '', password: ''});
+  const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -32,7 +35,7 @@ const Login = ({ onSuccess }) => {
     }
   };
 
-// main
+  // main
   return (
     <div className="min-h-screen flex items-center justify-center bg-white px-4 py-12">
       <div className="w-full max-w-md">
@@ -63,16 +66,25 @@ const Login = ({ onSuccess }) => {
               <label htmlFor="password" className="block text-sm font-bold text-black mb-1">
                 Password
               </label>
-              <input
-                id="password"
-                type="password"
-                required
-                className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-maatram-yellow focus:border-maatram-yellow outline-none transition font-medium"
-                placeholder="Enter your password"
-                value={form.password}
-                onChange={(event) => setForm({ ...form, password: event.target.value })}
-                disabled={loading}
-              />
+              <div className="relative">
+                <input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-maatram-yellow focus:border-maatram-yellow outline-none transition font-medium pr-10"
+                  placeholder="Enter your password"
+                  value={form.password}
+                  onChange={(event) => setForm({ ...form, password: event.target.value })}
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
               <div className="mt-2 text-right">
                 <Link
                   to="/forgot-password"
@@ -84,7 +96,7 @@ const Login = ({ onSuccess }) => {
             </div>
             {error && (
               <div className="bg-red-100 border-2 border-red-500 text-red-900 px-4 py-3 rounded-lg text-sm font-bold">
-                Please Enter valid Email and Password
+                Please enter valid email and password
               </div>
             )}
             <button
