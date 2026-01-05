@@ -49,7 +49,8 @@ const createOnboarding = async (req, res, next) => {
 
     const setupUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/set-password?token=${token}`;
 
-    await sendMail({
+    // Send email asynchronously (fire-and-forget) to avoid delaying the response
+    sendMail({
       to: email,
       from: process.env.MAIL_FROM,
       subject: 'Welcome to Maatram - Complete Your Registration',
@@ -69,7 +70,7 @@ const createOnboarding = async (req, res, next) => {
           <p style="font-size: 12px; color: #999;">If you were not expecting this invitation, please ignore this email.</p>
         </div>
       `,
-    });
+    }).catch(err => console.error('Failed to send onboarding email:', err));
 
     logAction(req.user, 'CREATE_ONBOARDING', `Created onboarding invitation for ${name} (${role})`, 'TutorOnboarding', String(request.id));
 

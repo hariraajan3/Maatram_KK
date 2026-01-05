@@ -20,10 +20,11 @@ const buildTransport = () => {
     });
   }
 
-  console.warn('[email] SMTP env not configured; falling back to jsonTransport');
-  return nodemailer.createTransport({
+  console.log('[email] Attempting to send email via jsonTransport...');
+  const transport = nodemailer.createTransport({
     jsonTransport: true,
   });
+  return transport;
 };
 
 const transporter = buildTransport();
@@ -33,10 +34,10 @@ const sendMail = async ({ to, subject, html, from }) => {
     throw new Error('sendMail: "to" is required');
   }
   await transporter.sendMail({
-      to,
-      subject,
-      html,
-    from: process.env.MAIL_FROM 
+    to,
+    subject,
+    html,
+    from: process.env.MAIL_FROM
   });
 };
 

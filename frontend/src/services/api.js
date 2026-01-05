@@ -194,5 +194,3 @@ export const updateProfile = async (payload) => {
   const { data } = await apiClient.put('/user/profile', payload);
   return data;
 };
-
-
