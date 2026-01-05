@@ -33,13 +33,24 @@ const sendMail = async ({ to, subject, html, from }) => {
   if (!to) {
     throw new Error('sendMail: "to" is required');
   }
-  await transporter.sendMail({
-    to,
-    subject,
-    html,
-    from: process.env.MAIL_FROM
-  });
+
+  const fromAddress = from || process.env.MAIL_FROM || 'noreply@maatram.org';
+
+  console.log(`[email] Sending email to: ${to} from: ${fromAddress}`);
+
+  try {
+    const info = await transporter.sendMail({
+      to,
+      subject,
+      html,
+      from: fromAddress
+    });
+    console.log('[email] Message sent:', info.messageId);
+    if (info.response) console.log('[email] SMTP Response:', info.response);
+  } catch (error) {
+    console.error('[email] Error sending mail:', error);
+    throw error;
+  }
 };
 
 export { sendMail };
-

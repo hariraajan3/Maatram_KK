@@ -98,6 +98,7 @@ const updateOnboardingStatus = async (req, res, next) => {
 };
 
 const listOnboarding = async (_req, res, next) => {
+  console.log('Hitting listOnboarding controller');
   try {
     const requests = await prisma.OnboardingUsers.findMany({
       orderBy: { invitedOn: 'desc' }
@@ -109,7 +110,7 @@ const listOnboarding = async (_req, res, next) => {
       createdAt: r.invitedOn,
       status: r.onboardingStatus
     }));
-    res.json(transformed);
+    res.json({ requests: transformed });
   } catch (error) {
     next(error);
   }
