@@ -294,11 +294,11 @@ const OverallAttendance = () => {
                                                         return (
                                                             <td key={d.date} className="p-2 text-center border-r border-gray-50 last:border-0">
                                                                 {status === 'P' ? (
-                                                                    <span className="inline-block w-6 h-6 rounded bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center mx-auto">
+                                                                    <span className="w-6 h-6 rounded bg-green-100 text-green-700 text-xs font-bold flex items-center justify-center mx-auto">
                                                                         P
                                                                     </span>
                                                                 ) : status === 'A' ? (
-                                                                    <span className="inline-block w-6 h-6 rounded bg-red-100 text-red-700 text-xs font-bold flex items-center justify-center mx-auto" title={studentRecord[d.date]?.notes}>
+                                                                    <span className="w-6 h-6 rounded bg-red-100 text-red-700 text-xs font-bold flex items-center justify-center mx-auto" title={studentRecord[d.date]?.notes}>
                                                                         A
                                                                     </span>
                                                                 ) : (

@@ -47,7 +47,7 @@ const createOnboarding = async (req, res, next) => {
     });
     console.log('Token generated:', token);
 
-    const setupUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/set-password?token=${token}`;
+    const setupUrl = `${"https://maatram-kk.vercel.app" || 'http://localhost:5173'}/set-password?token=${token}`;
 
     // Send email asynchronously (fire-and-forget) to avoid delaying the response
     sendMail({
