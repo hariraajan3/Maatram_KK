@@ -52,7 +52,8 @@ const getTutorAttendanceOverview = async (req, res, next) => {
           select: {
             id: true,
             name: true,
-            email: true
+            email: true,
+            isActive: true
           }
         },
         schedules: {
@@ -61,9 +62,7 @@ const getTutorAttendanceOverview = async (req, res, next) => {
           },
           include: {
             attendances: {
-              include: {
-                student: true
-              }
+              select: { studentId: true }
             },
             _count: {
               select: {
@@ -78,9 +77,13 @@ const getTutorAttendanceOverview = async (req, res, next) => {
     });
 
     const overview = tutors.map(tutor => {
-      const totalClasses = tutor.schedules.length;
-      const totalAttendance = tutor.schedules.reduce((sum, sch) => sum + sch._count.attendances, 0);
-      const avgAttendance = 0; // Complexity in calculation, simplified for fix
+      // Calculate active student count based on unique students in recent schedules
+      const uniqueStudents = new Set();
+      tutor.schedules.forEach(schedule => {
+        schedule.attendances.forEach(att => uniqueStudents.add(att.studentId));
+      });
+
+      const avgAttendance = 0;
 
       return {
         tutorId: tutor.id,
@@ -89,6 +92,8 @@ const getTutorAttendanceOverview = async (req, res, next) => {
         medium: tutor.tutoringMedium,
         district: tutor.tutoringDistrict,
         subjects: tutor.tutoringSubjects,
+        isActive: tutor.user.isActive,
+        studentCount: uniqueStudents.size,
         avgAttendance: Math.round(avgAttendance * 100) / 100,
         recentClasses: tutor.schedules.map(sch => ({
           id: sch.id,

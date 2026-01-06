@@ -52,6 +52,7 @@ const withAuth = async (req, res, next) => {
     req.user = user;
     return next();
   } catch (error) {
+    console.error('Middleware: Token verification failed:', error.name, error.message);
     return res.status(401).json({ message: 'Invalid token' });
   }
 };

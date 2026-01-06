@@ -25,6 +25,7 @@ const setupAccountHandler = async (req, res, next) => {
       return res.status(400).json({ message: 'Token and password are required' });
     }
 
+    console.log('Verifying token:', token);
     const decoded = verifyToken(token);
     if (!decoded || decoded.purpose !== 'setup_account') {
       return res.status(400).json({ message: 'Invalid or expired setup token' });

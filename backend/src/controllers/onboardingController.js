@@ -43,15 +43,17 @@ const createOnboarding = async (req, res, next) => {
       onboardingId: request.id,
       email: request.email,
       purpose: 'setup_account',
+    }, '7d');
 
-    });
     console.log('Token generated:', token);
 
-    const setupUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/set-password?token=${token}`;
+    // const setupUrl = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
+    const setupUrl = `http://localhost:5173/set-password?token=${token}`;
     console.log('Setup URL:', setupUrl);
     // Send email asynchronously (fire-and-forget) to avoid delaying the response
+
     sendMail({
-      to:email,
+      to: email,
       from: process.env.MAIL_FROM,
       subject: 'Welcome to Maatram - Complete Your Registration',
       html: `
@@ -98,7 +100,6 @@ const updateOnboardingStatus = async (req, res, next) => {
 };
 
 const listOnboarding = async (_req, res, next) => {
-  console.log('Hitting listOnboarding controller');
   try {
     const requests = await prisma.OnboardingUsers.findMany({
       orderBy: { invitedOn: 'desc' }

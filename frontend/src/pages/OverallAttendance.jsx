@@ -41,49 +41,6 @@ const OverallAttendance = () => {
             setTutors(data);
         } catch (error) {
             console.error('Failed to load tutors:', error);
-            // Demo data for development
-            setTutors([
-                {
-                    id: 'TUT-001',
-                    name: 'Hari Kumar',
-                    email: 'hari@maatram.org',
-                    medium: 'Tamil',
-                    district: 'Other',
-                    subjects: ['Maths', 'Physics'],
-                    status: 'active',
-                    studentCount: 15,
-                },
-                {
-                    id: 'TUT-002',
-                    name: 'Priya Sundaram',
-                    email: 'priya@maatram.org',
-                    medium: 'English',
-                    district: 'Chennai',
-                    subjects: ['Chemistry', 'Maths'],
-                    status: 'active',
-                    studentCount: 12,
-                },
-                {
-                    id: 'TUT-003',
-                    name: 'Ravi Chandran',
-                    email: 'ravi@maatram.org',
-                    medium: 'Tamil',
-                    district: 'Coimbatore',
-                    subjects: ['Commerce', 'Accounts', 'Economics'],
-                    status: 'active',
-                    studentCount: 8,
-                },
-                {
-                    id: 'TUT-004',
-                    name: 'Meena Lakshmi',
-                    email: 'meena@maatram.org',
-                    medium: 'English',
-                    district: 'Other',
-                    subjects: ['Tamil', 'English'],
-                    status: 'active',
-                    studentCount: 10,
-                },
-            ]);
         } finally {
             setLoading(false);
         }
@@ -102,43 +59,6 @@ const OverallAttendance = () => {
             setAttendanceDetail(attendanceData.detailed || null);
         } catch (error) {
             console.error('Failed to load tutor details:', error);
-            // Demo data
-            setTutorStudents([
-                { id: 'STU-001', name: 'Arun Kumar', subjects: ['Maths', 'Physics'] },
-                { id: 'STU-002', name: 'Divya Lakshmi', subjects: ['Maths'] },
-                { id: 'STU-003', name: 'Karthik Raja', subjects: ['Physics'] },
-            ]);
-            setAttendanceHistory([
-                { date: '2025-12-18', present: 12, absent: 3, total: 15 },
-                { date: '2025-12-17', present: 14, absent: 1, total: 15 },
-                { date: '2025-12-16', present: 13, absent: 2, total: 15 },
-            ]);
-            // Demo Detailed Data
-            setAttendanceDetail({
-                dates: [
-                    { date: '2025-12-18', classId: 'c1' },
-                    { date: '2025-12-17', classId: 'c2' },
-                    { date: '2025-12-16', classId: 'c3' },
-                    { date: '2025-12-15', classId: 'c4' },
-                    { date: '2025-12-14', classId: 'c5' },
-                ],
-                students: [
-                    { id: 'STU-001', name: 'Arun Kumar' },
-                    { id: 'STU-002', name: 'Divya Lakshmi' },
-                    { id: 'STU-003', name: 'Karthik Raja' },
-                ],
-                records: {
-                    'STU-001': {
-                        '2025-12-18': { status: 'P' }, '2025-12-17': { status: 'P' }, '2025-12-16': { status: 'P' }, '2025-12-15': { status: 'A', notes: 'Fever' }, '2025-12-14': { status: 'P' }
-                    },
-                    'STU-002': {
-                        '2025-12-18': { status: 'P' }, '2025-12-17': { status: 'A', notes: 'Absent' }, '2025-12-16': { status: 'P' }, '2025-12-15': { status: 'P' }, '2025-12-14': { status: 'P' }
-                    },
-                    'STU-003': {
-                        '2025-12-18': { status: 'A', notes: 'Not Informed' }, '2025-12-17': { status: 'P' }, '2025-12-16': { status: 'P' }, '2025-12-15': { status: 'P' }, '2025-12-14': { status: 'P' }
-                    }
-                }
-            });
         }
     };
 
@@ -490,7 +410,7 @@ const OverallAttendance = () => {
                                         </td>
                                         <td className="px-6 py-4">
                                             {(() => {
-                                                const sub = tutor.subject || (tutor.subjects && tutor.subjects[0]) || 'Unassigned';
+                                                const sub = tutor.subject || 'Unassigned';
                                                 return (
                                                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${getSubjectColor(sub)}`}>
                                                         {sub}
@@ -502,9 +422,9 @@ const OverallAttendance = () => {
                                             <span className="font-bold text-black">{tutor.studentCount || 0}</span>
                                         </td>
                                         <td className="px-6 py-4 text-center">
-                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${tutor.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                                            <span className={`px-3 py-1 rounded-full text-xs font-bold ${tutor.isActive ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
                                                 }`}>
-                                                {tutor.status === 'active' ? '● Active' : '○ Inactive'}
+                                                {tutor.isActive ? '● Active' : '○ Inactive'}
                                             </span>
                                         </td>
                                         <td className="px-6 py-4 text-right">

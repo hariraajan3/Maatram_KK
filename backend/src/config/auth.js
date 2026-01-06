@@ -7,8 +7,11 @@ if (!JWT_SECRET) {
   throw new Error('JWT_SECRET is not set in environment variables. Please set it in backend/config.env.');
 }
 
-const signToken = (payload) => jwt.sign(payload, JWT_SECRET, { expiresIn: TOKEN_TTL });
-const verifyToken = (token) => jwt.verify(token, JWT_SECRET);
+const signToken = (payload, expiresIn = TOKEN_TTL) => jwt.sign(payload, JWT_SECRET, { expiresIn });
+const verifyToken = (token) => {
+  // console.log('Verifying with secret starting with:', JWT_SECRET.substring(0, 4));
+  return jwt.verify(token, JWT_SECRET);
+};
 
 export { TOKEN_TTL, signToken, verifyToken };
 

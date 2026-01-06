@@ -6,11 +6,15 @@ import {
   getApplication,
   updateApplicationPhase,
   getApplicationsByPhase,
+  handleGFormWebhook,
 } from '../controllers/selectionController.js';
 import { withAuth, requireRole } from '../middlewares/auth.js';
 
 const { body } = validator;
 const router = express.Router();
+
+// Public Webhook (Secured by Secret Header)
+router.post('/webhook', handleGFormWebhook);
 
 // All routes require authentication
 router.use(withAuth);

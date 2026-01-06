@@ -43,21 +43,6 @@ const getRoles = (req, res) => {
     res.json({ roles: dataStore.roles });
 };
 
-const updateRolePermissions = (req, res) => {
-    const { roleName, permissions } = req.body;
-    const role = dataStore.roles.find(r => r.name === roleName);
-
-    if (!role) {
-        return res.status(404).json({ message: 'Role not found' });
-    }
-
-    const oldPermissions = [...role.permissions];
-    role.permissions = permissions;
-
-    logAction(req.user, 'UPDATE_ROLE_PERMISSIONS', `Updated permissions for ${roleName} from [${oldPermissions}] to [${permissions}]`);
-
-    res.json({ role });
-};
 
 const assignRole = async (req, res, next) => {
     try {
@@ -151,7 +136,6 @@ const deleteUser = async (req, res, next) => {
 export {
     getAuditLogs,
     getRoles,
-    updateRolePermissions,
     assignRole,
     getUsers,
     deleteUser

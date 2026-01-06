@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { fetchAuditLogs, fetchRoles, updateRolePermissions, fetchUsers, assignRole, deleteUser } from '../services/api';
 
 const AdminLogs = () => {
-  const [activeSection, setActiveSection] = useState('audit'); // 'audit', 'roles', 'permissions'
+  const [activeSection, setActiveSection] = useState('roles'); // 'audit', 'roles', 'permissions'
   const [logs, setLogs] = useState([]);
   const [roles, setRoles] = useState([]);
   const [users, setUsers] = useState([]);
@@ -27,70 +27,8 @@ const AdminLogs = () => {
       setRoles(rolesData);
       setUsers(usersData);
     } catch (error) {
-      // Fallback dummy data
-      setLogs([
-        {
-          id: 'log1',
-          userName: 'Akila Admin',
-          userRole: 'admin',
-          action: 'UPDATE_ROLE_PERMISSIONS',
-          details: 'Updated permissions for tutorLead role',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 'log2',
-          userName: 'Latha Lead',
-          userRole: 'tutorLead',
-          action: 'CREATE_ONBOARDING',
-          details: 'Created onboarding request for Rajesh Kumar',
-          timestamp: new Date(Date.now() - 5 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          id: 'log3',
-          userName: 'Akila Admin',
-          userRole: 'admin',
-          action: 'ASSIGN_ROLE',
-          details: 'Changed role for Siva Tutor from tutor to tutorLead',
-          timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ]);
-      setRoles([
-        { name: 'admin', permissions: ['all'] },
-        { name: 'tutorLead', permissions: ['view_tutors', 'manage_onboarding', 'view_classes'] },
-        { name: 'tutor', permissions: ['view_own_classes', 'mark_attendance'] },
-        { name: 'coordinator', permissions: ['view_classes', 'manage_schedule', 'view_attendance'] },
-      ]);
-      setUsers([
-        {
-          id: 'u1',
-          name: 'Akila Admin',
-          email: 'admin@maatram.org',
-          role: 'admin',
-          avatar: 'https://ui-avatars.com/api/?name=Akila+Admin',
-        },
-        {
-          id: 'u2',
-          name: 'Latha Lead',
-          email: 'lead@maatram.org',
-          role: 'tutorLead',
-          avatar: 'https://ui-avatars.com/api/?name=Latha+Lead',
-        },
-        {
-          id: 'u3',
-          name: 'Siva Tutor',
-          email: 'tutor@maatram.org',
-          role: 'tutor',
-          avatar: 'https://ui-avatars.com/api/?name=Siva+Tutor',
-        },
-        {
-          id: 'u4',
-          name: 'Priya Coordinator',
-          email: 'coord@maatram.org',
-          role: 'coordinator',
-          avatar: 'https://ui-avatars.com/api/?name=Priya+Coord',
-        },
-      ]);
-      setMessage({ type: 'error', text: 'Using dummy data - API connection failed' });
+      console.error('Failed to load admin logs data:', error);
+      setMessage({ type: 'error', text: error.message || 'Failed to load data from server' });
     } finally {
       setLoading(false);
     }
@@ -125,23 +63,20 @@ const AdminLogs = () => {
     }
   };
 
-  // const availablePermissions = ['view_tutors', 'manage_onboarding', 'view_classes', 'view_own_classes', 'mark_attendance', 'manage_schedule', 'view_attendance', 'all'];
   const availableRoles = ['admin', 'tutorLead', 'tutor', '  selectionTeam', 'classInspectionTeam', 'attendanceTrackingTeam'];
 
   const sections = [
     { id: 'roles', label: 'Roles & Users', icon: 'people' },
-    // { id: 'permissions', label: 'Permissions', icon: 'lock' },
     { id: 'audit', label: 'Audit Logs', icon: 'history' },
   ];
 
   return (
     <div className="space-y-6">
       {message.text && (
-        <div className={`p-3 rounded-xl font-bold border animate-fade-in text-sm ${
-          message.type === 'success' 
-            ? 'bg-green-50 text-green-700 border-green-100' 
-            : 'bg-red-50 text-red-700 border-red-100'
-        }`}>
+        <div className={`p-3 rounded-xl font-bold border animate-fade-in text-sm ${message.type === 'success'
+          ? 'bg-green-50 text-green-700 border-green-100'
+          : 'bg-red-50 text-red-700 border-red-100'
+          }`}>
           {message.text}
         </div>
       )}
@@ -152,11 +87,10 @@ const AdminLogs = () => {
           <button
             key={section.id}
             onClick={() => setActiveSection(section.id)}
-            className={`flex-1 flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${
-              activeSection === section.id
-                ? 'bg-maatram-yellow text-black shadow-md'
-                : 'bg-white text-gray-500 hover:bg-gray-50 hover:text-black border border-gray-200'
-            }`}
+            className={`flex-1 flex flex-col items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold text-sm transition-all duration-300 ${activeSection === section.id
+              ? 'bg-maatram-yellow text-black shadow-md'
+              : 'bg-white text-gray-500 hover:bg-gray-50 hover:text-black border border-gray-200'
+              }`}
           >
             <span className="material-icons-outlined text-2xl">{section.icon}</span>
             <span className="font-display">{section.label}</span>
@@ -326,9 +260,9 @@ const AdminLogs = () => {
                 </div>
               </div>
             )}
-          
+
           </>
-          
+
         )}
       </div>
     </div>
