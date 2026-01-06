@@ -38,19 +38,25 @@ const sendMail = async ({ to, subject, html, from }) => {
 
   console.log(`[email] Sending email to: ${to} from: ${fromAddress}`);
 
-  try {
-    const info = await transporter.sendMail({
-      to,
-      subject,
-      html,
-      from: fromAddress
+  const mailData = {
+    to,
+    subject,
+    html,
+    from: fromAddress
+  };
+
+  await new Promise((resolve, reject) => {
+    transporter.sendMail(mailData, (err, info) => {
+      if (err) {
+        console.error(err);
+        reject(err);
+      } else {
+        console.log('[email] Message sent:', info.messageId);
+        if (info.response) console.log('[email] SMTP Response:', info.response);
+        resolve(info);
+      }
     });
-    console.log('[email] Message sent:', info.messageId);
-    if (info.response) console.log('[email] SMTP Response:', info.response);
-  } catch (error) {
-    console.error('[email] Error sending mail:', error);
-    throw error;
-  }
+  });
 };
 
 export { sendMail };

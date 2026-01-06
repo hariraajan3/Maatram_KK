@@ -31,7 +31,7 @@ const setupAccountHandler = async (req, res, next) => {
     }
 
     // Changed from TutorOnboarding to OnboardingUsers
-    const onboarding = await prisma.onboardingUsers.findUnique({
+    const onboarding = await prisma.OnboardingUsers.findUnique({
       where: { id: decoded.onboardingId }
     });
 
@@ -87,7 +87,7 @@ const setupAccountHandler = async (req, res, next) => {
     }
 
     // Mark onboarding as completed
-    await prisma.onboardingUsers.update({
+    await prisma.OnboardingUsers.update({
       where: { id: onboarding.id },
       data: { onboardingStatus: 'completed', acceptedOn: new Date() }
     });
