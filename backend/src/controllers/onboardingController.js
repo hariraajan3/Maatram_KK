@@ -47,9 +47,9 @@ const createOnboarding = async (req, res, next) => {
 
     console.log('Token generated:', token);
 
-    const setupUrl = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
-    // const setupUrl = `http://localhost:5173/set-password?token=${token}`;
-    console.log('Setup URL:', setupUrl);
+    //const setupUrl = `${process.env.FRONTEND_URL}/set-password?token=${token}`;
+     const setupUrl = `http://localhost:5173/set-password?token=${token}`;
+    // console.log('Setup URL:', setupUrl);
     // Send email asynchronously (fire-and-forget) to avoid delaying the response
 
     sendMail({
@@ -73,7 +73,7 @@ const createOnboarding = async (req, res, next) => {
         </div>
       `,
     }).catch(err => console.error('Failed to send onboarding email:', err));
-
+    
     logAction(req.user, 'CREATE_ONBOARDING', `Created onboarding invitation for ${name} (${role})`, 'TutorOnboarding', String(request.id));
 
     res.status(201).json({ message: 'Invitation sent successfully', request, token });

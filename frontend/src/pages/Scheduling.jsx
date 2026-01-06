@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchClasses, requestSwap } from '../services/api';
+import Can from '../Can';
+import { useAuth } from "../AuthContext";
 
 const Scheduling = () => {
   const [classes, setClasses] = useState([]);
@@ -12,7 +14,14 @@ const Scheduling = () => {
   });
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(true);
-
+  const { hasPermission, hasRole, hasAllPermissions, hasAnyPermission } = useAuth();
+  /* 
+    Defining `classesListCss` as a derived variable instead of strict state, because it depends entirely on `hasRole`.
+    Using `useState` here would cause unnecessary re-renders. 
+  */
+  const classesListCss = hasRole("tutor")
+    ? "lg:col-span-2 bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden"
+    : "lg:col-span-4 bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden";
   useEffect(() => {
     fetchClasses()
       .then((data) => {
@@ -90,7 +99,7 @@ const Scheduling = () => {
 
       <div className="grid lg:grid-cols-3 gap-8">
         {/* Upcoming Classes List */}
-        <section className="lg:col-span-2 bg-white rounded-2xl shadow-card border border-gray-100 overflow-hidden">
+        <section className={classesListCss}>
           <div className="p-6 border-b border-gray-100 flex justify-between items-center">
             <h3 className="text-lg font-bold text-black">Upcoming Classes</h3>
             <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-bold">
@@ -161,91 +170,92 @@ const Scheduling = () => {
             </table>
           </div>
         </section>
-
-        {/* Swap Request Form */}
-        <section className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 h-fit sticky top-24">
-          <div className="mb-6">
-            <h3 className="text-lg font-bold text-black">Request Swap / Reschedule</h3>
-            <p className="text-sm text-gray-500 mt-1">
-              Admins and leads will be notified instantly.
-            </p>
-          </div>
-
-          <form onSubmit={submitSwap} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Class ID</label>
-              <input
-                name="classId"
-                required
-                value={swapForm.classId}
-                onChange={(e) => setSwapForm({ ...swapForm, classId: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
-                placeholder="e.g. CLS-2024-001"
-              />
+        <Can role="tutor">
+          {/* Swap Request Form */}
+          <section className="bg-white rounded-2xl shadow-card border border-gray-100 p-6 h-fit sticky top-24">
+            <div className="mb-6">
+              <h3 className="text-lg font-bold text-black">Request Swap / Reschedule</h3>
+              <p className="text-sm text-gray-500 mt-1">
+                Admins and leads will be notified instantly.
+              </p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={submitSwap} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Current Tutor ID</label>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Class ID</label>
                 <input
-                  name="proposedByTutorId"
+                  name="classId"
                   required
-                  value={swapForm.proposedByTutorId}
-                  onChange={(e) => setSwapForm({ ...swapForm, proposedByTutorId: e.target.value })}
+                  value={swapForm.classId}
+                  onChange={(e) => setSwapForm({ ...swapForm, classId: e.target.value })}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
+                  placeholder="e.g. CLS-2024-001"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Current Tutor ID</label>
+                  <input
+                    name="proposedByTutorId"
+                    required
+                    value={swapForm.proposedByTutorId}
+                    onChange={(e) => setSwapForm({ ...swapForm, proposedByTutorId: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Target Tutor ID</label>
+                  <input
+                    name="targetTutorId"
+                    required
+                    value={swapForm.targetTutorId}
+                    onChange={(e) => setSwapForm({ ...swapForm, targetTutorId: e.target.value })}
+                    className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Desired Date & Time</label>
+                <input
+                  type="datetime-local"
+                  name="desiredDate"
+                  required
+                  value={swapForm.desiredDate}
+                  onChange={(e) => setSwapForm({ ...swapForm, desiredDate: e.target.value })}
                   className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
                 />
               </div>
+
               <div>
-                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Target Tutor ID</label>
-                <input
-                  name="targetTutorId"
+                <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Reason</label>
+                <textarea
+                  name="reason"
                   required
-                  value={swapForm.targetTutorId}
-                  onChange={(e) => setSwapForm({ ...swapForm, targetTutorId: e.target.value })}
+                  rows="3"
+                  value={swapForm.reason}
+                  onChange={(e) => setSwapForm({ ...swapForm, reason: e.target.value })}
                   className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
+                  placeholder="Briefly explain why..."
                 />
               </div>
-            </div>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Desired Date & Time</label>
-              <input
-                type="datetime-local"
-                name="desiredDate"
-                required
-                value={swapForm.desiredDate}
-                onChange={(e) => setSwapForm({ ...swapForm, desiredDate: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
-              />
-            </div>
+              <button
+                type="submit"
+                className="w-full py-3 bg-maatram-yellow text-black font-bold rounded-xl hover:bg-maatram-yellow-dark transition-colors shadow-lg shadow-maatram-yellow/20"
+              >
+                Submit Request
+              </button>
 
-            <div>
-              <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Reason</label>
-              <textarea
-                name="reason"
-                required
-                rows="3"
-                value={swapForm.reason}
-                onChange={(e) => setSwapForm({ ...swapForm, reason: e.target.value })}
-                className="w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-maatram-yellow focus:border-transparent outline-none text-sm transition-all"
-                placeholder="Briefly explain why..."
-              />
-            </div>
-
-            <button
-              type="submit"
-              className="w-full py-3 bg-maatram-yellow text-black font-bold rounded-xl hover:bg-maatram-yellow-dark transition-colors shadow-lg shadow-maatram-yellow/20"
-            >
-              Submit Request
-            </button>
-
-            {message && (
-              <div className="p-3 rounded-lg bg-green-50 text-green-700 text-sm font-medium border border-green-100 text-center animate-fade-in">
-                {message}
-              </div>
-            )}
-          </form>
-        </section>
+              {message && (
+                <div className="p-3 rounded-lg bg-green-50 text-green-700 text-sm font-medium border border-green-100 text-center animate-fade-in">
+                  {message}
+                </div>
+              )}
+            </form>
+          </section>
+        </Can>
       </div>
     </div>
   );

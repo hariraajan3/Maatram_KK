@@ -1,7 +1,6 @@
 import validator from 'express-validator';
 import prisma from '../../lib/prisma.js';
 import { encrypt } from '../utils/security.js';
-import { sendNotificationBundle } from '../utils/notifications.js';
 import { logAction } from '../utils/auditLogger.js';
 
 const { validationResult } = validator;

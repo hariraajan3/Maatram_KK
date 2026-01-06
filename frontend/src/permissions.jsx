@@ -16,6 +16,7 @@ export const PERMISSIONS = {
   SCHEDULING_MANAGE: "scheduling:manage",
   SCHEDULING_VIEW: "scheduling:view",
   SCHEDULING_EDIT: "scheduling:edit",
+  SCHEDULING_SWAP: "scheduling:swap",
 
   // Attendance Management
   ATTENDANCE_MANAGE: "attendance:manage",
