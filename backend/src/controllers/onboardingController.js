@@ -48,7 +48,7 @@ const createOnboarding = async (req, res, next) => {
     console.log('Token generated:', token);
 
     const setupUrl = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/set-password?token=${token}`;
-
+    console.log('Setup URL:', setupUrl);
     // Send email asynchronously (fire-and-forget) to avoid delaying the response
     sendMail({
       to:email,
