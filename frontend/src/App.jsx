@@ -78,15 +78,15 @@ const App = () => {
       if (parsed.user && parsed.user.role) {
         parsed.user.role = ROLE_MAP[parsed.user.role] || parsed.user.role;
       }
+      if (parsed.token) {
+        setAuthToken(parsed.token);
+      }
+
       return parsed;
     } catch {
       return null;
     }
   });
-
-  useEffect(() => {
-    setAuthToken(session?.token || null);
-  }, [session]);
 
   const handleLogin = (payload) => {
     localStorage.setItem('kk_session', JSON.stringify(payload));

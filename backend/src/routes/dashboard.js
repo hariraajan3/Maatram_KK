@@ -1,10 +1,11 @@
 import express from 'express';
-import { getDashboard } from '../controllers/dashboardController.js';
+import { getDashboard, getDashboardStudents } from '../controllers/dashboardController.js';
 import { withAuth, requireRole } from '../middlewares/auth.js';
 
 const router = express.Router();
 
-router.get('/', withAuth, requireRole('ADMIN', 'TUTOR_LEAD', 'studentsTrackingTeam', 'STUDENTS_TRACKING_TEAM'), getDashboard);
+router.get('/', withAuth, requireRole('ADMIN', 'TUTOR_LEAD', 'studentsTrackingTeam', 'STUDENTS_TRACKING_TEAM', 'ATTENDANCE_TRACKING_TEAM'), getDashboard);
+router.get('/students', withAuth, requireRole('ADMIN', 'TUTOR_LEAD', 'ATTENDANCE_TRACKING_TEAM'), getDashboardStudents);
 
 export default router;
 

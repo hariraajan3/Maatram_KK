@@ -203,6 +203,8 @@ const handleGFormWebhook = async (req, res, next) => {
     const secret = req.headers['x-webhook-secret'];
     if (!secret || secret !== process.env.WEBHOOK_SECRET) {
       console.warn('Webhook Unauthorized Attempt:', req.ip);
+      console.log('Secret:', secret);
+      console.log('Expected Secret:', process.env.WEBHOOK_SECRET);
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
@@ -216,7 +218,9 @@ const handleGFormWebhook = async (req, res, next) => {
       parentName,
       yearOfStudy,
       publicMark,
-      subjectMarks
+      subjectMarks,
+      medium,           // New field
+      tutoringSubjects  // New field (expected as an array of subjects)
     } = req.body;
 
     console.log('Received Webhook Payload:', req.body);
@@ -235,6 +239,13 @@ const handleGFormWebhook = async (req, res, next) => {
       }
     });
 
+    // Generate sequential KK ID only for new students
+    let kkId = existingStudent ? existingStudent.kkId : null;
+    if (!kkId) {
+      const count = await prisma.student.count();
+      kkId = `KK2025${(count + 1).toString().padStart(3, '0')}`;
+    }
+
     let student;
     const studentData = {
       name,
@@ -247,8 +258,9 @@ const handleGFormWebhook = async (req, res, next) => {
       yearOfStudying: yearOfStudy || '12th',
       class11PublicMarks: publicMark ? { total: publicMark } : {},
       subjectMarks: subjectMarks ? { marks: subjectMarks } : {},
-      tutoringSubjects: [], // Default empty
-      kkId: `KK-${Date.now().toString().slice(-6)}` // Temporary ID generation
+      tutoringSubjects: tutoringSubjects || [],
+      medium: medium || null,
+      kkId
     };
 
     if (existingStudent) {

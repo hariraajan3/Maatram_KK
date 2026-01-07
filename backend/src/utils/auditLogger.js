@@ -11,13 +11,12 @@ const logAction = async (user, action, description, entityType = null, entityId 
                 description,
                 oldData,
                 newData,
-                ipAddress: null, // Would need to get from request
-                userAgent: null, // Would need to get from request
+                ipAddress: null,
+                userAgent: null,
             }
         });
     } catch (error) {
         console.error('Failed to log audit action:', error);
-        // Don't throw error to avoid breaking the main flow
     }
 };
 

@@ -1,7 +1,7 @@
 import axios from "axios";
 const getBaseUrl = () => {
-  // let url = import.meta.env.VITE_BACKEND_API ;
-  let url = 'http://localhost:4000';
+  let url = import.meta.env.VITE_BACKEND_API ;
+  // let url = 'http://localhost:4000';
   if (!url.endsWith('/api')) url += '/api';
   return url;
 };
@@ -14,6 +14,22 @@ export const apiClient = axios.create({
     "Content-Type": "application/json",
   }
 });
+
+// Response interceptor to handle token expiry (401)
+// apiClient.interceptors.response.use(
+//   (response) => response,
+//   (error) => {
+//     if (error.response && error.response.status === 401) {
+//       // Clear session if token is expired/invalid
+//       // We check if we are not already on login page to avoid loops if login check fails
+//       if (window.location.pathname !== '/login') {
+//         localStorage.removeItem('kk_session');
+//         window.location.href = '/login';
+//       }
+//     }
+//     return Promise.reject(error);
+//   }
+// );
 
 export const setAuthToken = (token) => {
   if (token) {
@@ -42,6 +58,12 @@ export const forgotPassword = async (payload) => {
 
 export const fetchDashboard = async () => {
   const { data } = await apiClient.get('/dashboard');
+  return data;
+};
+
+export const fetchDashboardStudents = async (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  const { data } = await apiClient.get(`/dashboard/students?${query}`);
   return data;
 };
 

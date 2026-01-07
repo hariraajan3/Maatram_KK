@@ -13,20 +13,32 @@ const getAuditLogs = async (req, res, next) => {
 
         const logs = await prisma.auditLog.findMany({
             where,
-            include: {
-                user: {
-                    select: { id: true, name: true, email: true }
-                }
-            },
-            orderBy: { createdAt: 'desc' },
             skip,
             take: parseInt(limit)
         });
 
+        const userIds = [...new Set(logs.map(log => log.userId).filter(id => id))];
+        const users = await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, name: true, email: true, role: true }
+        });
+
+        const userMap = users.reduce((acc, user) => {
+            acc[user.id] = user;
+            return acc;
+        }, {});
+
+        const logsWithUser = logs.map(log => ({
+            ...log,
+            userName: userMap[log.userId]?.name || 'Unknown',
+            userEmail: userMap[log.userId]?.email || '',
+            userRole: userMap[log.userId]?.role || ''
+        }));
+
         const total = await prisma.auditLog.count({ where });
 
         res.json({
-            logs,
+            logs: logsWithUser,
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
@@ -40,7 +52,8 @@ const getAuditLogs = async (req, res, next) => {
 };
 
 const getRoles = (req, res) => {
-    res.json({ roles: dataStore.roles });
+    const roles = ['ADMIN', 'TUTOR_LEAD', 'TUTOR', 'SELECTION_TEAM', 'ATTENDANCE_TRACKING_TEAM', 'CLASS_INSPECTION_TEAM'];
+    res.json({ roles });
 };
 
 
@@ -81,15 +94,14 @@ const getUsers = async (req, res, next) => {
                 email: true,
                 role: true,
                 isActive: true,
-                lastLoginAt: true,
                 createdAt: true,
                 tutor: {
                     select: {
                         id: true,
-                        status: true,
-                        medium: true,
-                        district: true,
-                        subjects: true
+                        onboardingStatus: true,
+                        tutoringMedium: true,
+                        tutoringDistrict: true,
+                        tutoringSubjects: true
                     }
                 }
             },

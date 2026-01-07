@@ -145,7 +145,6 @@ const AdminLogs = () => {
                                 )}
                                 <div>
                                   <div className="font-bold text-black text-sm">{user.name}</div>
-                                  <div className="text-[10px] text-gray-400">ID: {user.id.slice(0, 8)}...</div>
                                 </div>
                               </div>
                             </td>

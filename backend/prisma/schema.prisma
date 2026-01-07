@@ -206,6 +206,7 @@ model Student {
   class11PublicMarks Json
   subjectMarks       Json
   parentName         String?
+  medium             Medium?
   phoneNumber        String?
   createdAt          DateTime @default(now())
 
@@ -310,7 +311,7 @@ model OnboardingUsers {
   id               Int              @id @default(autoincrement())
   fullName         String
   email            String           @unique
-  role             Role             
+  role             Role
   medium           Medium?
   district         District?
   subject          Subject?
