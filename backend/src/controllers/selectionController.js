@@ -19,27 +19,43 @@ const respondValidation = (req) => {
 const createApplication = async (req, res, next) => {
   try {
     respondValidation(req);
-    const { name, email, phone, guardianContact, medium, district, requestedSubjects } = req.body;
+    const {
+      name,
+      schoolName,
+      address,
+      district,
+      medium,
+      email,
+      yearOfStudy,
+      publicMark,
+      subjectMarks,
+      phone,
+      parentName,
+      tutoringSubjects
+    } = req.body;
+
+    const count = await prisma.student.count();
+    const kkId = `KK2025${(count + 1).toString().padStart(3, '0')}`;
 
     const application = await prisma.studentApplication.create({
       data: {
         student: {
           create: {
+            kkId,
             name,
-            email: email || null,
-            phoneNumber: phone || null,
-            // guardianContactEncrypted: guardianContact ? encrypt(guardianContact) : null, // Removed as Student model doesn't have this encrypted field in provided schema
-            // Using standard fields from Schema:
-            parentName: guardianContact || null, // Mapping guardianContact to parentName?
+            schoolName: schoolName || null,
+            address: address || null,
             district: district || null,
-            tutoringSubjects: requestedSubjects || [],
-            kkId: `TEMP-${Date.now()}`, // Schema requires kkId (String @unique)
-            yearOfStudying: '12th', // Default
-            class11PublicMarks: {},
-            subjectMarks: {},
+            medium: medium || null,
+            email: email || null,
+            yearOfStudying: yearOfStudy || '12th',
+            class11PublicMarks: publicMark ? parseInt(publicMark) : null,
+            subjectMarks: subjectMarks ? { text: subjectMarks } : {},
+            phoneNumber: phone || null,
+            parentName: parentName || null,
+            tutoringSubjects: tutoringSubjects || [],
           }
         },
-        // currentPhase defaults to TELE_VERIFICATION
       },
       include: {
         student: true
@@ -88,6 +104,13 @@ const listApplications = async (req, res, next) => {
       medium: app.student?.medium,
       requestedSubjects: app.student?.tutoringSubjects || [],
       phoneNumber: app.student?.phoneNumber,
+      schoolName: app.student?.schoolName,
+      address: app.student?.address,
+      yearOfStudying: app.student?.yearOfStudying,
+      class11PublicMarks: app.student?.class11PublicMarks,
+      subjectMarks: app.student?.subjectMarks,
+      parentName: app.student?.parentName,
+      kkId: app.student?.kkId,
     }));
 
     res.json({ applications: flattened });
@@ -226,6 +249,13 @@ const getApplicationsByPhase = async (req, res, next) => {
       medium: app.student?.medium,
       requestedSubjects: app.student?.tutoringSubjects || [],
       phoneNumber: app.student?.phoneNumber,
+      schoolName: app.student?.schoolName,
+      address: app.student?.address,
+      yearOfStudying: app.student?.yearOfStudying,
+      class11PublicMarks: app.student?.class11PublicMarks,
+      subjectMarks: app.student?.subjectMarks,
+      parentName: app.student?.parentName,
+      kkId: app.student?.kkId,
     }));
 
     res.json({ applications: flattened });
@@ -294,7 +324,7 @@ const handleGFormWebhook = async (req, res, next) => {
       parentName: parentName || null,
       yearOfStudying: yearOfStudy || '12th',
       class11PublicMarks: publicMark ? parseInt(publicMark) : null,
-      subjectMarks: subjectMarks || {},
+      subjectMarks: subjectMarks ? { text: subjectMarks } : {},
       tutoringSubjects: tutoringSubjects || [],
       medium: medium || null,
       kkId

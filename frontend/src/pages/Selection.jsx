@@ -7,7 +7,7 @@ import {
   fetchApplicationsByPhase,
   createApplication,
   updateApplicationPhase,
-} from '../services/api';
+} from '../services/selectionApi';
 
 const PHASES = {
   Phase1_Selection: { label: 'Phase 1', sublabel: 'New Applications', color: 'bg-blue-100 text-blue-800', icon: 'assignment', description: 'Initial student applications' },
@@ -18,7 +18,7 @@ const PHASES = {
 
 const MEDIUMS = ['Tamil', 'English'];
 const DISTRICTS = ['Chennai', 'Coimbatore', 'Other'];
-const SUBJECTS = ['Physics', 'Maths', 'Chemistry', 'Commerce', 'Economics', 'Accounts', 'Tamil', 'English'];
+const SUBJECTS = ['Physics', 'Maths', 'Chemistry', 'Biology', 'Science', 'Commerce', 'Economics', 'Accounts', 'Tamil', 'English'];
 
 const Selection = () => {
   const [activeTab, setActiveTab] = useState('Phase1_Selection');
@@ -32,11 +32,16 @@ const Selection = () => {
 
   const [formData, setFormData] = useState({
     name: '',
+    schoolName: '',
+    address: '',
+    district: '',
+    medium: '',
     email: '',
+    yearOfStudy: '12th',
+    publicMark: '',
+    subjectMarks: '',
     phone: '',
     guardianContact: '',
-    medium: '',
-    district: '',
     requestedSubjects: [],
   });
 
@@ -76,11 +81,16 @@ const Selection = () => {
       setShowForm(false);
       setFormData({
         name: '',
+        schoolName: '',
+        address: '',
+        district: '',
+        medium: '',
         email: '',
+        yearOfStudy: '12th',
+        publicMark: '',
+        subjectMarks: '',
         phone: '',
         guardianContact: '',
-        medium: '',
-        district: '',
         requestedSubjects: [],
       });
       loadApplications();
@@ -141,7 +151,7 @@ const Selection = () => {
         </button>
       </div>
 
-      {/* Phase Tabs - 3 Phases with equal spacing */}
+      {/* Phase Tabs - 4 Phases with equal spacing */}
       <div className="">
         <div className="flex justify-between gap-4 ">
           {Object.entries(PHASES).map(([phase, config]) => (
@@ -182,25 +192,50 @@ const Selection = () => {
                       {app.name.charAt(0)}
                     </div>
                     <div>
-                      <h3 className="text-xl font-bold text-black">{app.name}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xl font-bold text-black">{app.name}</h3>
+                        <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[11px] font-black tracking-wider uppercase border border-gray-200">
+                          {app.kkId || 'PENDING'}
+                        </span>
+                      </div>
                       {app.email && <p className="text-sm text-gray-500">{app.email}</p>}
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-3 gap-4 mb-4">
+                  <div className="grid md:grid-cols-3 gap-4 mb-6 pt-4 border-t border-gray-50">
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">Medium</p>
-                      <p className="font-bold text-black">{app.medium || 'Not specified'}</p>
+                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Medium & District</p>
+                      <p className="text-sm font-bold text-black">{app.medium || 'N/A'} | {app.district || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">District</p>
-                      <p className="font-bold text-black">{app.district || 'Not specified'}</p>
+                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Contact</p>
+                      <p className="text-sm font-bold text-black">{app.phoneNumber || 'N/A'}</p>
+                      <p className="text-[11px] text-gray-600">Parent: {app.parentName || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">Subjects</p>
-                      <div className="flex flex-wrap gap-2">
+                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Academic</p>
+                      <p className="text-sm font-bold text-black">{app.yearOfStudying} | {app.schoolName || 'N/A'}</p>
+                      <p className="text-[11px] text-gray-600 truncate" title={app.address}>Addr: {app.address || 'N/A'}</p>
+                    </div>
+                  </div>
+
+                  <div className="grid md:grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-xl">
+                    <div>
+                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Marks (11th Public)</p>
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg font-black text-black">{app.class11PublicMarks || 'N/A'}</span>
+                        <span className="text-[11px] text-gray-600 italic">
+                          {typeof app.subjectMarks === 'object'
+                            ? (app.subjectMarks.text || app.subjectMarks.marks || 'No break-up')
+                            : (app.subjectMarks || 'No break-up')}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Requested Subjects</p>
+                      <div className="flex flex-wrap gap-1.5 mt-1">
                         {(app.requestedSubjects || []).map((subject) => (
-                          <span key={subject} className="px-2 py-1 bg-gray-100 rounded text-xs font-bold">
+                          <span key={subject} className="px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-gray-700 shadow-sm">
                             {subject}
                           </span>
                         ))}
@@ -224,14 +259,6 @@ const Selection = () => {
                     <div className="mb-2">
                       <p className="text-xs text-gray-500 uppercase font-bold mb-1">Panel Interview Notes</p>
                       <p className="text-sm text-gray-700">{app.phase3PanelInterviewNotes}</p>
-                    </div>
-                  )}
-
-                  {app.student && (
-                    <div className="mt-4 p-3 bg-green-50 rounded-lg">
-                      <p className="text-sm font-bold text-green-800">
-                        ✓ Student created: {app.student.name} (ID: {String(app.student.id).slice(0, 8)}...)
-                      </p>
                     </div>
                   )}
                 </div>
@@ -285,65 +312,45 @@ const Selection = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">School Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.schoolName}
+                    onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
+                  />
+                </div>
+              </div>
+
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Name *</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-bold text-gray-700 mb-2">Address *</label>
+                <textarea
                   required
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  value={formData.address}
+                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
+                  rows="2"
                 />
               </div>
 
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Phone</label>
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Guardian Contact</label>
-                <input
-                  type="tel"
-                  value={formData.guardianContact}
-                  onChange={(e) => setFormData({ ...formData, guardianContact: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                />
-              </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Medium</label>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">District *</label>
                   <select
-                    value={formData.medium}
-                    onChange={(e) => setFormData({ ...formData, medium: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  >
-                    <option value="">Select medium</option>
-                    {MEDIUMS.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">District</label>
-                  <select
+                    required
                     value={formData.district}
                     onChange={(e) => setFormData({ ...formData, district: e.target.value })}
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
@@ -354,10 +361,97 @@ const Selection = () => {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Medium *</label>
+                  <select
+                    required
+                    value={formData.medium}
+                    onChange={(e) => setFormData({ ...formData, medium: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
+                  >
+                    <option value="">Select medium</option>
+                    {MEDIUMS.map((m) => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Email *</label>
+                  <input
+                    type="email"
+                    required
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Year of Studying *</label>
+                  <select
+                    required
+                    value={formData.yearOfStudy}
+                    onChange={(e) => setFormData({ ...formData, yearOfStudy: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
+                  >
+                    <option value="11th">11th</option>
+                    <option value="12th">12th</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">11th Public Mark *</label>
+                  <input
+                    type="number"
+                    required
+                    value={formData.publicMark}
+                    onChange={(e) => setFormData({ ...formData, publicMark: e.target.value })}
+                    placeholder="Ex: 487"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Subject marks *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.subjectMarks}
+                    onChange={(e) => setFormData({ ...formData, subjectMarks: e.target.value })}
+                    placeholder="Ex: Maths:60, Science:80"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
+                  />
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Phone Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={formData.phone}
+                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-2">Parent Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={formData.guardianContact}
+                    onChange={(e) => setFormData({ ...formData, guardianContact: e.target.value })}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
+                  />
+                </div>
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Requested Subjects</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2">Subjects tutoring needed *</label>
                 <div className="grid grid-cols-4 gap-2">
                   {SUBJECTS.map((subject) => (
                     <label key={subject} className="flex items-center gap-2 p-3 border border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50">
