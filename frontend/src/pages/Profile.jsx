@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { fetchProfile, updateProfile } from '../services/api';
-import { useAuth } from '../AuthContext';
 
 const DISTRICTS = ['Chennai', 'Coimbatore', 'Other'];
 const MEDIUMS = ['Tamil', 'English'];
@@ -38,6 +37,7 @@ const Profile = () => {
         tutoringDistrict: data.tutoringDistrict || '',
         tutoringMedium: data.tutoringMedium || '',
         tutoringSubjects: currentSubject || '',
+        meetLink: data.meetLink || '',
       });
     } catch (err) {
       console.error('Failed to load profile:', err);
@@ -161,6 +161,7 @@ const Profile = () => {
                 <DataField label="District" name="tutoringDistrict" value={formData.tutoringDistrict} onChange={handleInputChange} isEditing={isEditing} options={DISTRICTS} />
                 <DataField label="Medium" name="tutoringMedium" value={formData.tutoringMedium} onChange={handleInputChange} isEditing={isEditing} options={MEDIUMS} />
                 <DataField label="Subject" name="tutoringSubjects" value={formData.tutoringSubjects} onChange={handleInputChange} isEditing={isEditing} options={SUBJECTS} />
+                <DataField label="Common Meet Link" name="meetLink" value={formData.meetLink} onChange={handleInputChange} isEditing={isEditing} placeholder="Permanent Zoom/GMeet Link" />
                 <DataField label="Year / Alumni" name="alumniOrYearStudying" value={formData.alumniOrYearStudying} onChange={handleInputChange} isEditing={isEditing} />
                 <DataField label="Experience (Years)" name="tutoringExperienceYears" value={formData.tutoringExperienceYears} onChange={handleInputChange} isEditing={isEditing} type="number" />
               </>

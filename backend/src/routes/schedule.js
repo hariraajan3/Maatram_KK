@@ -16,11 +16,7 @@ router.post(
   '/',
   withAuth,
   requireRole('ADMIN', 'TUTOR_LEAD'),
-  body('phase').isString(),
-  body('tutorId').isString(),
-  body('studentGroup').isString(),
-  body('startTime').isISO8601(),
-  body('endTime').isISO8601(),
+  body('schedules').isArray(),
   createClass,
 );
 router.post(

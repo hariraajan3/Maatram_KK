@@ -3,6 +3,7 @@ import {
   fetchPhase1,
   fetchPhase2,
   fetchPhase3,
+  fetchPhase4,
   fetchApplicationsByPhase,
   createApplication,
   updateApplicationPhase,
@@ -12,6 +13,7 @@ const PHASES = {
   Phase1_Selection: { label: 'Phase 1', sublabel: 'New Applications', color: 'bg-blue-100 text-blue-800', icon: 'assignment', description: 'Initial student applications' },
   Phase2_Televerification: { label: 'Phase 2', sublabel: 'Tele-verification', color: 'bg-yellow-100 text-yellow-800', icon: 'phone', description: 'Phone verification in progress' },
   Phase3_PanelInterview: { label: 'Phase 3', sublabel: 'Panel Interview', color: 'bg-purple-100 text-purple-800', icon: 'groups', description: 'Final panel interview' },
+  Phase4_Scheduling: { label: 'Phase 4', sublabel: 'Scheduling', color: 'bg-green-100 text-green-800', icon: 'event_available', description: 'Selected students awaiting class assignment' },
 };
 
 const MEDIUMS = ['Tamil', 'English'];
@@ -52,10 +54,13 @@ const Selection = () => {
         data = await fetchPhase2();
       } else if (activeTab === 'Phase3_PanelInterview') {
         data = await fetchPhase3();
+      } else if (activeTab === 'Phase4_Scheduling') {
+        data = await fetchPhase4();
       } else {
         data = await fetchApplicationsByPhase(activeTab);
       }
-      setApplications(data);
+      const mappedData = data.map(app => ({ ...app, phase: activeTab }));
+      setApplications(mappedData);
     } catch (error) {
       console.error('Failed to load applications:', error);
       setApplications([]);
@@ -225,7 +230,7 @@ const Selection = () => {
                   {app.student && (
                     <div className="mt-4 p-3 bg-green-50 rounded-lg">
                       <p className="text-sm font-bold text-green-800">
-                        ✓ Student created: {app.student.name} (ID: {app.student.id.slice(0, 8)}...)
+                        ✓ Student created: {app.student.name} (ID: {String(app.student.id).slice(0, 8)}...)
                       </p>
                     </div>
                   )}

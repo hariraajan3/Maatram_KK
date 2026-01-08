@@ -144,6 +144,7 @@ model Tutor {
   alumniOrYearStudying    String
   tutoringExperienceYears Int
   onboardingStatus        OnboardingStatus @default(pending)
+  meetLink                String?
   createdAt               DateTime         @default(now())
 
   user User @relation(fields: [userId], references: [id])
@@ -194,21 +195,22 @@ model ClassInspectionTeam {
 }
 
 model Student {
-  id                 Int      @id @default(autoincrement())
-  kkId               String   @unique
+  id                 Int          @id @default(autoincrement())
+  kkId               String       @unique
   name               String
   schoolName         String?
   district           String?
   email              String?
-  yearOfStudying     String   @default("12th")
+  yearOfStudying     String       @default("12th")
   tutoringSubjects   Json
   address            String?
-  class11PublicMarks Json
+  class11PublicMarks Int?
   subjectMarks       Json
   parentName         String?
   medium             Medium?
   phoneNumber        String?
-  createdAt          DateTime @default(now())
+  phase              StudentPhase @default(Selection)
+  createdAt          DateTime     @default(now())
 
   application StudentApplication?
 
@@ -217,6 +219,7 @@ model Student {
 
 model Schedule {
   id           Int            @id @default(autoincrement())
+  classId      String?
   scheduleDate DateTime
   scheduleAt   DateTime
   subject      Subject
@@ -329,13 +332,17 @@ model StudentApplication {
 
   currentPhase SelectionPhase @default(TELE_VERIFICATION)
 
-  teleStatus  SelectionStatus @default(PENDING)
-  teleRemarks String?
+  teleStatus                  SelectionStatus @default(PENDING)
+  teleRemarks                 String?
+  phase2TeleverificationNotes String?         @map("tele_notes")
 
-  panelStatus  SelectionStatus @default(PENDING)
-  panelRemarks String?
+  panelStatus               SelectionStatus @default(PENDING)
+  panelRemarks              String?
+  phase3PanelInterviewNotes String?         @map("panel_notes")
 
   finalStatus SelectionStatus @default(PENDING)
+
+  phase1Notes String? @map("phase1_notes")
 
   assignedTutorId Int?
 

@@ -15,22 +15,6 @@ export const apiClient = axios.create({
   }
 });
 
-// Response interceptor to handle token expiry (401)
-// apiClient.interceptors.response.use(
-//   (response) => response,
-//   (error) => {
-//     if (error.response && error.response.status === 401) {
-//       // Clear session if token is expired/invalid
-//       // We check if we are not already on login page to avoid loops if login check fails
-//       if (window.location.pathname !== '/login') {
-//         localStorage.removeItem('kk_session');
-//         window.location.href = '/login';
-//       }
-//     }
-//     return Promise.reject(error);
-//   }
-// );
-
 export const setAuthToken = (token) => {
   if (token) {
     apiClient.defaults.headers.common.Authorization = `Bearer ${token}`;
@@ -70,6 +54,11 @@ export const fetchDashboardStudents = async (params = {}) => {
 export const fetchClasses = async () => {
   const { data } = await apiClient.get('/schedule');
   return data.classes || [];
+};
+
+export const createSchedule = async (payload) => {
+  const { data } = await apiClient.post('/schedule', payload);
+  return data;
 };
 
 export const requestSwap = async (payload) => {
@@ -167,14 +156,21 @@ export const fetchPhase3 = async () => {
   return data.applications || [];
 };
 
+export const fetchPhase4 = async () => {
+  const { data } = await apiClient.get('/selection/phase4');
+  return data.applications || [];
+};
+
 export const fetchApplicationsByPhase = async (phase) => {
   const phaseMap = {
     'Phase1_Selection': 'phase1',
     'Phase2_Televerification': 'phase2',
     'Phase3_PanelInterview': 'phase3',
+    'Phase4_Scheduling': 'phase4',
     'phase1': 'phase1',
     'phase2': 'phase2',
     'phase3': 'phase3',
+    'phase4': 'phase4',
   };
   const endpoint = phaseMap[phase] || `phase/${phase}`;
   const { data } = await apiClient.get(`/selection/${endpoint}`);

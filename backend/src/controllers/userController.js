@@ -53,7 +53,8 @@ export const updateProfile = async (req, res, next) => {
             yearOfStudyingOrAlumni,
             alumniOrYearStudying,
             tutoringExperienceYears,
-            tutoringDistrict
+            tutoringDistrict,
+            meetLink
         } = req.body;
 
         // Get current user to know the role
@@ -93,7 +94,8 @@ export const updateProfile = async (req, res, next) => {
                     tutorAddress,
                     alumniOrYearStudying,
                     tutoringDistrict,
-                    tutoringExperienceYears: tutoringExperienceYears ? parseInt(tutoringExperienceYears) : undefined
+                    tutoringExperienceYears: tutoringExperienceYears ? parseInt(tutoringExperienceYears) : undefined,
+                    meetLink
                 }
             });
         } else if (user.role === 'SELECTION_TEAM' && user.selectionTeam) {

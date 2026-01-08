@@ -228,6 +228,59 @@
         }
       }
     },
+    "/api/dashboard/students": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "search",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "subject",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "district",
+            "in": "query",
+            "type": "string"
+          },
+          {
+            "name": "medium",
+            "in": "query",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
     "/api/onboarding/": {
       "get": {
         "description": "",
@@ -917,6 +970,12 @@
                   "example": "any"
                 },
                 "subjectMarks": {
+                  "example": "any"
+                },
+                "medium": {
+                  "example": "any"
+                },
+                "tutoringSubjects": {
                   "example": "any"
                 }
               }

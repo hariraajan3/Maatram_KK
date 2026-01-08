@@ -49,6 +49,11 @@ router.get('/phase3', requireRole('ADMIN', 'SELECTION_TEAM'), (req, res, next) =
   getApplicationsByPhase(req, res, next);
 });
 
+router.get('/phase4', requireRole('ADMIN', 'SELECTION_TEAM'), (req, res, next) => {
+  req.params.phase = 'Phase4_Scheduling';
+  getApplicationsByPhase(req, res, next);
+});
+
 // Get single application
 router.get('/:id', requireRole('ADMIN', 'SELECTION_TEAM'), getApplication);
 
@@ -56,7 +61,7 @@ router.get('/:id', requireRole('ADMIN', 'SELECTION_TEAM'), getApplication);
 router.patch(
   '/:id/phase',
   requireRole('ADMIN', 'SELECTION_TEAM'),
-  body('phase').isIn(['Phase1_Selection', 'Phase2_Televerification', 'Phase3_PanelInterview', 'Selected', 'Rejected']),
+  body('phase').isIn(['Phase1_Selection', 'Phase2_Televerification', 'Phase3_PanelInterview', 'Phase4_Scheduling', 'Selected', 'Rejected']),
   body('notes').optional().isString(),
   updateApplicationPhase,
 );

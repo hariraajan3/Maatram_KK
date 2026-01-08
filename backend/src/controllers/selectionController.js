@@ -75,14 +75,22 @@ const listApplications = async (req, res, next) => {
     const applications = await prisma.studentApplication.findMany({
       where,
       include: {
-        student: {
-          select: { id: true, name: true, district: true, parentName: true }, // Adjusted fields
-        },
+        student: true,
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({ applications });
+    const flattened = applications.map(app => ({
+      ...app,
+      name: app.student?.name,
+      email: app.student?.email,
+      district: app.student?.district,
+      medium: app.student?.medium,
+      requestedSubjects: app.student?.tutoringSubjects || [],
+      phoneNumber: app.student?.phoneNumber,
+    }));
+
+    res.json({ applications: flattened });
   } catch (error) {
     next(error);
   }
@@ -125,34 +133,50 @@ const updateApplicationPhase = async (req, res, next) => {
     }
 
     let updateData = {};
-    const now = new Date();
+    let studentUpdateData = {};
 
     // Map frontend phase strings to DB Schema
     if (phase === 'Phase2_Televerification') {
       updateData.currentPhase = 'TELE_VERIFICATION';
-      updateData.teleRemarks = notes;
-      updateData.teleStatus = 'SELECTED'; // Assuming moving to this phase implies selection from prev? Or just updating notes?
-      // If we are IN this phase, we update status? 
-      // Let's assume this action "Moves" to Phase 2 or "Updates" Phase 2.
+      updateData.teleStatus = 'SELECTED';
+      updateData.phase1Notes = notes; // Notes from finishing Phase 1
     } else if (phase === 'Phase3_PanelInterview') {
       updateData.currentPhase = 'PANEL_INTERVIEW';
-      updateData.panelRemarks = notes;
-      // updateData.teleStatus = 'SELECTED'; // Ensure prev is selected
+      updateData.panelStatus = 'SELECTED';
+      updateData.phase2TeleverificationNotes = notes; // Notes from finishing Phase 2
     } else if (phase === 'Selected') {
       updateData.currentPhase = 'FINAL_SELECTION';
       updateData.finalStatus = 'SELECTED';
+      updateData.phase3PanelInterviewNotes = notes; // Notes from finishing Phase 3
+      // Student moves to Scheduling phase
+      studentUpdateData.phase = 'Scheduling';
+    } else if (phase === 'Phase4_Scheduling') {
+      // Just in case they move to Phase 4 explicitly
+      updateData.currentPhase = 'FINAL_SELECTION';
+      studentUpdateData.phase = 'Scheduling';
     } else if (phase === 'Rejected') {
       updateData.finalStatus = 'REJECTED';
-      // Which phase? Keep current?
+      // Store rejection reason in the notes of the current phase? 
+      // For simplicity, let's just use the current phase's note field or a generic one.
+      // But we'll just save it to whatever phase it was in.
+      if (application.currentPhase === 'TELE_VERIFICATION') {
+        if (application.teleStatus === 'PENDING') updateData.phase1Notes = notes;
+        else updateData.phase2TeleverificationNotes = notes;
+      } else if (application.currentPhase === 'PANEL_INTERVIEW') {
+        updateData.phase3PanelInterviewNotes = notes;
+      }
     }
-
-    // If selected, create Student record? 
-    // Wait, Student record is created at Application creation (via relation).
-    // So we don't need to create it again.
 
     const updated = await prisma.studentApplication.update({
       where: { id: parseInt(id) },
-      data: updateData,
+      data: {
+        ...updateData,
+        student: studentUpdateData.phase ? {
+          update: {
+            phase: studentUpdateData.phase
+          }
+        } : undefined
+      },
       include: {
         student: true,
       },
@@ -170,28 +194,41 @@ const updateApplicationPhase = async (req, res, next) => {
 const getApplicationsByPhase = async (req, res, next) => {
   try {
     const { phase } = req.params;
-    let dbPhase;
+    const where = {};
 
-    if (phase === 'Phase1_Selection' || phase === 'Phase2_Televerification') {
-      dbPhase = 'TELE_VERIFICATION';
+    if (phase === 'Phase1_Selection') {
+      where.currentPhase = 'TELE_VERIFICATION';
+      where.teleStatus = 'PENDING';
+    } else if (phase === 'Phase2_Televerification') {
+      where.currentPhase = 'TELE_VERIFICATION';
+      where.teleStatus = 'SELECTED';
     } else if (phase === 'Phase3_PanelInterview') {
-      dbPhase = 'PANEL_INTERVIEW';
+      where.currentPhase = 'PANEL_INTERVIEW';
+    } else if (phase === 'Phase4_Scheduling' || phase === 'FINAL_SELECTION') {
+      where.currentPhase = 'FINAL_SELECTION';
     } else {
-      // Handle unexpected phase strings gracefully
-      dbPhase = 'TELE_VERIFICATION';
+      where.currentPhase = 'TELE_VERIFICATION';
     }
 
     const applications = await prisma.studentApplication.findMany({
-      where: { currentPhase: dbPhase },
+      where,
       include: {
-        student: {
-          select: { id: true, name: true, district: true, parentName: true }
-        }
+        student: true
       },
       orderBy: { createdAt: 'desc' },
     });
 
-    res.json({ applications });
+    const flattened = applications.map(app => ({
+      ...app,
+      name: app.student?.name,
+      email: app.student?.email,
+      district: app.student?.district,
+      medium: app.student?.medium,
+      requestedSubjects: app.student?.tutoringSubjects || [],
+      phoneNumber: app.student?.phoneNumber,
+    }));
+
+    res.json({ applications: flattened });
   } catch (error) {
     next(error);
   }
@@ -219,8 +256,8 @@ const handleGFormWebhook = async (req, res, next) => {
       yearOfStudy,
       publicMark,
       subjectMarks,
-      medium,           // New field
-      tutoringSubjects  // New field (expected as an array of subjects)
+      medium,
+      tutoringSubjects
     } = req.body;
 
     console.log('Received Webhook Payload:', req.body);
@@ -256,8 +293,8 @@ const handleGFormWebhook = async (req, res, next) => {
       district: district || null,
       parentName: parentName || null,
       yearOfStudying: yearOfStudy || '12th',
-      class11PublicMarks: publicMark ? { total: publicMark } : {},
-      subjectMarks: subjectMarks ? { marks: subjectMarks } : {},
+      class11PublicMarks: publicMark ? parseInt(publicMark) : null,
+      subjectMarks: subjectMarks || {},
       tutoringSubjects: tutoringSubjects || [],
       medium: medium || null,
       kkId
@@ -288,58 +325,6 @@ const handleGFormWebhook = async (req, res, next) => {
           studentId: student.id,
           currentPhase: 'TELE_VERIFICATION',
           teleStatus: 'PENDING',
-          // Use a system user ID or null for createdBy if possible, or leave it out if schema allows optional
-          // If schema requires createdBy (User), we might need a system bot user or make it optional.
-          // Checking schema: StudentApplication doesn't strictly require createdBy relation??
-          // Wait, 'createdBy' field was used in createApplication above: 'createdBy: req.user.id'.
-          // Let's check schema again. The schema has 'student' relation, but doesn't explicitly show 'createdBy' in the model definition in the previous `view_file` output of schema.prisma?
-          // Ah, I missed checking schema details for StudentApplication relation completely.
-          // Looking at `createApplication` implementation:
-          // `createdBy: req.user.id` is passed.
-          // But I don't see `recievedBy` or similar.
-          // Let's assume for webhook we don't have a creator user.
-          // If schema requires it, this will fail.
-          // Let's check schema.prisma from previous turn...
-          // User model has... `model StudentApplication` is not linked to User as 'creator' in the schema I saw?
-          // Wait, `createApplication` in `selectionController.js` uses `createdBy: req.user.id`.
-          // But `schema.prisma` show `model StudentApplication`?
-          // Line 324: model StudentApplication { ... }
-          // It DOES NOT show `createdBy` field or relation to User for creation.
-          // Wait, `createApplication` in `selectionController.js` has:
-          /*
-            const application = await prisma.studentApplication.create({
-              data: {
-                ...
-                createdBy: req.user.id,
-              },
-            });
-          */
-          // But looking at schema.prisma provided in Step 95:
-          /*
-            model StudentApplication {
-              id        Int     @id @default(autoincrement())
-              studentId Int     @unique
-              student   Student @relation(fields: [studentId], references: [id])
-              currentPhase SelectionPhase @default(TELE_VERIFICATION)
-              ...
-            }
-          */
-          // I DO NOT SEE `createdBy` field in `StudentApplication` model in schema.prisma!
-          // This implies `createApplication` in `selectionController.js` might be referring to a schema I haven't seen fully or it's implicitly valid?
-          // Or `selectionController.js` provided in Step 157 might be out of sync with schema?
-          // In Step 157, `createApplication` definitely imports prisma.
-          // Let's look at `listApplications` in Step 157. It includes `creator`.
-          // `creator: { select: { id: true... } }`
-          // This suggests `creator` relation exists.
-          // Maybe I missed it in schema view or it was truncated?
-          // Re-reading schema Step 95...
-          // I see `User` model has `studentApplication StudentApplication?`... No, it has `classInspectionTeam etc`.
-          // I don't see `applications` relation in User.
-          // This is strange.
-          // Let's assume `StudentApplication` might NOT have `createdBy` required if it was missing in the view?
-          // ERROR RISK: If `createdBy` is required, webhook will fail.
-          // However, for now I will try to create WITHOUT `createdBy` since I don't have a user ID.
-          // If it fails, I'll fix it.
         }
       });
       console.log('Application created for student:', student.id);
