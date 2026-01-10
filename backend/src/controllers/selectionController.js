@@ -1,6 +1,5 @@
 import validator from 'express-validator';
 import prisma from '../../lib/prisma.js';
-import { encrypt } from '../utils/security.js';
 import { logAction } from '../utils/auditLogger.js';
 
 const { validationResult } = validator;
@@ -34,8 +33,18 @@ const createApplication = async (req, res, next) => {
       tutoringSubjects
     } = req.body;
 
-    const count = await prisma.student.count();
-    const kkId = `KK2025${(count + 1).toString().padStart(3, '0')}`;
+    // Generate robust sequential KK ID
+    const lastStudent = await prisma.student.findFirst({
+      orderBy: { kkId: 'desc' },
+      where: { kkId: { startsWith: 'KK2025' } }
+    });
+
+    let nextNum = 1;
+    if (lastStudent && lastStudent.kkId) {
+      const match = lastStudent.kkId.match(/(\d+)$/);
+      if (match) nextNum = parseInt(match[0]) + 1;
+    }
+    const kkId = `KK2025${nextNum.toString().padStart(3, '0')}`;
 
     const application = await prisma.studentApplication.create({
       data: {
@@ -115,6 +124,7 @@ const listApplications = async (req, res, next) => {
 
     res.json({ applications: flattened });
   } catch (error) {
+    console.error('Error in listApplications:', error);
     next(error);
   }
 };
@@ -140,58 +150,112 @@ const getApplication = async (req, res, next) => {
   }
 };
 
+// Update a student's profile information
+const updateStudent = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      schoolName,
+      address,
+      district,
+      medium,
+      email,
+      yearOfStudy,
+      publicMark,
+      subjectMarks,
+      phone,
+      parentName,
+      tutoringSubjects
+    } = req.body;
+
+    // Handle both numeric ID and kkId
+    const numId = parseInt(id);
+    const whereClause = (numId && !isNaN(numId)) ? { id: numId } : { kkId: id };
+
+    const student = await prisma.student.update({
+      where: whereClause,
+      data: {
+        name,
+        schoolName,
+        address,
+        district,
+        medium,
+        email,
+        yearOfStudying: yearOfStudy,
+        class11PublicMarks: publicMark ? parseInt(publicMark) : null,
+        subjectMarks: subjectMarks ? { text: subjectMarks } : {},
+        phoneNumber: phone,
+        parentName,
+        tutoringSubjects: tutoringSubjects || [],
+      }
+    });
+
+    logAction(req.user, 'UPDATE_STUDENT', `Updated profile for ${name}`, 'Student', id);
+    res.json({ student });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // Update application phase (Phase 1 -> Phase 2 -> Phase 3 -> Selected/Rejected)
 const updateApplicationPhase = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { phase, notes } = req.body;
 
-    const application = await prisma.studentApplication.findUnique({
-      where: { id: parseInt(id) },
-      include: { student: true }
+    // Find student by ID (KKID or numeric ID)
+    const student = await prisma.student.findFirst({
+      where: {
+        OR: [
+          { kkId: id.toString() },
+          { id: (parseInt(id) && !isNaN(parseInt(id))) ? parseInt(id) : -1 }
+        ]
+      }
     });
 
-    if (!application) {
-      return res.status(404).json({ message: 'Application not found' });
+    if (!student) {
+      return res.status(404).json({ message: 'Student not found' });
     }
+
+    const application = await prisma.studentApplication.upsert({
+      where: { studentId: student.id },
+      update: {},
+      create: {
+        studentId: student.id,
+        currentPhase: 'TELE_VERIFICATION',
+        teleStatus: 'PENDING'
+      },
+      include: { student: true }
+    });
 
     let updateData = {};
     let studentUpdateData = {};
 
-    // Map frontend phase strings to DB Schema
-    if (phase === 'Phase2_Televerification') {
-      updateData.currentPhase = 'TELE_VERIFICATION';
-      updateData.teleStatus = 'SELECTED';
-      updateData.phase1Notes = notes; // Notes from finishing Phase 1
-    } else if (phase === 'Phase3_PanelInterview') {
+    // Map frontend phase strings to DB Schema (3-Phase flow)
+    if (phase === 'Phase2_PanelInterview') {
       updateData.currentPhase = 'PANEL_INTERVIEW';
+      updateData.teleStatus = 'SELECTED';
+      updateData.phase1Notes = notes; // Notes from finishing Tele-verification
+    } else if (phase === 'Phase3_FinalSelection') {
+      updateData.currentPhase = 'FINAL_SELECTION';
       updateData.panelStatus = 'SELECTED';
-      updateData.phase2TeleverificationNotes = notes; // Notes from finishing Phase 2
-    } else if (phase === 'Selected') {
-      updateData.currentPhase = 'FINAL_SELECTION';
       updateData.finalStatus = 'SELECTED';
-      updateData.phase3PanelInterviewNotes = notes; // Notes from finishing Phase 3
-      // Student moves to Scheduling phase
-      studentUpdateData.phase = 'Scheduling';
-    } else if (phase === 'Phase4_Scheduling') {
-      // Just in case they move to Phase 4 explicitly
-      updateData.currentPhase = 'FINAL_SELECTION';
+      updateData.phase2Notes = notes; // Notes from finishing Panel Interview
       studentUpdateData.phase = 'Scheduling';
     } else if (phase === 'Rejected') {
       updateData.finalStatus = 'REJECTED';
-      // Store rejection reason in the notes of the current phase? 
-      // For simplicity, let's just use the current phase's note field or a generic one.
-      // But we'll just save it to whatever phase it was in.
       if (application.currentPhase === 'TELE_VERIFICATION') {
-        if (application.teleStatus === 'PENDING') updateData.phase1Notes = notes;
-        else updateData.phase2TeleverificationNotes = notes;
+        updateData.phase1Notes = notes;
+        updateData.teleStatus = 'REJECTED';
       } else if (application.currentPhase === 'PANEL_INTERVIEW') {
-        updateData.phase3PanelInterviewNotes = notes;
+        updateData.phase2Notes = notes;
+        updateData.panelStatus = 'REJECTED';
       }
     }
 
     const updated = await prisma.studentApplication.update({
-      where: { id: parseInt(id) },
+      where: { id: application.id },
       data: {
         ...updateData,
         student: studentUpdateData.phase ? {
@@ -213,24 +277,23 @@ const updateApplicationPhase = async (req, res, next) => {
   }
 };
 
-// Get applications by phase (for phase-specific views)
 const getApplicationsByPhase = async (req, res, next) => {
   try {
     const { phase } = req.params;
     const where = {};
 
-    if (phase === 'Phase1_Selection') {
+    // Standardized 3-Phase Mapping
+    if (phase === 'Phase1_Televerification' || phase === 'phase1') {
       where.currentPhase = 'TELE_VERIFICATION';
-      where.teleStatus = 'PENDING';
-    } else if (phase === 'Phase2_Televerification') {
-      where.currentPhase = 'TELE_VERIFICATION';
-      where.teleStatus = 'SELECTED';
-    } else if (phase === 'Phase3_PanelInterview') {
+      where.finalStatus = { not: 'REJECTED' };
+    } else if (phase === 'Phase2_PanelInterview' || phase === 'phase2') {
       where.currentPhase = 'PANEL_INTERVIEW';
-    } else if (phase === 'Phase4_Scheduling' || phase === 'FINAL_SELECTION') {
+      where.finalStatus = { not: 'REJECTED' };
+    } else if (phase === 'Phase3_FinalSelection' || phase === 'phase3') {
       where.currentPhase = 'FINAL_SELECTION';
     } else {
       where.currentPhase = 'TELE_VERIFICATION';
+      where.finalStatus = { not: 'REJECTED' };
     }
 
     const applications = await prisma.studentApplication.findMany({
@@ -247,7 +310,7 @@ const getApplicationsByPhase = async (req, res, next) => {
       email: app.student?.email,
       district: app.student?.district,
       medium: app.student?.medium,
-      requestedSubjects: app.student?.tutoringSubjects || [],
+      tutoringSubjects: app.student?.tutoringSubjects || [],
       phoneNumber: app.student?.phoneNumber,
       schoolName: app.student?.schoolName,
       address: app.student?.address,
@@ -256,10 +319,25 @@ const getApplicationsByPhase = async (req, res, next) => {
       subjectMarks: app.student?.subjectMarks,
       parentName: app.student?.parentName,
       kkId: app.student?.kkId,
+      studentId: app.student?.id
     }));
+    console.log(flattened)
 
-    res.json({ applications: flattened });
+    // Calculate basic stats for the current view
+    const stats = {
+      totalStudents: flattened.length,
+      approved: flattened.filter(a =>
+        (phase.includes('Tele') && a.teleStatus === 'SELECTED') ||
+        (phase.includes('Panel') && a.panelStatus === 'SELECTED') ||
+        (phase.includes('Final') && a.finalStatus === 'SELECTED')
+      ).length,
+      rejected: flattened.filter(a => a.finalStatus === 'REJECTED' || a.teleStatus === 'REJECTED' || a.panelStatus === 'REJECTED').length,
+    };
+
+    res.json({ applications: flattened, stats });
   } catch (error) {
+    fs.appendFileSync('error_log.txt', `\n[${new Date().toISOString()}] ${error.message}\n${error.stack}\n`);
+    console.error('Error in getApplicationsByPhase:', error);
     next(error);
   }
 };
@@ -306,11 +384,19 @@ const handleGFormWebhook = async (req, res, next) => {
       }
     });
 
-    // Generate sequential KK ID only for new students
     let kkId = existingStudent ? existingStudent.kkId : null;
     if (!kkId) {
-      const count = await prisma.student.count();
-      kkId = `KK2025${(count + 1).toString().padStart(3, '0')}`;
+      const lastStudent = await prisma.student.findFirst({
+        orderBy: { kkId: 'desc' },
+        where: { kkId: { startsWith: 'KK2025' } }
+      });
+
+      let nextNum = 1;
+      if (lastStudent && lastStudent.kkId) {
+        const match = lastStudent.kkId.match(/(\d+)$/);
+        if (match) nextNum = parseInt(match[0]) + 1;
+      }
+      kkId = `KK2025${nextNum.toString().padStart(3, '0')}`;
     }
 
     let student;
@@ -374,6 +460,7 @@ export {
   listApplications,
   getApplication,
   updateApplicationPhase,
+  updateStudent,
   getApplicationsByPhase,
   handleGFormWebhook,
 };

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { fetchAuditLogs, fetchRoles, updateRolePermissions, fetchUsers, assignRole, deleteUser } from '../services/api';
+import { fetchAuditLogs, fetchRoles, fetchUsers, assignRole, deleteUser } from '../services/adminApi';
 
 const AdminLogs = () => {
   const [activeSection, setActiveSection] = useState('roles'); // 'audit', 'roles', 'permissions'

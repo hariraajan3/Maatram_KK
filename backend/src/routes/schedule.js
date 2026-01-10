@@ -15,14 +15,14 @@ router.get('/', withAuth, requireRole('ADMIN', 'TUTOR_LEAD', 'TUTOR', 'CLASS_INS
 router.post(
   '/',
   withAuth,
-  requireRole('ADMIN', 'TUTOR_LEAD'),
+  requireRole('TUTOR_LEAD'),
   body('schedules').isArray(),
   createClass,
 );
 router.post(
   '/swap',
   withAuth,
-  requireRole('TUTOR', 'ADMIN', 'TUTOR_LEAD'),
+  requireRole('TUTOR'),
   body('classId').isString(),
   body('reason').isLength({ min: 10 }),
   body('proposedByTutorId').isString(),

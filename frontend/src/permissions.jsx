@@ -1,3 +1,5 @@
+import OverallAttendance from "./pages/OverallAttendance";
+
 // Comprehensive permission definitions for role-based access control
 export const PERMISSIONS = {
   // User Management
@@ -48,7 +50,7 @@ export const ROLES = {
   ADMIN: "admin",
   TUTOR_LEAD: "tutorLead",
   TUTOR: "tutor",
-  STUDENTS_TRACKING_TEAM: "studentsTrackingTeam",
+  CLASS_INSPECTION_TEAM: "classInspectionTeam",
   ATTENDANCE_TRACKING_TEAM: "attendanceTrackingTeam",
   SELECTION_TEAM: "selectionTeam",
 };
@@ -71,13 +73,6 @@ export const getNavItems = (role) => {
         label: "Selection",
         icon: "how_to_reg",
         permission: PERMISSIONS.SELECTION_VIEW,
-        roles: [ROLES.ADMIN],
-      },
-      {
-        to: "/scheduling",
-        label: "Scheduling",
-        icon: "calendar_today",
-        permission: PERMISSIONS.SCHEDULING_VIEW,
         roles: [ROLES.ADMIN],
       },
       {
@@ -131,6 +126,13 @@ export const getNavItems = (role) => {
         permission: PERMISSIONS.DASHBOARD_VIEW,
         roles: [ROLES.TUTOR_LEAD],
       },
+      {
+        to: "/overall-attendance",
+        label: "Overall Attendance",
+        icon: "assessment",
+        permission: PERMISSIONS.ATTENDANCE_OVERALL_VIEW,
+        roles: [ROLES.TUTOR_LEAD],
+      }
     ],
     tutor: [
       {
@@ -168,20 +170,13 @@ export const getNavItems = (role) => {
       },
     ],
 
-    studentsTrackingTeam: [
+    classInspectionTeam: [
       {
-        to: "/overall-attendance",
-        label: "Overall Attendance",
-        icon: "assessment",
-        permission: PERMISSIONS.ATTENDANCE_OVERALL_VIEW,
-        roles: [ROLES.STUDENTS_TRACKING_TEAM],
-      },
-      {
-        to: "/dashboard",
-        label: "Dashboard",
-        icon: "dashboard",
-        permission: PERMISSIONS.DASHBOARD_VIEW,
-        roles: [ROLES.STUDENTS_TRACKING_TEAM],
+        to: "/scheduling",
+        label: "Scheduling",
+        icon: "calendar_today",
+        permission: PERMISSIONS.SCHEDULING_VIEW,
+        roles: [ROLES.CLASS_INSPECTION_TEAM],
       },
     ],
   };

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { BarChart, Bar, ResponsiveContainer, Tooltip, XAxis, YAxis, CartesianGrid, Cell, AreaChart, Area } from 'recharts';
-import { fetchDashboard, fetchDashboardStudents } from '../services/api';
+import { fetchDashboard, fetchDashboardStudents } from '../services/dashboardApi';
 
 const Dashboard = () => {
   const [dashboardData, setDashboardData] = useState(null);

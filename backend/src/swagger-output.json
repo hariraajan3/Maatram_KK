@@ -187,6 +187,9 @@
                 },
                 "tutoringDistrict": {
                   "example": "any"
+                },
+                "meetLink": {
+                  "example": "any"
                 }
               }
             }
@@ -432,22 +435,7 @@
             "schema": {
               "type": "object",
               "properties": {
-                "endTime": {
-                  "example": "any"
-                },
-                "phase": {
-                  "example": "any"
-                },
-                "tutorId": {
-                  "example": "any"
-                },
-                "studentGroup": {
-                  "example": "any"
-                },
-                "startTime": {
-                  "example": "any"
-                },
-                "modality": {
+                "schedules": {
                   "example": "any"
                 }
               }
@@ -457,6 +445,9 @@
         "responses": {
           "201": {
             "description": "Created"
+          },
+          "400": {
+            "description": "Bad Request"
           },
           "401": {
             "description": "Unauthorized"
@@ -554,9 +545,6 @@
           },
           "403": {
             "description": "Forbidden"
-          },
-          "404": {
-            "description": "Not Found"
           }
         }
       }
@@ -1016,22 +1004,37 @@
                 "name": {
                   "example": "any"
                 },
-                "email": {
+                "schoolName": {
                   "example": "any"
                 },
-                "phone": {
-                  "example": "any"
-                },
-                "guardianContact": {
-                  "example": "any"
-                },
-                "medium": {
+                "address": {
                   "example": "any"
                 },
                 "district": {
                   "example": "any"
                 },
-                "requestedSubjects": {
+                "medium": {
+                  "example": "any"
+                },
+                "email": {
+                  "example": "any"
+                },
+                "yearOfStudy": {
+                  "example": "any"
+                },
+                "publicMark": {
+                  "example": "any"
+                },
+                "subjectMarks": {
+                  "example": "any"
+                },
+                "phone": {
+                  "example": "any"
+                },
+                "parentName": {
+                  "example": "any"
+                },
+                "tutoringSubjects": {
                   "example": "any"
                 }
               }
@@ -1134,6 +1137,29 @@
       }
     },
     "/api/selection/phase3": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "authorization",
+            "in": "header",
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/api/selection/phase4": {
       "get": {
         "description": "",
         "parameters": [

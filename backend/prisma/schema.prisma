@@ -332,17 +332,12 @@ model StudentApplication {
 
   currentPhase SelectionPhase @default(TELE_VERIFICATION)
 
-  teleStatus                  SelectionStatus @default(PENDING)
-  teleRemarks                 String?
-  phase2TeleverificationNotes String?         @map("tele_notes")
-
-  panelStatus               SelectionStatus @default(PENDING)
-  panelRemarks              String?
-  phase3PanelInterviewNotes String?         @map("panel_notes")
-
+  teleStatus  SelectionStatus @default(PENDING)
+  panelStatus SelectionStatus @default(PENDING)
   finalStatus SelectionStatus @default(PENDING)
 
-  phase1Notes String? @map("phase1_notes")
+  phase1Notes String? @map("phase1_notes") // Tele-verification notes
+  phase2Notes String? @map("phase2_notes") // Panel Interview notes
 
   assignedTutorId Int?
 

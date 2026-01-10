@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createOnboarding, fetchOnboarding, updateOnboardingStatus } from '../services/api';
+import { createOnboarding, fetchOnboarding, updateOnboardingStatus } from '../services/onboardingApi';
 import { ROLES } from '../permissions';
 
 const MEDIUMS = ['Tamil', 'English'];

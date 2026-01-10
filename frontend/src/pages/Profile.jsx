@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { fetchProfile, updateProfile } from '../services/api';
+import { fetchProfile, updateProfile } from '../services/profileApi';
 
 const DISTRICTS = ['Chennai', 'Coimbatore', 'Other'];
 const MEDIUMS = ['Tamil', 'English'];

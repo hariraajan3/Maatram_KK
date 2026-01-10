@@ -7,6 +7,7 @@ import {
   updateApplicationPhase,
   getApplicationsByPhase,
   handleGFormWebhook,
+  updateStudent
 } from '../controllers/selectionController.js';
 import { withAuth, requireRole } from '../middlewares/auth.js';
 
@@ -22,7 +23,7 @@ router.use(withAuth);
 // Create new application (Phase 1)
 router.post(
   '/',
-  requireRole('ADMIN', 'SELECTION_TEAM'),
+  requireRole('SELECTION_TEAM'),
   body('name').isString().notEmpty(),
   body('schoolName').isString().notEmpty(),
   body('address').isString().notEmpty(),
@@ -39,39 +40,37 @@ router.post(
 );
 
 // List all applications (with optional filters)
-router.get('/', requireRole('ADMIN', 'SELECTION_TEAM'), listApplications);
+router.get('/', requireRole('ADMIN', 'TUTOR_LEAD', 'SELECTION_TEAM'), listApplications);
 
-// Get applications by specific phase - simple endpoints like admin logs
-router.get('/phase1', requireRole('ADMIN', 'SELECTION_TEAM'), (req, res, next) => {
-  req.params.phase = 'Phase1_Selection';
+// Get applications by specific phase - simple endpoints
+router.get('/phase1', requireRole('ADMIN', 'TUTOR_LEAD', 'SELECTION_TEAM'), (req, res, next) => {
+  req.params.phase = 'Phase1_Televerification';
   getApplicationsByPhase(req, res, next);
 });
 
-router.get('/phase2', requireRole('ADMIN', 'SELECTION_TEAM'), (req, res, next) => {
-  req.params.phase = 'Phase2_Televerification';
+router.get('/phase2', requireRole('ADMIN', 'TUTOR_LEAD', 'SELECTION_TEAM'), (req, res, next) => {
+  req.params.phase = 'Phase2_PanelInterview';
   getApplicationsByPhase(req, res, next);
 });
 
-router.get('/phase3', requireRole('ADMIN', 'SELECTION_TEAM'), (req, res, next) => {
-  req.params.phase = 'Phase3_PanelInterview';
-  getApplicationsByPhase(req, res, next);
-});
-
-router.get('/phase4', requireRole('ADMIN', 'SELECTION_TEAM'), (req, res, next) => {
-  req.params.phase = 'Phase4_Scheduling';
+router.get('/phase3', requireRole('ADMIN', 'TUTOR_LEAD', 'SELECTION_TEAM'), (req, res, next) => {
+  req.params.phase = 'Phase3_FinalSelection';
   getApplicationsByPhase(req, res, next);
 });
 
 // Get single application
-router.get('/:id', requireRole('ADMIN', 'SELECTION_TEAM'), getApplication);
+router.get('/:id', requireRole('SELECTION_TEAM'), getApplication);
 
 // Update application phase
 router.patch(
   '/:id/phase',
-  requireRole('ADMIN', 'SELECTION_TEAM'),
-  body('phase').isIn(['Phase1_Selection', 'Phase2_Televerification', 'Phase3_PanelInterview', 'Phase4_Scheduling', 'Selected', 'Rejected']),
+  requireRole('SELECTION_TEAM'),
+  body('phase').isIn(['Phase1_Televerification', 'Phase2_PanelInterview', 'Phase3_FinalSelection', 'Rejected']),
   body('notes').optional().isString(),
   updateApplicationPhase,
 );
+
+// Update student profile
+router.put('/:id/student', requireRole('SELECTION_TEAM'), updateStudent);
 
 export default router;

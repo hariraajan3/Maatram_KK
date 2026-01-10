@@ -3,17 +3,34 @@ import {
   fetchPhase1,
   fetchPhase2,
   fetchPhase3,
-  fetchPhase4,
   fetchApplicationsByPhase,
   createApplication,
   updateApplicationPhase,
+  updateStudent,
 } from '../services/selectionApi';
 
 const PHASES = {
-  Phase1_Selection: { label: 'Phase 1', sublabel: 'New Applications', color: 'bg-blue-100 text-blue-800', icon: 'assignment', description: 'Initial student applications' },
-  Phase2_Televerification: { label: 'Phase 2', sublabel: 'Tele-verification', color: 'bg-yellow-100 text-yellow-800', icon: 'phone', description: 'Phone verification in progress' },
-  Phase3_PanelInterview: { label: 'Phase 3', sublabel: 'Panel Interview', color: 'bg-purple-100 text-purple-800', icon: 'groups', description: 'Final panel interview' },
-  Phase4_Scheduling: { label: 'Phase 4', sublabel: 'Scheduling', color: 'bg-green-100 text-green-800', icon: 'event_available', description: 'Selected students awaiting class assignment' },
+  Phase1_Televerification: {
+    label: 'Phase 1',
+    sublabel: 'Tele-verification',
+    color: 'bg-yellow-100 text-yellow-800',
+    icon: 'phone',
+    description: 'Phone verification in progress'
+  },
+  Phase2_PanelInterview: {
+    label: 'Phase 2',
+    sublabel: 'Panel Interview',
+    color: 'bg-purple-100 text-purple-800',
+    icon: 'groups',
+    description: 'Final panel interview'
+  },
+  Phase3_FinalSelection: {
+    label: 'Phase 3',
+    sublabel: 'Final Selection',
+    color: 'bg-green-100 text-green-800',
+    icon: 'inbox',
+    description: 'Students cleared for scheduling'
+  },
 };
 
 const MEDIUMS = ['Tamil', 'English'];
@@ -21,7 +38,7 @@ const DISTRICTS = ['Chennai', 'Coimbatore', 'Other'];
 const SUBJECTS = ['Physics', 'Maths', 'Chemistry', 'Biology', 'Science', 'Commerce', 'Economics', 'Accounts', 'Tamil', 'English'];
 
 const Selection = () => {
-  const [activeTab, setActiveTab] = useState('Phase1_Selection');
+  const [activeTab, setActiveTab] = useState('Phase1_Televerification');
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -29,6 +46,10 @@ const Selection = () => {
   const [showPhaseModal, setShowPhaseModal] = useState(false);
   const [phaseNotes, setPhaseNotes] = useState('');
   const [isRejectAction, setIsRejectAction] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+  const [stats, setStats] = useState(null);
 
   const [formData, setFormData] = useState({
     name: '',
@@ -51,24 +72,62 @@ const Selection = () => {
 
   const loadApplications = async () => {
     setLoading(true);
+    setErrorMessage('');
     try {
-      let data;
-      if (activeTab === 'Phase1_Selection') {
-        data = await fetchPhase1();
-      } else if (activeTab === 'Phase2_Televerification') {
-        data = await fetchPhase2();
-      } else if (activeTab === 'Phase3_PanelInterview') {
-        data = await fetchPhase3();
-      } else if (activeTab === 'Phase4_Scheduling') {
-        data = await fetchPhase4();
+      let response;
+      if (activeTab === 'Phase1_Televerification') {
+        response = await fetchPhase1();
+      } else if (activeTab === 'Phase2_PanelInterview') {
+        response = await fetchPhase2();
+      } else if (activeTab === 'Phase3_FinalSelection') {
+        response = await fetchPhase3();
       } else {
-        data = await fetchApplicationsByPhase(activeTab);
+        response = await fetchApplicationsByPhase(activeTab);
       }
-      const mappedData = data.map(app => ({ ...app, phase: activeTab }));
+
+      // Consistent data handling from API response
+      const data = Array.isArray(response) ? response : (response?.applications || []);
+      const mappedData = data.map(app => {
+        // Robust display marks formatting
+        let displayMarks = 'No break-up';
+        if (app.subjectMarks) {
+          if (typeof app.subjectMarks === 'string') {
+            displayMarks = app.subjectMarks;
+          } else if (typeof app.subjectMarks === 'object') {
+            const marksData = app.subjectMarks.text || app.subjectMarks;
+            if (typeof marksData === 'string') {
+              displayMarks = marksData;
+            } else if (typeof marksData === 'object' && marksData !== null) {
+              // Format key-value pairs if it's a break-up object
+              displayMarks = Object.entries(marksData)
+                .filter(([key]) => key !== 'text')
+                .map(([sub, mark]) => `${sub}: ${mark}`)
+                .join(', ') || 'No break-up';
+            }
+          }
+        }
+
+        return {
+          ...app,
+          phase: activeTab,
+          displayMarks,
+          // Ensure tutoringSubjects is always an array of strings
+          tutoringSubjects: Array.isArray(app.tutoringSubjects)
+            ? app.tutoringSubjects.map(s => (typeof s === 'object' ? JSON.stringify(s) : String(s)))
+            : (typeof app.tutoringSubjects === 'object' && app.tutoringSubjects !== null
+              ? Object.keys(app.tutoringSubjects)
+              : [])
+        };
+      });
+
       setApplications(mappedData);
+      if (response?.stats) setStats(response.stats);
+      else setStats(null);
     } catch (error) {
       console.error('Failed to load applications:', error);
+      setErrorMessage(error.response?.data?.message || 'Failed to load applications');
       setApplications([]);
+      setStats(null);
     } finally {
       setLoading(false);
     }
@@ -77,26 +136,40 @@ const Selection = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await createApplication(formData);
+      if (isEditing) {
+        await updateStudent(selectedApp.studentId || selectedApp.id, formData);
+        setSuccessMessage('Profile updated successfully');
+      } else {
+        await createApplication(formData);
+        setSuccessMessage('Application created successfully');
+      }
+
       setShowForm(false);
-      setFormData({
-        name: '',
-        schoolName: '',
-        address: '',
-        district: '',
-        medium: '',
-        email: '',
-        yearOfStudy: '12th',
-        publicMark: '',
-        subjectMarks: '',
-        phone: '',
-        guardianContact: '',
-        requestedSubjects: [],
-      });
+      resetForm();
       loadApplications();
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      alert('Failed to create application: ' + (error.response?.data?.message || error.message));
+      setErrorMessage('Operation failed: ' + (error.response?.data?.message || error.message));
     }
+  };
+
+  const resetForm = () => {
+    setFormData({
+      name: '',
+      schoolName: '',
+      address: '',
+      district: '',
+      medium: '',
+      email: '',
+      yearOfStudy: '12th',
+      publicMark: '',
+      subjectMarks: '',
+      phone: '',
+      guardianContact: '',
+      requestedSubjects: [],
+    });
+    setIsEditing(false);
+    setSelectedApp(null);
   };
 
   const confirmPhaseUpdate = async () => {
@@ -105,25 +178,29 @@ const Selection = () => {
       const targetPhase = isRejectAction ? 'Rejected' : getNextPhase(selectedApp.phase);
 
       if (!targetPhase) {
-        alert('Cannot update phase');
+        setErrorMessage('Cannot update phase');
         return;
       }
 
-      await updateApplicationPhase(selectedApp.id, targetPhase, phaseNotes);
+      // Important: Backend expects target phase string
+      await updateApplicationPhase(selectedApp.studentId || selectedApp.id, targetPhase, phaseNotes);
+
       setShowPhaseModal(false);
       setSelectedApp(null);
       setPhaseNotes('');
       setIsRejectAction(false);
+      setSuccessMessage(`Application ${isRejectAction ? 'rejected' : 'moved to next phase'} successfully`);
       loadApplications();
+      setTimeout(() => setSuccessMessage(''), 3000);
     } catch (error) {
-      alert('Failed to update phase: ' + (error.response?.data?.message || error.message));
+      setErrorMessage('Failed to update phase: ' + (error.response?.data?.message || error.message));
     }
   };
 
   const getNextPhase = (currentPhase) => {
-    const phaseOrder = ['Phase1_Selection', 'Phase2_Televerification', 'Phase3_PanelInterview', 'Selected'];
+    const phaseOrder = ['Phase1_Televerification', 'Phase2_PanelInterview', 'Phase3_FinalSelection'];
     const currentIndex = phaseOrder.indexOf(currentPhase);
-    return currentIndex < phaseOrder.length - 1 ? phaseOrder[currentIndex + 1] : null;
+    return currentIndex < phaseOrder.length - 1 ? phaseOrder[currentIndex + 1] : 'Selected';
   };
 
   const toggleSubject = (subject) => {
@@ -135,15 +212,42 @@ const Selection = () => {
     }));
   };
 
+  const handleEdit = (app) => {
+    setSelectedApp(app);
+    setFormData({
+      name: app.name || '',
+      schoolName: app.schoolName || '',
+      address: app.address || '',
+      district: app.district || '',
+      medium: app.medium || '',
+      email: app.email || '',
+      yearOfStudy: app.yearOfStudying || '12th',
+      publicMark: app.class11PublicMarks || '',
+      subjectMarks: typeof app.subjectMarks === 'object'
+        ? (typeof app.subjectMarks.text === 'string' ? app.subjectMarks.text : (app.subjectMarks.text ? JSON.stringify(app.subjectMarks.text) : JSON.stringify(app.subjectMarks)))
+        : (app.subjectMarks || ''),
+      phone: app.phoneNumber || '',
+      guardianContact: app.parentName || '',
+      requestedSubjects: Array.isArray(app.tutoringSubjects) ? app.tutoringSubjects : [],
+    });
+    setIsEditing(true);
+    setShowForm(true);
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-display font-bold text-black">Student Selection Process</h1>
-        </div>
+        <h1 className="text-3xl font-display font-bold text-black flex items-center gap-4">
+          Student Selection Process
+          {!loading && applications.length > 0 && (
+            <span className="bg-maatram-yellow/20 text-black px-4 py-1.5 rounded-full text-sm font-black border border-maatram-yellow/30">
+              {applications.length} Students
+            </span>
+          )}
+        </h1>
         <button
-          onClick={() => setShowForm(true)}
+          onClick={() => { resetForm(); setShowForm(true); }}
           className="px-6 py-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-colors flex items-center gap-2"
         >
           <span className="material-icons-outlined">add</span>
@@ -151,52 +255,113 @@ const Selection = () => {
         </button>
       </div>
 
-      {/* Phase Tabs - 4 Phases with equal spacing */}
-      <div className="">
-        <div className="flex justify-between gap-4 ">
+      {/* Phase Tabs - 3 Phases */}
+      <div className="bg-white/50 backdrop-blur-sm p-2 rounded-2xl border border-gray-100 shadow-sm">
+        <div className="flex flex-wrap md:flex-nowrap justify-between gap-2">
           {Object.entries(PHASES).map(([phase, config]) => (
             <button
               key={phase}
               onClick={() => setActiveTab(phase)}
-              className={`  flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all ${activeTab === phase
-                ? 'bg-maatram-yellow text-black shadow-md'
-                : ' bg-white text-gray-600 hover:bg-gray-50'
+              className={`flex-1 flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl font-bold transition-all duration-300 ${activeTab === phase
+                ? 'bg-maatram-yellow text-black shadow-lg scale-[1.02] ring-4 ring-maatram-yellow/20'
+                : 'bg-white text-gray-400 hover:text-gray-600 hover:bg-gray-50'
                 }`}
             >
-              <span className="material-icons-outlined text-xl">{config.icon}</span>
-              <span className="text-sm">{config.label}: {config.sublabel}</span>
+              <span className={`material-icons-outlined text-xl ${activeTab === phase ? 'text-black' : 'text-gray-300'}`}>
+                {config.icon}
+              </span>
+              <div className="text-left">
+                <p className="text-[10px] uppercase tracking-widest leading-none mb-1 opacity-60">{config.label}</p>
+                <p className="text-sm leading-none whitespace-nowrap">{config.sublabel}</p>
+              </div>
             </button>
           ))}
         </div>
       </div>
 
+      {/* Status Messages */}
+      {successMessage && (
+        <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-4 flex items-center gap-3 animate-fade-in shadow-sm">
+          <span className="material-icons-outlined text-green-600">check_circle</span>
+          <p className="text-green-700 font-bold flex-1">{successMessage}</p>
+          <button onClick={() => setSuccessMessage('')}><span className="material-icons-outlined text-green-400">close</span></button>
+        </div>
+      )}
+      {errorMessage && (
+        <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-4 flex items-center gap-3 animate-fade-in shadow-sm">
+          <span className="material-icons-outlined text-red-600">error_outline</span>
+          <p className="text-red-700 font-bold flex-1">{errorMessage}</p>
+          <button onClick={() => setErrorMessage('')}><span className="material-icons-outlined text-red-400">close</span></button>
+        </div>
+      )}
+
+      {/* Stats Summary Bar */}
+      {!loading && (stats || applications.length > 0) && (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+              <span className="material-icons-outlined">people</span>
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total in Phase</p>
+              <p className="text-2xl font-black text-black">{applications.length}</p>
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
+              <span className="material-icons-outlined">check_circle</span>
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Selected</p>
+              <p className="text-2xl font-black text-black">
+                {applications.filter(a => a.teleStatus === 'SELECTED' || a.panelStatus === 'SELECTED' || a.finalStatus === 'SELECTED').length}
+              </p>
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-600">
+              <span className="material-icons-outlined">block</span>
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Rejected</p>
+              <p className="text-2xl font-black text-black">
+                {applications.filter(a => a.finalStatus === 'REJECTED' || a.teleStatus === 'REJECTED' || a.panelStatus === 'REJECTED').length}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Applications List */}
       {loading ? (
-        <div className="bg-white rounded-2xl p-12 text-center text-gray-500">
+        <div className="bg-white rounded-2xl p-12 text-center text-gray-500 shadow-sm">
           <div className="animate-spin w-8 h-8 border-4 border-maatram-yellow border-t-transparent rounded-full mx-auto mb-4"></div>
           Loading applications...
         </div>
       ) : applications.length === 0 ? (
-        <div className="bg-white rounded-2xl p-12 text-center text-gray-500">
+        <div className="bg-white rounded-2xl p-12 text-center text-gray-500 shadow-sm">
           <span className="material-icons-outlined text-6xl mb-4 opacity-50">inbox</span>
           <p className="text-lg font-bold">No applications in this phase</p>
         </div>
       ) : (
         <div className="grid gap-4">
           {applications.map((app) => (
-            <div key={app.id} className="bg-white rounded-2xl p-6 shadow-card border border-gray-100">
+            <div key={app.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl font-bold">
-                      {app.name.charAt(0)}
+                      {app.name?.charAt(0) || '?'}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-xl font-bold text-black">{app.name}</h3>
                         <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[11px] font-black tracking-wider uppercase border border-gray-200">
-                          {app.kkId || 'PENDING'}
+                          {app.kkId || 'P001'}
                         </span>
+                        {app.finalStatus === 'REJECTED' && (
+                          <span className="px-2 py-0.5 bg-red-100 text-red-600 rounded text-[10px] font-black uppercase">Rejected</span>
+                        )}
                       </div>
                       {app.email && <p className="text-sm text-gray-500">{app.email}</p>}
                     </div>
@@ -214,8 +379,7 @@ const Selection = () => {
                     </div>
                     <div>
                       <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Academic</p>
-                      <p className="text-sm font-bold text-black">{app.yearOfStudying} | {app.schoolName || 'N/A'}</p>
-                      <p className="text-[11px] text-gray-600 truncate" title={app.address}>Addr: {app.address || 'N/A'}</p>
+                      <p className="text-sm font-bold text-black">{app.yearOfStudying || '12th'} | {app.schoolName || 'N/A'}</p>
                     </div>
                   </div>
 
@@ -224,18 +388,14 @@ const Selection = () => {
                       <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Marks (11th Public)</p>
                       <div className="flex items-center gap-3">
                         <span className="text-lg font-black text-black">{app.class11PublicMarks || 'N/A'}</span>
-                        <span className="text-[11px] text-gray-600 italic">
-                          {typeof app.subjectMarks === 'object'
-                            ? (app.subjectMarks.text || app.subjectMarks.marks || 'No break-up')
-                            : (app.subjectMarks || 'No break-up')}
-                        </span>
+                        <span className="text-[11px] text-gray-600 italic">{app.displayMarks}</span>
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Requested Subjects</p>
+                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Tutoring Subjects</p>
                       <div className="flex flex-wrap gap-1.5 mt-1">
-                        {(app.requestedSubjects || []).map((subject) => (
-                          <span key={subject} className="px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-gray-700 shadow-sm">
+                        {(app.tutoringSubjects || []).map((subject, idx) => (
+                          <span key={idx} className="px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-gray-700 shadow-sm">
                             {subject}
                           </span>
                         ))}
@@ -245,26 +405,20 @@ const Selection = () => {
 
                   {app.phase1Notes && (
                     <div className="mb-2">
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">Phase 1 Notes</p>
+                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Tele-verification Notes</p>
                       <p className="text-sm text-gray-700">{app.phase1Notes}</p>
                     </div>
                   )}
-                  {app.phase2TeleverificationNotes && (
+                  {app.phase2Notes && (
                     <div className="mb-2">
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">Televerification Notes</p>
-                      <p className="text-sm text-gray-700">{app.phase2TeleverificationNotes}</p>
-                    </div>
-                  )}
-                  {app.phase3PanelInterviewNotes && (
-                    <div className="mb-2">
-                      <p className="text-xs text-gray-500 uppercase font-bold mb-1">Panel Interview Notes</p>
-                      <p className="text-sm text-gray-700">{app.phase3PanelInterviewNotes}</p>
+                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1">Panel Interview Notes</p>
+                      <p className="text-sm text-gray-700">{app.phase2Notes}</p>
                     </div>
                   )}
                 </div>
 
                 <div className="flex flex-col gap-2 ml-4">
-                  {getNextPhase(app.phase) && app.phase !== 'Rejected' && (
+                  {getNextPhase(app.phase) && app.finalStatus !== 'REJECTED' && app.phase !== 'Phase3_FinalSelectedStudents' && (
                     <button
                       onClick={() => {
                         setSelectedApp(app);
@@ -272,12 +426,12 @@ const Selection = () => {
                         setIsRejectAction(false);
                         setShowPhaseModal(true);
                       }}
-                      className="px-4 py-2 bg-maatram-yellow text-black rounded-lg font-bold hover:bg-maatram-yellow-dark transition-colors text-sm"
+                      className="px-4 py-2.5 bg-maatram-yellow text-black rounded-lg font-bold hover:bg-maatram-yellow-dark transition-all text-sm whitespace-nowrap shadow-sm"
                     >
                       Move to {PHASES[getNextPhase(app.phase)]?.label || 'Next'}
                     </button>
                   )}
-                  {app.phase !== 'Rejected' && (
+                  {app.finalStatus !== 'REJECTED' && (
                     <button
                       onClick={() => {
                         setSelectedApp(app);
@@ -285,11 +439,18 @@ const Selection = () => {
                         setIsRejectAction(true);
                         setShowPhaseModal(true);
                       }}
-                      className="px-4 py-2 bg-red-100 text-red-800 rounded-lg font-bold hover:bg-red-200 transition-colors text-sm"
+                      className="px-4 py-2.5 bg-red-100 text-red-800 rounded-lg font-bold hover:bg-red-200 transition-all text-sm"
                     >
                       Reject
                     </button>
                   )}
+                  <button
+                    onClick={() => handleEdit(app)}
+                    className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-bold hover:bg-gray-200 transition-all text-sm flex items-center justify-center gap-2"
+                  >
+                    <span className="material-icons-outlined text-sm">edit</span>
+                    Edit
+                  </button>
                 </div>
               </div>
             </div>
@@ -297,190 +458,82 @@ const Selection = () => {
         </div>
       )}
 
-      {/* Create Application Form Modal */}
+      {/* Enrollment Form Modal */}
       {showForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-black">New Student Application</h2>
-              <button
-                onClick={() => setShowForm(false)}
-                className="text-gray-400 hover:text-black"
-              >
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="flex items-center justify-between mb-8">
+              <h2 className="text-2xl font-black text-black">{isEditing ? 'Edit Profile' : 'New Enrollment'}</h2>
+              <button onClick={() => setShowForm(false)} className="w-10 h-10 flex items-center justify-center rounded-xl bg-gray-50 text-gray-400 hover:text-black">
                 <span className="material-icons-outlined">close</span>
               </button>
             </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid md:grid-cols-2 gap-4">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  />
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Name *</label>
+                  <input type="text" required value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-maatram-yellow/20 outline-none font-bold" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">School Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.schoolName}
-                    onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  />
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">School *</label>
+                  <input type="text" required value={formData.schoolName} onChange={(e) => setFormData({ ...formData, schoolName: e.target.value })} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-maatram-yellow/20 outline-none font-bold" />
                 </div>
               </div>
-
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Address *</label>
-                <textarea
-                  required
-                  value={formData.address}
-                  onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  rows="2"
-                />
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Address *</label>
+                <textarea required value={formData.address} onChange={(e) => setFormData({ ...formData, address: e.target.value })} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-maatram-yellow/20 outline-none font-bold" rows="2" />
               </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">District *</label>
-                  <select
-                    required
-                    value={formData.district}
-                    onChange={(e) => setFormData({ ...formData, district: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  >
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">District *</label>
+                  <select required value={formData.district} onChange={(e) => setFormData({ ...formData, district: e.target.value })} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-maatram-yellow/20 outline-none font-bold">
                     <option value="">Select district</option>
-                    {DISTRICTS.map((d) => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
+                    {DISTRICTS.map(d => <option key={d} value={d}>{d}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Medium *</label>
-                  <select
-                    required
-                    value={formData.medium}
-                    onChange={(e) => setFormData({ ...formData, medium: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  >
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Medium *</label>
+                  <select required value={formData.medium} onChange={(e) => setFormData({ ...formData, medium: e.target.value })} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-maatram-yellow/20 outline-none font-bold">
                     <option value="">Select medium</option>
-                    {MEDIUMS.map((m) => (
-                      <option key={m} value={m}>{m}</option>
-                    ))}
+                    {MEDIUMS.map(m => <option key={m} value={m}>{m}</option>)}
                   </select>
                 </div>
               </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Email *</label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  />
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Email *</label>
+                  <input type="email" required value={formData.email} onChange={(e) => setFormData({ ...formData, email: e.target.value })} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-maatram-yellow/20 outline-none font-bold" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Year of Studying *</label>
-                  <select
-                    required
-                    value={formData.yearOfStudy}
-                    onChange={(e) => setFormData({ ...formData, yearOfStudy: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  >
-                    <option value="11th">11th</option>
-                    <option value="12th">12th</option>
-                  </select>
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Public Mark *</label>
+                  <input type="number" required value={formData.publicMark} onChange={(e) => setFormData({ ...formData, publicMark: e.target.value })} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-maatram-yellow/20 outline-none font-bold" />
                 </div>
               </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
+              <div className="grid md:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">11th Public Mark *</label>
-                  <input
-                    type="number"
-                    required
-                    value={formData.publicMark}
-                    onChange={(e) => setFormData({ ...formData, publicMark: e.target.value })}
-                    placeholder="Ex: 487"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  />
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Phone *</label>
+                  <input type="tel" required value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-maatram-yellow/20 outline-none font-bold" />
                 </div>
                 <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Subject marks *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.subjectMarks}
-                    onChange={(e) => setFormData({ ...formData, subjectMarks: e.target.value })}
-                    placeholder="Ex: Maths:60, Science:80"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  />
+                  <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 ml-1">Parent *</label>
+                  <input type="text" required value={formData.guardianContact} onChange={(e) => setFormData({ ...formData, guardianContact: e.target.value })} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-maatram-yellow/20 outline-none font-bold" />
                 </div>
               </div>
-
-              <div className="grid md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Phone Number *</label>
-                  <input
-                    type="tel"
-                    required
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Parent Name *</label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.guardianContact}
-                    onChange={(e) => setFormData({ ...formData, guardianContact: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                  />
-                </div>
-              </div>
-
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2">Subjects tutoring needed *</label>
-                <div className="grid grid-cols-4 gap-2">
+                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4 ml-1">Tutoring Subjects *</label>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {SUBJECTS.map((subject) => (
-                    <label key={subject} className="flex items-center gap-2 p-3 border border-gray-300 rounded-xl cursor-pointer hover:bg-gray-50">
-                      <input
-                        type="checkbox"
-                        checked={formData.requestedSubjects.includes(subject)}
-                        onChange={() => toggleSubject(subject)}
-                        className="rounded"
-                      />
-                      <span className="text-sm font-bold">{subject}</span>
-                    </label>
+                    <button type="button" key={subject} onClick={() => toggleSubject(subject)} className={`p-3 rounded-xl border text-xs font-black transition-all ${formData.requestedSubjects.includes(subject) ? 'bg-black text-white border-black shadow-lg scale-[1.05]' : 'bg-white text-gray-500 border-gray-100 hover:border-gray-300'}`}>
+                      {subject}
+                    </button>
                   ))}
                 </div>
               </div>
-
-              <div className="flex gap-4 pt-4">
-                <button
-                  type="submit"
-                  className="flex-1 px-6 py-3 bg-black text-white rounded-xl font-bold hover:bg-gray-800 transition-colors"
-                >
-                  Create Application
+              <div className="flex gap-4 pt-6">
+                <button type="submit" className="flex-1 px-8 py-5 bg-black text-white rounded-2xl font-black uppercase text-sm tracking-widest transition-all shadow-xl active:scale-[0.98]">
+                  {isEditing ? 'Save Changes' : 'Submit Enrollment'}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setShowForm(false)}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
+                <button type="button" onClick={() => setShowForm(false)} className="px-8 py-5 text-gray-400 font-bold uppercase text-xs tracking-widest hover:text-black">Cancel</button>
               </div>
             </form>
           </div>
@@ -488,72 +541,26 @@ const Selection = () => {
       )}
 
       {/* Phase Update Modal */}
-      {showPhaseModal && selectedApp && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-8 max-w-lg w-full">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-black">Update Phase</h2>
-              <button
-                onClick={() => {
-                  setShowPhaseModal(false);
-                  setSelectedApp(null);
-                  setPhaseNotes('');
-                  setIsRejectAction(false);
-                }}
-                className="text-gray-400 hover:text-black"
-              >
-                <span className="material-icons-outlined">close</span>
-              </button>
+      {showPhaseModal && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-8 max-w-lg w-full shadow-2xl border border-gray-100">
+            <h2 className="text-2xl font-black text-black mb-6 tracking-tight">Update Application Phase</h2>
+            <div className="bg-gray-50 p-5 rounded-2xl mb-8 border border-gray-100">
+              <p className="text-sm font-bold text-gray-600 mb-2">Updating: <span className="text-black">{selectedApp.name}</span></p>
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Action</span>
+                <span className={`px-3 py-1 rounded-lg text-[10px] font-black border uppercase ${isRejectAction ? 'bg-red-50 text-red-600 border-red-100' : 'bg-green-50 text-green-600 border-green-100'}`}>
+                  {isRejectAction ? 'Reject student' : `Move to ${PHASES[getNextPhase(selectedApp.phase)]?.label || 'Next'}`}
+                </span>
+              </div>
             </div>
-
-            <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">
-                Application: <span className="font-bold">{selectedApp.name}</span>
-              </p>
-              <p className="text-sm text-gray-600 mb-2">
-                Current Phase: <span className="font-bold">{PHASES[selectedApp.phase]?.label} - {PHASES[selectedApp.phase]?.sublabel}</span>
-              </p>
-              {isRejectAction ? (
-                <p className="text-sm text-red-600 font-bold">⚠️ This will reject the application</p>
-              ) : (
-                <p className="text-sm text-gray-600">
-                  Next Phase: <span className="font-bold">{PHASES[getNextPhase(selectedApp.phase)]?.label} - {PHASES[getNextPhase(selectedApp.phase)]?.sublabel}</span>
-                </p>
-              )}
+            <div className="space-y-3 mb-8">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">Notes (Optional)</label>
+              <textarea value={phaseNotes} onChange={(e) => setPhaseNotes(e.target.value)} rows={4} className="w-full px-5 py-4 bg-gray-50 border border-gray-100 rounded-2xl focus:ring-4 focus:ring-maatram-yellow/20 outline-none font-bold text-black" placeholder="Add notes for this update..." />
             </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-bold text-gray-700 mb-2">Notes</label>
-              <textarea
-                value={phaseNotes}
-                onChange={(e) => setPhaseNotes(e.target.value)}
-                rows={4}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-maatram-yellow focus:border-transparent"
-                placeholder="Add notes for this phase..."
-              />
-            </div>
-
             <div className="flex gap-4">
-              <button
-                onClick={confirmPhaseUpdate}
-                className={`flex-1 px-6 py-3 rounded-xl font-bold transition-colors ${isRejectAction
-                  ? 'bg-red-600 text-white hover:bg-red-700'
-                  : 'bg-maatram-yellow text-black hover:bg-maatram-yellow-dark'
-                  }`}
-              >
-                {isRejectAction ? 'Confirm Rejection' : 'Confirm'}
-              </button>
-              <button
-                onClick={() => {
-                  setShowPhaseModal(false);
-                  setSelectedApp(null);
-                  setPhaseNotes('');
-                  setIsRejectAction(false);
-                }}
-                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl font-bold hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
+              <button onClick={confirmPhaseUpdate} className={`flex-1 px-8 py-5 rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl transition-all active:scale-[0.98] ${isRejectAction ? 'bg-red-600 text-white hover:bg-red-700' : 'bg-maatram-yellow text-black hover:bg-maatram-yellow-dark'}`}>Confirm</button>
+              <button onClick={() => setShowPhaseModal(false)} className="px-8 py-5 text-gray-400 font-bold uppercase text-xs tracking-widest hover:text-black transition-colors">Cancel</button>
             </div>
           </div>
         </div>

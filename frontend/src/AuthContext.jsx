@@ -20,6 +20,7 @@ const ROLE_PERMISSIONS = {
     "scheduling:manage",
     "scheduling:view",
     "scheduling:edit",
+    "scheduling:swap",
     // Attendance
     "attendance:manage",
     "attendance:view",
@@ -42,19 +43,18 @@ const ROLE_PERMISSIONS = {
     "selection:manage",
     "selection:view",
     "selection:edit",
+    "onboarding:manage",
+    "onboarding:view",
     // Scheduling
     "scheduling:manage",
     "scheduling:view",
     "scheduling:edit",
-    //onboarding
-    "onboarding:manage",
-    "onboarding:view",
+    "scheduling:swap",
     // Attendance
     "attendance:manage",
     "attendance:view",
     "attendance:approve",
-    "tutor-attendance:manage",
-    "tutor-attendance:view",
+    "attendance:overall-view",
     // Dashboard
     "dashboard:view",
     // Profile
@@ -90,11 +90,9 @@ const ROLE_PERMISSIONS = {
     "profile:view",
     "profile:edit",
   ],
-  studentsTrackingTeam: [
+  classInspectionTeam: [
     // Attendance
-    "attendance:overall-view",
-    // Dashboard
-    "dashboard:view",
+    "scheduling:view",
     // Profile
     "profile:view",
     "profile:edit",
@@ -107,7 +105,7 @@ const ROLE_MAP = {
   'TUTOR': 'tutor',
   'SELECTION_TEAM': 'selectionTeam',
   'ATTENDANCE_TRACKING_TEAM': 'attendanceTrackingTeam',
-  'CLASS_INSPECTION_TEAM': 'studentsTrackingTeam',
+  'CLASS_INSPECTION_TEAM': 'classInspectionTeam',
 };
 
 export function AuthProvider({ children, userData }) {

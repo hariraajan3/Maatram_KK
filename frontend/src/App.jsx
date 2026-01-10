@@ -39,11 +39,10 @@ const HomeRedirect = () => {
     return <Navigate to="/attendance" replace />;
   }
 
-  if (user.role === ROLES.STUDENTS_TRACKING_TEAM) {
-    return <Navigate to="/overall-attendance" replace />;
+  if (user.role === ROLES.CLASS_INSPECTION_TEAM) {
+    return <Navigate to="/scheduling" replace />;
   }
 
-  // Default for admin, tutorLead, selectionTeam
   return (
     <RoleRoute
       allowedRoles={[
@@ -72,7 +71,7 @@ const App = () => {
         'TUTOR': 'tutor',
         'SELECTION_TEAM': 'selectionTeam',
         'ATTENDANCE_TRACKING_TEAM': 'attendanceTrackingTeam',
-        'CLASS_INSPECTION_TEAM': 'studentsTrackingTeam',
+        'CLASS_INSPECTION_TEAM': 'classInspectionTeam',
       };
 
       if (parsed.user && parsed.user.role) {
@@ -153,6 +152,7 @@ const App = () => {
                 <RoleRoute
                   allowedRoles={[
                     ROLES.ADMIN,
+                    ROLES.CLASS_INSPECTION_TEAM,
                     ROLES.TUTOR_LEAD,
                     ROLES.TUTOR,
                   ]}
@@ -190,8 +190,8 @@ const App = () => {
                 <RoleRoute
                   allowedRoles={[
                     ROLES.ADMIN,
+                    ROLES.TUTOR_LEAD,
                     ROLES.ATTENDANCE_TRACKING_TEAM,
-                    ROLES.STUDENTS_TRACKING_TEAM,
                   ]}
                 >
                   <RequirePermission permission={PERMISSIONS.ATTENDANCE_OVERALL_VIEW}>
@@ -205,7 +205,7 @@ const App = () => {
             <Route
               path="onboarding"
               element={
-                <RoleRoute allowedRoles={[ROLES.TUTOR_LEAD]}>
+                <RoleRoute allowedRoles={[ROLES.ADMIN, ROLES.TUTOR_LEAD]}>
                   <RequirePermission permission={PERMISSIONS.ONBOARDING_MANAGE}>
                     <Onboarding />
                   </RequirePermission>
@@ -221,7 +221,6 @@ const App = () => {
                   allowedRoles={[
                     ROLES.ADMIN,
                     ROLES.TUTOR_LEAD,
-                    ROLES.STUDENTS_TRACKING_TEAM,
                   ]}
                 >
                   <RequirePermission permission={PERMISSIONS.DASHBOARD_VIEW}>

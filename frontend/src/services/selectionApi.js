@@ -27,36 +27,31 @@ export const updateApplicationPhase = async (id, phase, notes) => {
 
 export const fetchPhase1 = async () => {
     const { data } = await apiClient.get('/selection/phase1');
-    return data.applications || [];
+    return data;
 };
 
 export const fetchPhase2 = async () => {
     const { data } = await apiClient.get('/selection/phase2');
-    return data.applications || [];
+    return data;
 };
 
 export const fetchPhase3 = async () => {
     const { data } = await apiClient.get('/selection/phase3');
-    return data.applications || [];
-};
-
-export const fetchPhase4 = async () => {
-    const { data } = await apiClient.get('/selection/phase4');
-    return data.applications || [];
+    return data;
 };
 
 export const fetchApplicationsByPhase = async (phase) => {
     const phaseMap = {
-        'Phase1_Selection': 'phase1',
-        'Phase2_Televerification': 'phase2',
-        'Phase3_PanelInterview': 'phase3',
-        'Phase4_Scheduling': 'phase4',
-        'phase1': 'phase1',
-        'phase2': 'phase2',
-        'phase3': 'phase3',
-        'phase4': 'phase4',
+        'Phase1_Televerification': 'phase1',
+        'Phase2_PanelInterview': 'phase2',
+        'Phase3_FinalSelection': 'phase3',
     };
     const endpoint = phaseMap[phase] || `phase/${phase}`;
     const { data } = await apiClient.get(`/selection/${endpoint}`);
-    return data.applications || [];
+    return data;
+};
+
+export const updateStudent = async (studentId, payload) => {
+    const { data } = await apiClient.put(`/selection/${studentId}/student`, payload);
+    return data;
 };
