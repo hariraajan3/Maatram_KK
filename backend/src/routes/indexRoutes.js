@@ -5,7 +5,7 @@ import scheduleRoutes from './schedule.js';
 import attendanceRoutes from './attendance.js';
 import dataRoutes from './data.js';
 import adminRoutes from './adminRoutes.js';
-import selectionRoutes from './selection.js';
+import selectionRoutes from './selectionRoutes.js';
 import tutorsRoutes from './tutors.js';
 import tutorRoutes from './tutor.js';
 import authRoutes from './auth.js';

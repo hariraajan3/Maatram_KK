@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createOnboarding, fetchOnboarding, updateOnboardingStatus } from '../services/onboardingApi';
-import { ROLES } from '../permissions';
+import { ROLES } from '../rbac/permissions';
 
 const MEDIUMS = ['Tamil', 'English'];
 const DISTRICTS = ['Chennai', 'Coimbatore', 'Other'];

@@ -1,31 +1,29 @@
 import { useState, useEffect } from 'react';
 import {
-  fetchPhase1,
-  fetchPhase2,
-  fetchPhase3,
+  studentRejected,  
   fetchApplicationsByPhase,
   createApplication,
-  updateApplicationPhase,
   updateStudent,
+  phaseAdvanced,
 } from '../services/selectionApi';
 
 const PHASES = {
-  Phase1_Televerification: {
-    label: 'Phase 1',
+  phase1: {
+    label: 'phase 1',
     sublabel: 'Tele-verification',
     color: 'bg-yellow-100 text-yellow-800',
     icon: 'phone',
     description: 'Phone verification in progress'
   },
-  Phase2_PanelInterview: {
-    label: 'Phase 2',
+  phase2: {
+    label: 'phase 2',
     sublabel: 'Panel Interview',
     color: 'bg-purple-100 text-purple-800',
     icon: 'groups',
     description: 'Final panel interview'
   },
-  Phase3_FinalSelection: {
-    label: 'Phase 3',
+  phase3: {
+    label: 'phase 3',
     sublabel: 'Final Selection',
     color: 'bg-green-100 text-green-800',
     icon: 'inbox',
@@ -35,10 +33,10 @@ const PHASES = {
 
 const MEDIUMS = ['Tamil', 'English'];
 const DISTRICTS = ['Chennai', 'Coimbatore', 'Other'];
-const SUBJECTS = ['Physics', 'Maths', 'Chemistry', 'Biology', 'Science', 'Commerce', 'Economics', 'Accounts', 'Tamil', 'English'];
+const SUBJECTS = ['Physics', 'Maths', 'Chemistry', 'Biology', 'Computer Science', 'Business Maths', 'Commerce', 'Economics', 'Accounts', 'Tamil', 'English'];
 
 const Selection = () => {
-  const [activeTab, setActiveTab] = useState('Phase1_Televerification');
+  const [activeTab, setActiveTab] = useState('phase1');
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -60,10 +58,10 @@ const Selection = () => {
     email: '',
     yearOfStudy: '12th',
     publicMark: '',
-    subjectMarks: '',
-    phone: '',
-    guardianContact: '',
-    requestedSubjects: [],
+    subjectMarks: { ...EMPTY_SUBJECT_MARKS },
+    phoneNumber: '',
+    parentName: '',
+    tutoringSubjects: [],
   });
 
   useEffect(() => {
@@ -74,81 +72,43 @@ const Selection = () => {
     setLoading(true);
     setErrorMessage('');
     try {
-      let response;
-      if (activeTab === 'Phase1_Televerification') {
-        response = await fetchPhase1();
-      } else if (activeTab === 'Phase2_PanelInterview') {
-        response = await fetchPhase2();
-      } else if (activeTab === 'Phase3_FinalSelection') {
-        response = await fetchPhase3();
-      } else {
-        response = await fetchApplicationsByPhase(activeTab);
-      }
-
-      // Consistent data handling from API response
-      const data = Array.isArray(response) ? response : (response?.applications || []);
-      const mappedData = data.map(app => {
-        // Robust display marks formatting
-        let displayMarks = 'No break-up';
-        if (app.subjectMarks) {
-          if (typeof app.subjectMarks === 'string') {
-            displayMarks = app.subjectMarks;
-          } else if (typeof app.subjectMarks === 'object') {
-            const marksData = app.subjectMarks.text || app.subjectMarks;
-            if (typeof marksData === 'string') {
-              displayMarks = marksData;
-            } else if (typeof marksData === 'object' && marksData !== null) {
-              // Format key-value pairs if it's a break-up object
-              displayMarks = Object.entries(marksData)
-                .filter(([key]) => key !== 'text')
-                .map(([sub, mark]) => `${sub}: ${mark}`)
-                .join(', ') || 'No break-up';
-            }
-          }
-        }
-
-        return {
-          ...app,
-          phase: activeTab,
-          displayMarks,
-          // Ensure tutoringSubjects is always an array of strings
-          tutoringSubjects: Array.isArray(app.tutoringSubjects)
-            ? app.tutoringSubjects.map(s => (typeof s === 'object' ? JSON.stringify(s) : String(s)))
-            : (typeof app.tutoringSubjects === 'object' && app.tutoringSubjects !== null
-              ? Object.keys(app.tutoringSubjects)
-              : [])
-        };
-      });
-
+      let response = await fetchApplicationsByPhase(activeTab);
+      const mappedData = response.applications.map(app => ({...app})
+    );
+      console.log('Fetched applications:', mappedData);
       setApplications(mappedData);
       if (response?.stats) setStats(response.stats);
       else setStats(null);
-    } catch (error) {
+    } 
+    catch (error) {
       console.error('Failed to load applications:', error);
       setErrorMessage(error.response?.data?.message || 'Failed to load applications');
       setApplications([]);
       setStats(null);
-    } finally {
+    } 
+    finally {
       setLoading(false);
     }
   };
 
+  // Form submit handling
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       if (isEditing) {
         await updateStudent(selectedApp.studentId || selectedApp.id, formData);
         setSuccessMessage('Profile updated successfully');
-      } else {
+      } 
+      else {
         await createApplication(formData);
         setSuccessMessage('Application created successfully');
       }
-
       setShowForm(false);
       resetForm();
       loadApplications();
       setTimeout(() => setSuccessMessage(''), 3000);
-    } catch (error) {
+    } 
+    catch (error) {
       setErrorMessage('Operation failed: ' + (error.response?.data?.message || error.message));
     }
   };
@@ -161,12 +121,12 @@ const Selection = () => {
       district: '',
       medium: '',
       email: '',
-      yearOfStudy: '12th',
+      yearOfStudying: '12th',
       publicMark: '',
-      subjectMarks: '',
-      phone: '',
-      guardianContact: '',
-      requestedSubjects: [],
+      subjectMarks: { ...EMPTY_SUBJECT_MARKS },
+      phoneNumber: '',
+      parentName: '',
+      tutoringSubjects: [],
     });
     setIsEditing(false);
     setSelectedApp(null);
@@ -181,8 +141,6 @@ const Selection = () => {
         setErrorMessage('Cannot update phase');
         return;
       }
-
-      // Important: Backend expects target phase string
       await updateApplicationPhase(selectedApp.studentId || selectedApp.id, targetPhase, phaseNotes);
 
       setShowPhaseModal(false);
@@ -195,12 +153,6 @@ const Selection = () => {
     } catch (error) {
       setErrorMessage('Failed to update phase: ' + (error.response?.data?.message || error.message));
     }
-  };
-
-  const getNextPhase = (currentPhase) => {
-    const phaseOrder = ['Phase1_Televerification', 'Phase2_PanelInterview', 'Phase3_FinalSelection'];
-    const currentIndex = phaseOrder.indexOf(currentPhase);
-    return currentIndex < phaseOrder.length - 1 ? phaseOrder[currentIndex + 1] : 'Selected';
   };
 
   const toggleSubject = (subject) => {
@@ -223,9 +175,7 @@ const Selection = () => {
       email: app.email || '',
       yearOfStudy: app.yearOfStudying || '12th',
       publicMark: app.class11PublicMarks || '',
-      subjectMarks: typeof app.subjectMarks === 'object'
-        ? (typeof app.subjectMarks.text === 'string' ? app.subjectMarks.text : (app.subjectMarks.text ? JSON.stringify(app.subjectMarks.text) : JSON.stringify(app.subjectMarks)))
-        : (app.subjectMarks || ''),
+      subjectMarks: app.subjectMarks || '' ,
       phone: app.phoneNumber || '',
       guardianContact: app.parentName || '',
       requestedSubjects: Array.isArray(app.tutoringSubjects) ? app.tutoringSubjects : [],
@@ -233,7 +183,7 @@ const Selection = () => {
     setIsEditing(true);
     setShowForm(true);
   };
-
+                        
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -293,20 +243,11 @@ const Selection = () => {
           <p className="text-red-700 font-bold flex-1">{errorMessage}</p>
           <button onClick={() => setErrorMessage('')}><span className="material-icons-outlined text-red-400">close</span></button>
         </div>
-      )}
+      )} 
 
       {/* Stats Summary Bar */}
       {!loading && (stats || applications.length > 0) && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
-              <span className="material-icons-outlined">people</span>
-            </div>
-            <div>
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1">Total in Phase</p>
-              <p className="text-2xl font-black text-black">{applications.length}</p>
-            </div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-4">
             <div className="w-12 h-12 rounded-xl bg-green-50 flex items-center justify-center text-green-600">
               <span className="material-icons-outlined">check_circle</span>
@@ -345,60 +286,67 @@ const Selection = () => {
         </div>
       ) : (
         <div className="grid gap-4">
-          {applications.map((app) => (
-            <div key={app.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all">
+          {applications.map((app) => ( 
+            <div key={app.student.id} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-all">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-4 mb-4">
                     <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-xl font-bold">
-                      {app.name?.charAt(0) || '?'}
+                      {app.student.name?.charAt(0) || '?'}
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="text-xl font-bold text-black">{app.name}</h3>
+                        <h3 className="text-xl font-bold text-black">{app.student.name}</h3>
                         <span className="px-2 py-0.5 bg-gray-100 text-gray-700 rounded text-[11px] font-black tracking-wider uppercase border border-gray-200">
-                          {app.kkId || 'P001'}
+                          {app.student.kkId || 'P001'}
                         </span>
-                        {app.finalStatus === 'REJECTED' && (
+                        {(app.teleStatus === 'REJECTED' || app.panelStatus === 'REJECTED') && (
                           <span className="px-2 py-0.5 bg-red-100 text-red-600 rounded text-[10px] font-black uppercase">Rejected</span>
                         )}
                       </div>
-                      {app.email && <p className="text-sm text-gray-500">{app.email}</p>}
+                      {app.student.email && <p className="text-sm text-gray-500">{app.student.email}</p>}
                     </div>
                   </div>
 
                   <div className="grid md:grid-cols-3 gap-4 mb-6 pt-4 border-t border-gray-50">
                     <div>
                       <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Medium & District</p>
-                      <p className="text-sm font-bold text-black">{app.medium || 'N/A'} | {app.district || 'N/A'}</p>
+                      <p className="text-sm font-bold text-black">{app.student.medium || 'N/A'} | {app.student.district || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Contact</p>
-                      <p className="text-sm font-bold text-black">{app.phoneNumber || 'N/A'}</p>
-                      <p className="text-[11px] text-gray-600">Parent: {app.parentName || 'N/A'}</p>
+                      <p className="text-sm font-bold text-black">{app.student.phoneNumber || 'N/A'}</p>
+                      <p className="text-[11px] text-gray-600">Parent: {app.student.parentName || 'N/A'}</p>
                     </div>
+
                     <div>
                       <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Academic</p>
-                      <p className="text-sm font-bold text-black">{app.yearOfStudying || '12th'} | {app.schoolName || 'N/A'}</p>
+                      <p className="text-sm font-bold text-black">{app.student.yearOfStudying || '12th'} | {app.student.schoolName || 'N/A'}</p>
                     </div>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4 mb-6 p-4 bg-gray-50 rounded-xl">
+                  <div className="grid md:grid-cols-[1.4fr_1fr] gap-4 mb-6 p-4 bg-gray-50 rounded-xl">
                     <div>
                       <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Marks (11th Public)</p>
-                      <div className="flex items-center gap-3">
-                        <span className="text-lg font-black text-black">{app.class11PublicMarks || 'N/A'}</span>
-                        <span className="text-[11px] text-gray-600 italic">{app.displayMarks}</span>
-                      </div>
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider">Tutoring Subjects</p>
-                      <div className="flex flex-wrap gap-1.5 mt-1">
-                        {(app.tutoringSubjects || []).map((subject, idx) => (
-                          <span key={idx} className="px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-gray-700 shadow-sm">
-                            {subject}
+                      <span className="text-lg font-black text-black">{app.student.class11PublicMarks || 'N/A'}</span>
+                      <div className="grid grid-cols-3 gap-2 mt-3">
+                        {app.student.subjectMarks && Object.entries(app.student.subjectMarks).map(([subject, mark], idx) => (
+                          <span key={idx} className="px-2 py-1 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-gray-700 shadow-sm">
+                            {subject}: {mark}
                           </span>
                         ))}
+                      </div>
+                    </div>
+                    <div className="flex flex-col justify-between items-end">
+                      <div className="w-full">
+                        <p className="text-[10px] text-gray-500 uppercase font-bold mb-1 tracking-wider text-right">Tutoring Subjects</p>
+                        <div className="flex flex-wrap justify-end gap-1.5 mt-1 w-full">
+                          {(app.student.tutoringSubjects || []).map((subject, idx) => (
+                            <span key={idx} className="px-2.5 py-1 bg-white border border-gray-200 rounded-lg text-[10px] font-bold text-gray-700 shadow-sm">
+                              {subject}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -418,9 +366,9 @@ const Selection = () => {
                 </div>
 
                 <div className="flex flex-col gap-2 ml-4">
-                  {getNextPhase(app.phase) && app.finalStatus !== 'REJECTED' && app.phase !== 'Phase3_FinalSelectedStudents' && (
                     <button
                       onClick={() => {
+                        phaseAdvanced(app.phase);
                         setSelectedApp(app);
                         setPhaseNotes('');
                         setIsRejectAction(false);
@@ -428,16 +376,17 @@ const Selection = () => {
                       }}
                       className="px-4 py-2.5 bg-maatram-yellow text-black rounded-lg font-bold hover:bg-maatram-yellow-dark transition-all text-sm whitespace-nowrap shadow-sm"
                     >
-                      Move to {PHASES[getNextPhase(app.phase)]?.label || 'Next'}
+                      Move to Next Phase
                     </button>
-                  )}
-                  {app.finalStatus !== 'REJECTED' && (
+  
+                  {!(app.teleStatus === 'REJECTED' || app.panelStatus === 'REJECTED') && (
                     <button
                       onClick={() => {
                         setSelectedApp(app);
                         setPhaseNotes('');
                         setIsRejectAction(true);
                         setShowPhaseModal(true);
+                        studentRejected(app.studentId , app.id, phaseNotes);
                       }}
                       className="px-4 py-2.5 bg-red-100 text-red-800 rounded-lg font-bold hover:bg-red-200 transition-all text-sm"
                     >

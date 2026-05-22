@@ -24,7 +24,8 @@ const adapter = new PrismaPg(pool);
 // Create Prisma Client with adapter
 const prisma = new PrismaClient({
     adapter,
-    log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    // log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+    log: ['error'],
 });
 
 // Handle graceful shutdown

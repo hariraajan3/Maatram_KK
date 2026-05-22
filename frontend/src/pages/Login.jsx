@@ -96,7 +96,7 @@ const Login = ({ onSuccess }) => {
             </div>
             {error && (
               <div className="bg-red-100 border-2 border-red-500 text-red-900 px-4 py-3 rounded-lg text-sm font-bold">
-                Please enter valid email and password
+                {error}
               </div>
             )}
             <button

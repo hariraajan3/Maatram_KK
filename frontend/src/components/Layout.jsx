@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import PropTypes from 'prop-types';
-import { getNavItems } from '../permissions';
+import { getNavItems } from '../rbac/permissions';
 import maatramLogo from '../Maatram logo.jpg';
 
 const navItems = [

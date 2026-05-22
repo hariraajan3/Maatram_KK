@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchClasses, requestSwap, createSchedule, fetchTutors } from '../services/api';
-import Can from '../Can';
-import { useAuth } from "../AuthContext";
+import Can from '../rbac/Can';
+import { useAuth } from "../rbac/AuthContext";
 
 const Scheduling = () => {
   const [classes, setClasses] = useState([]);

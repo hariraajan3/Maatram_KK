@@ -4,7 +4,7 @@ import path from 'path';
 import fs from 'fs';
 import swaggerUiDist from 'swagger-ui-dist';
 import { fileURLToPath } from 'url';
-import routes from './routes/index.js';
+import routes from './routes/indexRoutes.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 
 const __filename = fileURLToPath(import.meta.url);

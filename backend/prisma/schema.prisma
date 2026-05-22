@@ -334,7 +334,6 @@ model StudentApplication {
 
   teleStatus  SelectionStatus @default(PENDING)
   panelStatus SelectionStatus @default(PENDING)
-  finalStatus SelectionStatus @default(PENDING)
 
   phase1Notes String? @map("phase1_notes") // Tele-verification notes
   phase2Notes String? @map("phase2_notes") // Panel Interview notes
@@ -354,10 +353,6 @@ model AuditLog {
   entityType  String?
   entityId    String?
   description String?
-  oldData     Json?
-  newData     Json?
-  ipAddress   String?
-  userAgent   String?
   createdAt   DateTime @default(now())
 
   @@map("audit_log")

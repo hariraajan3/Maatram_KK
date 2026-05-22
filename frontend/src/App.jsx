@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 
 import Layout from './components/Layout';
 import RoleRoute from './components/RoleRoute';
-import RequirePermission from './RequirePermission';
+import RequirePermission from './rbac/RequirePermission';
 
 import Dashboard from './pages/Dashboard';
 import Selection from './pages/Selection';
@@ -19,11 +19,11 @@ import SetPassword from './pages/SetPassword';
 
 import './App.css';
 
-import { AuthProvider } from './AuthContext';
+import { AuthProvider } from './rbac/AuthContext';
 import { setAuthToken } from './services/api';
-import { PERMISSIONS } from './permissions';
-import { ROLES } from './permissions';
-import { useAuth } from './AuthContext';
+import { PERMISSIONS } from './rbac/permissions';
+import { ROLES } from './rbac/permissions';
+import { useAuth } from './rbac/AuthContext';
 
 const ProtectedLayout = ({ session, onLogout }) => {
   if (!session) return <Navigate to="/login" replace />;

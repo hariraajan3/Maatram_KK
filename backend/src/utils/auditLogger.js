@@ -11,8 +11,6 @@ const logAction = async (user, action, description, entityType = null, entityId 
                 description,
                 oldData,
                 newData,
-                ipAddress: null,
-                userAgent: null,
             }
         });
     } catch (error) {
