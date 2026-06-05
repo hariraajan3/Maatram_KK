@@ -22,6 +22,25 @@ export const setAuthToken = (token) => {
   }
 };
 
+export const api = apiClient;
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (
+      error.response?.status === 401 &&
+      error.response?.data?.code === "TOKEN_EXPIRED"
+    ) {
+      localStorage.removeItem("kk_session");
+
+      window.location.href = "/login";
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+
 export const login = async (credentials) => {
   const { data } = await apiClient.post('/auth/login', credentials);
   setAuthToken(data.token);

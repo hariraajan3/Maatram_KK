@@ -1,15 +1,12 @@
 import { useState, useEffect } from 'react';
-import { fetchAuditLogs, fetchRoles, fetchUsers, assignRole, deleteUser } from '../services/adminApi';
+import { auditLogs,  getUsers, deleteUser } from '../services/adminApi';
 
 const AdminLogs = () => {
-  const [activeSection, setActiveSection] = useState('roles'); // 'audit', 'roles', 'permissions'
+  const [activeSection, setActiveSection] = useState('roles'); 
   const [logs, setLogs] = useState([]);
-  const [roles, setRoles] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState({ type: '', text: '' });
-  const [editingUser, setEditingUser] = useState(null);
-  const [selectedRole, setSelectedRole] = useState('');
 
   useEffect(() => {
     loadAllData();
@@ -18,52 +15,36 @@ const AdminLogs = () => {
   const loadAllData = async () => {
     setLoading(true);
     try {
-      const [logsData, rolesData, usersData] = await Promise.all([
-        fetchAuditLogs(),
-        fetchRoles(),
-        fetchUsers()
+      const [usersData , userRoles] = await Promise.all([
+        getUsers(),
       ]);
-      setLogs(logsData);
-      setRoles(rolesData);
-      setUsers(usersData);
-    } catch (error) {
+      const mappedData = Array.isArray(usersData?.users) ? usersData.users : [];
+      setUsers(mappedData);
+      
+    } 
+    catch (error) {
       console.error('Failed to load admin logs data:', error);
       setMessage({ type: 'error', text: error.message || 'Failed to load data from server' });
-    } finally {
+    } 
+    finally {
       setLoading(false);
     }
   };
-
-  const handleRoleChange = async (userId, newRole) => {
-    try {
-      await assignRole(userId, newRole);
-      setUsers(users.map(u => u.id === userId ? { ...u, role: newRole } : u));
-      setEditingUser(null);
-      setMessage({ type: 'success', text: 'Role updated successfully' });
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      await loadAllData(); // Reload to get updated audit logs
-    } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to update role' });
-    }
-  };
-
+  
   const handleDeleteUser = async (userId, userName) => {
     if (!window.confirm(`Are you sure you want to delete ${userName}? This action cannot be undone.`)) {
       return;
     }
-
     try {
       await deleteUser(userId);
       setUsers(users.filter(u => u.id !== userId));
       setMessage({ type: 'success', text: 'User deleted successfully' });
       setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-      await loadAllData(); // Reload to get updated audit logs
+      await loadAllData(); 
     } catch (error) {
       setMessage({ type: 'error', text: error.response?.data?.message || 'Failed to delete user' });
     }
   };
-
-  const availableRoles = ['admin', 'tutorLead', 'tutor', '  selectionTeam', 'classInspectionTeam', 'attendanceTrackingTeam'];
 
   const sections = [
     { id: 'roles', label: 'Roles & Users', icon: 'people' },
@@ -132,17 +113,10 @@ const AdminLogs = () => {
                           <td colSpan="4" className="px-4 py-6 text-center text-gray-500 text-sm">No users found.</td>
                         </tr>
                       ) : (
-                        users.map((user) => (
-                          <tr key={user.id} className="hover:bg-gray-50/50 transition-colors">
+                       users.map((user, idx) => (
+                          <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
                             <td className="px-4 py-3">
                               <div className="flex items-center gap-2">
-                                {user.avatar ? (
-                                  <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full" />
-                                ) : (
-                                  <div className="w-8 h-8 rounded-full bg-maatram-yellow flex items-center justify-center text-black font-bold text-sm">
-                                    {user.name.charAt(0)}
-                                  </div>
-                                )}
                                 <div>
                                   <div className="font-bold text-black text-sm">{user.name}</div>
                                 </div>
@@ -152,66 +126,16 @@ const AdminLogs = () => {
                               <span className="text-xs text-gray-700 break-all">{user.email}</span>
                             </td>
                             <td className="px-4 py-3">
-                              {editingUser === user.id ? (
-                                <select
-                                  value={selectedRole || user.role}
-                                  onChange={(e) => setSelectedRole(e.target.value)}
-                                  className="px-2 py-1.5 rounded-lg border border-gray-200 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-maatram-yellow"
-                                >
-                                  {availableRoles.map((role) => (
-                                    <option key={role} value={role}>
-                                      {role.charAt(0).toUpperCase() + role.slice(1)}
-                                    </option>
-                                  ))}
-                                </select>
-                              ) : (
-                                <span className="px-2 py-1 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 capitalize">
-                                  {user.role}
-                                </span>
-                              )}
+                                <span className="text-xs text-gray-700 capitalize">{user.role}</span>
                             </td>
                             <td className="px-4 py-3">
-                              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-                                {editingUser === user.id ? (
-                                  <>
-                                    <button
-                                      onClick={() => handleRoleChange(user.id, selectedRole || user.role)}
-                                      className="px-3 py-1.5 bg-maatram-yellow text-black rounded-lg text-xs font-bold hover:shadow-md transition-all"
-                                    >
-                                      Save
-                                    </button>
-                                    <button
-                                      onClick={() => {
-                                        setEditingUser(null);
-                                        setSelectedRole('');
-                                      }}
-                                      className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-xs font-bold hover:bg-gray-200 transition-all"
-                                    >
-                                      Cancel
-                                    </button>
-                                  </>
-                                ) : (
-                                  <>
-                                    <button
-                                      onClick={() => {
-                                        setEditingUser(user.id);
-                                        setSelectedRole(user.role);
-                                      }}
-                                      className="px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-bold hover:bg-blue-100 transition-all flex items-center gap-1"
-                                    >
-                                      <span className="material-icons-outlined text-xs">edit</span>
-                                      Change
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteUser(user.id, user.name)}
-                                      className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100 transition-all flex items-center gap-1"
-                                    >
-                                      <span className="material-icons-outlined text-xs">delete</span>
-                                      Delete
-                                    </button>
-                                  </>
-                                )}
-                              </div>
+                              <button
+                                onClick={() => handleDeleteUser(id, user.name)}
+                                className="px-3 py-1.5 bg-red-50 text-red-600 rounded-lg text-xs font-bold hover:bg-red-100 transition-all flex items-center gap-1"
+                              >
+                               <span className="material-icons-outlined text-xs">delete</span>
+                                 Delete
+                              </button>
                             </td>
                           </tr>
                         ))
@@ -259,9 +183,7 @@ const AdminLogs = () => {
                 </div>
               </div>
             )}
-
           </>
-
         )}
       </div>
     </div>

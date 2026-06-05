@@ -14,6 +14,21 @@ const respondValidation = (req) => {
   }
 };
 
+const normalizePublicMark = (value) => {
+  if (value === '' || value === null || value === undefined) return null;
+
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const normalizeSubjectMarks = (value) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return {};
+
+  return Object.fromEntries(
+    Object.entries(value).map(([subject, mark]) => [subject, Number(mark) || 0])
+  );
+};
+
 // Create a new student application (Phase 1)
 const createApplication = async (req, res, next) => {
   try {
@@ -60,8 +75,8 @@ const createApplication = async (req, res, next) => {
             medium: medium || null,
             email: email || null,
             yearOfStudying: yearOfStudying || '12th',
-            class11PublicMarks: publicMark || null,
-            subjectMarks: subjectMarks || {},
+            class11PublicMarks: normalizePublicMark(publicMark),
+            subjectMarks: normalizeSubjectMarks(subjectMarks),
             phoneNumber: phoneNumber || null,
             parentName: parentName || null,
             tutoringSubjects: tutoringSubjects || [],
@@ -182,10 +197,12 @@ const getApplicationsByPhase = async (req, res, next) => {
     // Standardized 3-Phase Mapping
     if (phase == 'phase1') {
       where.currentPhase = 'TELE_VERIFICATION';
+      where.teleStatus = 'PENDING';
     } 
     else if ( phase == 'phase2') {
       where.currentPhase = 'PANEL_INTERVIEW';
       where.teleStatus = 'SELECTED';
+      where.panelStatus = 'PENDING';
     } 
     else if (phase == 'phase3') {
       where.currentPhase = 'FINAL_SELECTION';
@@ -225,8 +242,6 @@ const getApplicationsByPhase = async (req, res, next) => {
     // Calculate basic stats for the current view
     const stats = {
       totalStudents: applications.length,
-      approve: applications.filter(a => a.teleStatus === 'SELECTED' || a.panelStatus === 'SELECTED' || a.finalStatus === 'SELECTED').length,
-      rejected: applications.filter(a => a.finalStatus === 'REJECTED' || a.teleStatus === 'REJECTED' || a.panelStatus === 'REJECTED').length,
     };
 
     res.json({ applications: applications , stats });
@@ -362,6 +377,66 @@ const phaseAdvanced = async (req, res, next) => {
   }
 };
 
+const getRejectedApplications = async (req, res, next) => {
+  try {
+    const applications = await prisma.studentApplication.findMany({
+      where: {
+        OR: [
+          { teleStatus: 'REJECTED' },
+          { panelStatus: 'REJECTED' }
+        ]
+      },
+      include: {
+        student: {
+          select: {
+            id: true,
+            kkId: true,
+            name: true,
+            email: true,
+            phoneNumber: true,
+            schoolName: true,
+            address: true,
+            district: true,
+            parentName: true,
+            yearOfStudying: true,
+            class11PublicMarks: true,
+            subjectMarks: true,
+            tutoringSubjects: true,
+            medium: true,
+          }
+        }
+      },
+      orderBy: { id: 'desc' }
+    });
+
+    res.json({ applications });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const selectionStats = async (req, res, next) => {
+  try {
+    const count = await prisma.student.count();
+    const selected = await prisma.studentApplication.count({
+      where: { currentPhase: 'FINAL_SELECTION' }
+    });
+
+    const rejected = await prisma.studentApplication.count({
+      where: {
+        OR: [
+          { teleStatus: 'REJECTED' },
+          { panelStatus: 'REJECTED' }
+        ]
+      }
+    });
+    res.json({ totalApplications: count, selected, rejected });
+  } 
+  catch (error) {
+    next(error);
+  }
+};
+
 
 export {
   createApplication,
@@ -369,6 +444,8 @@ export {
   getApplicationsByPhase,
   handleGFormWebhook,
   studentRejected,
-  phaseAdvanced
+  phaseAdvanced,
+  getRejectedApplications,
+  selectionStats
 };
 

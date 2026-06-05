@@ -20,17 +20,19 @@ const Login = ({ onSuccess }) => {
       const payload = await login(form);
       if (typeof onSuccess === 'function') {
         await onSuccess(payload);
-        // navigate to root (App will render authenticated routes)
+
         window.location.href = '/';
-      } else {
-        // fallback for older flow: persist and reload
+      } 
+      else {
         localStorage.setItem('kk_session', JSON.stringify(payload));
         window.location.href = '/';
       }
-    } catch (loginErr) {
+    } 
+    catch (loginErr) {
       console.error('Login error:', loginErr);
       setError(loginErr?.response?.data?.message || 'Unable to login. Please try again.');
-    } finally {
+    } 
+    finally {
       setLoading(false);
     }
   };
