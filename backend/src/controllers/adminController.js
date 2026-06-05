@@ -3,7 +3,7 @@ import { logAction } from '../utils/auditLogger.js';
 
 const getAuditLogs = async (req, res, next) => {
     try {
-        const { page = 1, limit = 50, userId, action, entityType } = req.query;
+        const { page = 1, limit = 50, entityType } = req.query;
         const skip = (page - 1) * limit;
 
         const where = {};
@@ -51,39 +51,6 @@ const getAuditLogs = async (req, res, next) => {
     }
 };
 
-const getRoles = (req, res) => {
-    const roles = ['ADMIN', 'TUTOR_LEAD', 'TUTOR', 'SELECTION_TEAM', 'ATTENDANCE_TRACKING_TEAM', 'CLASS_INSPECTION_TEAM'];
-    res.json({ roles });
-};
-
-
-const assignRole = async (req, res, next) => {
-    try {
-        const { userId, newRole } = req.body;
-
-        const user = await prisma.user.findUnique({
-            where: { id: userId },
-            select: { id: true, name: true, role: true }
-        });
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        const oldRole = user.role;
-
-        await prisma.user.update({
-            where: { id: userId },
-            data: { role: newRole }
-        });
-
-        logAction(req.user, 'ASSIGN_ROLE', `Changed role for ${user.name} from ${oldRole} to ${newRole}`, 'User', userId);
-
-        res.json({ message: 'Role updated successfully' });
-    } catch (error) {
-        next(error);
-    }
-};
 
 const getUsers = async (req, res, next) => {
     try {
@@ -133,8 +100,9 @@ const deleteUser = async (req, res, next) => {
         }
 
         // Delete user (cascade will handle related records)
-        await prisma.user.delete({
-            where: { id: userId }
+        await prisma.user.updateOne({
+            where: { id: userId },
+            data: { isActive: false }
         });
 
         logAction(req.user, 'DELETE_USER', `Deleted user ${user.name} (${user.email}) with role ${user.role}`, 'User', userId);
@@ -147,8 +115,6 @@ const deleteUser = async (req, res, next) => {
 
 export {
     getAuditLogs,
-    getRoles,
-    assignRole,
     getUsers,
     deleteUser
 };

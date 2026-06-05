@@ -7,6 +7,8 @@ import {
   updateStudent,
   studentRejected,
   phaseAdvanced,
+  getRejectedApplications,
+  selectionStats
 } from '../controllers/selectionController.js';
 import { withAuth, requireRole } from '../middlewares/auth.js';
 
@@ -42,6 +44,8 @@ router.get('/phases/:phase', requireRole('ADMIN', 'TUTOR_LEAD', 'SELECTION_TEAM'
  getApplicationsByPhase 
 );
 
+router.get('/rejected', requireRole('ADMIN', 'TUTOR_LEAD', 'SELECTION_TEAM'), getRejectedApplications);
+
 //Application Rejected 
 router.patch(
   '/:id/reject',
@@ -58,5 +62,7 @@ router.patch(
 
 // Update student profile
 router.put('/:id/student', requireRole('ADMIN', 'TUTOR_LEAD', 'SELECTION_TEAM'), updateStudent);
+
+router.get('/stats', requireRole('ADMIN', 'TUTOR_LEAD', 'SELECTION_TEAM'), selectionStats);
 
 export default router;

@@ -13,7 +13,8 @@ const logAction = async (user, action, description, entityType = null, entityId 
                 newData,
             }
         });
-    } catch (error) {
+    } 
+    catch (error) {
         console.error('Failed to log audit action:', error);
     }
 };
